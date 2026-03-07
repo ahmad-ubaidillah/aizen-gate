@@ -31,7 +31,7 @@ const program = new Command();
 program
 	.name("aizen-gate")
 	.description("The Ultimate AI-Orchestration & Specification Shield")
-	.version("2.1.0");
+	.version("2.1.3");
 
 // --- Command Groups ---
 
