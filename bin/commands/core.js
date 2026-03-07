@@ -10,8 +10,8 @@ function registerCore(program) {
 		.description("Install Aizen-Gate into the current project workspace")
 		.option("-y, --yes", "Skip interactive prompts and use defaults")
 		.action(async (options) => {
-			const { runInstall } = require("../../src/setup/install");
-			await runInstall(process.cwd(), options);
+			const { installAizenGate } = require("../../installer/src/install");
+			await installAizenGate(process.cwd());
 		});
 
 	// 2. Start (Session Init)
