@@ -1,6 +1,6 @@
 {
 	"name": "aizen-gate",
-	"version": "2.1.4",
+	"version": "2.1.5",
 	"description": "The Ultimate AI-Orchestration & Specification Shield",
 	"main": "index.js",
 	"type": "commonjs",
