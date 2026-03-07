@@ -17,14 +17,8 @@ function registerOrchestration(program) {
 		.description("Implement a specific Work Package from the plan")
 		.argument("[wpId]", "ID of the Work Package to implement")
 		.action(async (wpId) => {
-			console.log(
-				chalk.red(
-					`\n--- ⛩️ [Aizen] Launching az-implement Playbook for ${wpId || "next available"} ---\n`,
-				),
-			);
-			console.log(
-				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-implement.md and implement."`),
-			);
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("implement", process.cwd(), wpId);
 		});
 
 	program
@@ -32,12 +26,8 @@ function registerOrchestration(program) {
 		.description("Perform QA review on a completed Work Package")
 		.argument("[wpId]", "ID of the Work Package to review")
 		.action(async (wpId) => {
-			console.log(
-				chalk.red(
-					`\n--- ⛩️ [Aizen] Launching az-review Playbook for ${wpId || "next available"} ---\n`,
-				),
-			);
-			console.log(chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-review.md and review."`));
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("review", process.cwd(), wpId);
 		});
 
 	program
@@ -52,8 +42,8 @@ function registerOrchestration(program) {
 		.command("merge")
 		.description("Merge a completed feature branch into the main trunk")
 		.action(async () => {
-			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-merge Playbook ---\n"));
-			console.log(chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-merge.md and merge."`));
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("merge", process.cwd());
 		});
 
 	// Research
@@ -61,10 +51,8 @@ function registerOrchestration(program) {
 		.command("research")
 		.description("Conduct parallel research phase for architectural validation")
 		.action(async () => {
-			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-research Playbook ---\n"));
-			console.log(
-				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-research.md and start research."`),
-			);
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("research", process.cwd());
 		});
 
 	// Export

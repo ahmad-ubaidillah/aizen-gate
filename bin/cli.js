@@ -103,11 +103,12 @@ program.arguments("[unrecognized]").action(async (cmd) => {
 
 	if (builtIn.includes(cmd)) return;
 
-	// Dynamic Playbook Invocation
-	const playbookPath = path.join(process.cwd(), `aizen-gate/commands/az-${cmd}.md`);
-	if (fs.existsSync(playbookPath)) {
-		console.log(chalk.red(`\n--- ⛩️ [Aizen] Launching az-${cmd} Playbook ---\n`));
-		console.log(chalk.gray(`Invoke agent: "Read ${playbookPath} and execute."`));
+	const { runPlaybook } = require("../src/utils/playbook-runner");
+	const playbookPath = path.join(process.cwd(), `commands/az-${cmd}.md`);
+	const installedPath = path.join(process.cwd(), `aizen-gate/commands/az-${cmd}.md`);
+
+	if (fs.existsSync(playbookPath) || fs.existsSync(installedPath)) {
+		runPlaybook(cmd, process.cwd());
 	} else {
 		console.log(chalk.red(`Error: Unknown command "${cmd}".`));
 		console.log(chalk.yellow(`Try "npx aizen-gate --help" for available commands.`));

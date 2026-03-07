@@ -63,22 +63,16 @@ function registerTasks(program) {
 		.command("specify")
 		.description("Conduct discovery interview to formalize a feature request")
 		.action(async () => {
-			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-specify Playbook ---\n"));
-			console.log(
-				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-specify.md and conduct discovery."`),
-			);
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("specify", process.cwd());
 		});
 
 	program
 		.command("plan")
 		.description("Generate architecture plan and TDD strategy")
 		.action(async () => {
-			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-plan Playbook ---\n"));
-			console.log(
-				chalk.gray(
-					`Invoke agent: "Read aizen-gate/commands/az-plan.md and generate architecture."`,
-				),
-			);
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("plan", process.cwd());
 		});
 }
 
