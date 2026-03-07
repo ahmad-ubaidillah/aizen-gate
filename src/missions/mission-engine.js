@@ -19,7 +19,8 @@ class MissionEngine {
 			id: "software-dev",
 			name: "Software Development",
 			description: "Standard Spec-Driven Development Pipeline",
-			phases: ["specify", "plan", "tasks", "implement", "review", "merge"],
+			phases: ["specify", "research", "plan", "tasks", "auto", "review", "merge"],
+			agents: ["[PM]", "[ARCH]", "[DEV]", "[QA]"],
 			artifacts: {
 				spec: "spec.md",
 				plan: "plan.md",
@@ -32,6 +33,7 @@ class MissionEngine {
 			name: "Documentation & Technical Writing",
 			description: "Pipeline optimized for creating and updating project documentation.",
 			phases: ["audit", "outline", "draft", "peer-review", "publish"],
+			agents: ["[PM]", "[DOCS]"],
 			artifacts: {
 				spec: "outline.md",
 				plan: "style-guide.md",
@@ -44,6 +46,7 @@ class MissionEngine {
 			name: "R&D Prototype Exploration",
 			description: "Fast-feedback loops for proving out new libraries or architectures.",
 			phases: ["hypothesis", "sandbox", "benchmark", "report"],
+			agents: ["[ANALYST]", "[ARCH]"],
 			artifacts: {
 				spec: "hypothesis.md",
 				plan: "architecture-spike.md",
@@ -73,6 +76,20 @@ class MissionEngine {
 			} catch (_e) {}
 		}
 		return "software-dev";
+	}
+
+	async getActiveMission() {
+		const missionId = this.getCurrentMission();
+		const missionPath = path.join(this.missionsDir, `${missionId}.json`);
+		if (fs.existsSync(missionPath)) {
+			return JSON.parse(fs.readFileSync(missionPath, "utf-8"));
+		}
+		// Fallback
+		return { phases: ["specify", "research", "plan", "tasks", "auto", "review", "merge"] };
+	}
+
+	async setActiveMission(missionId) {
+		return this.switchMission(missionId);
 	}
 
 	switchMission(missionId) {
@@ -105,4 +122,5 @@ class MissionEngine {
 	}
 }
 
-module.exports = { MissionEngine };
+module.exports = { MissionEngine, MissionManager: MissionEngine };
+

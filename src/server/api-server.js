@@ -1,5 +1,5 @@
 const express = require("express");
-const { OrchestratorAPI } = require("./orchestrator-api");
+const { OrchestratorAPI } = require("../orchestration/orchestrator-api");
 const chalk = require("chalk");
 const path = require("node:path");
 
@@ -14,14 +14,14 @@ const api = new OrchestratorAPI(projectRoot);
  */
 
 app.get("/api/status", async (_req, res) => {
-	const { TaskCLI } = require("./task-cli");
+	const { TaskCLI } = require("../tasks/task-cli");
 	const _cli = new TaskCLI(projectRoot);
 	// Simple state retrieval for dashboard
 	res.json(api._envelope({ status: "active", platform: process.platform }));
 });
 
 app.get("/api/tasks", async (_req, res) => {
-	const { TaskCLI } = require("./task-cli");
+	const { TaskCLI } = require("../tasks/task-cli");
 	const _cli = new TaskCLI(projectRoot);
 	const tasksDir = path.join(projectRoot, "backlog", "tasks");
 	const files = require("fs-extra")

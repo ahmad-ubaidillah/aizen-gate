@@ -4,8 +4,8 @@ const chalk = require("chalk");
 const yaml = require("js-yaml");
 const { WorktreeManager } = require("./worktree-manager");
 const { CircuitBreaker } = require("./circuit-breaker");
-const { ContextEngine } = require("./context-engine");
-const { TaskCLI } = require("./task-cli");
+const { ContextEngine } = require("../memory/context-engine");
+const { TaskCLI } = require("../tasks/task-cli");
 
 /**
  * Aizen-Gate Autonomous Shield
@@ -119,7 +119,7 @@ async function runAutoLoop(projectRoot) {
 }
 
 // ⛩️ Signal Handlers for Session Persistence
-const { pauseSession } = require("./session-manager");
+const { pauseSession } = require("../session/session-manager");
 process.on("SIGINT", async () => {
 	console.log(chalk.yellow("\n[Aizen] SIGINT received. Initiating auto-pause..."));
 	await pauseSession(process.cwd(), "Process SIGINT");

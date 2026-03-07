@@ -139,7 +139,7 @@ class MergeEngine {
 			}
 
 			// [Kanban] Auto-update merged tasks to Done
-			const { KanbanAutomation } = require("./kanban-automation");
+			const { KanbanAutomation } = require("../tasks/kanban-automation");
 			const kanban = new KanbanAutomation(this.projectDir);
 			(async () => {
 				for (const wpId of wpOrder) {

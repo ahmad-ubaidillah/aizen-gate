@@ -1,4 +1,4 @@
-const { WorkPackage } = require("./wp-model");
+const { WorkPackage } = require("../tasks/wp-model");
 
 class DependencyGraph {
 	constructor(featureDir) {

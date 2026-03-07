@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-const { TokenBudget } = require("../scripts/token-budget");
-const { OutputFilter } = require("../scripts/output-filter");
+const { TokenBudget } = require("../src/ai/token-budget");
+const { OutputFilter } = require("../src/ai/output-filter");
 
 describe("Token Efficiency System", () => {
 	const budget = new TokenBudget(process.cwd());

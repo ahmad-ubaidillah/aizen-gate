@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const path = require("node:path");
 const chalk = require("chalk");
 const { execSync } = require("node:child_process");
-const { KnowledgeGraph } = require("./kg-engine");
+const { KnowledgeGraph } = require("../knowledge/kg-engine");
 
 /**
  * Aizen-Gate Shield Diagnostics

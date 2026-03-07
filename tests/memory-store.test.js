@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 const fs = require("fs-extra");
 const path = require("node:path");
-const { MemoryStore } = require("../scripts/memory-store");
+const { MemoryStore } = require("../src/memory/memory-store");
 
 describe("MemoryStore - Suite", () => {
 	const testRoot = path.join(__dirname, "test-env-mem");

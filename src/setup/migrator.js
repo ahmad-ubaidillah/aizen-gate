@@ -50,7 +50,7 @@ class Migrator {
 		console.log(chalk.yellow(`Executing structural bootstraps...`));
 		try {
 			// Re-seed updated mission files
-			const { MissionEngine } = require("./mission-engine");
+			const { MissionEngine } = require("../missions/mission-engine");
 			const mz = new MissionEngine(this.projectDir);
 			mz.init();
 

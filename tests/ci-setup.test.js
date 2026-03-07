@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 const fs = require("fs-extra");
-const { setupCI } = require("../scripts/ci-setup");
+const { setupCI } = require("../src/setup/ci-setup");
 
 describe("Aizen-Gate CI/CD Orchestrator", () => {
 	test("Injects GitHub Actions config file", async () => {

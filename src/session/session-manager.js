@@ -34,7 +34,7 @@ async function pauseSession(projectRoot, reason = "User requested pause") {
 			const tasksDir = path.join(specsDir, dir, "tasks");
 			if (fs.existsSync(tasksDir)) {
 				// Check for WPs in 'doing'
-				const { WorkPackage } = require("./wp-model");
+				const { WorkPackage } = require("../tasks/wp-model");
 				const wps = await WorkPackage.loadAllWPs(path.join(specsDir, dir));
 				const doingWps = wps.filter((w) => w.lane === "doing");
 				if (doingWps.length > 0) {

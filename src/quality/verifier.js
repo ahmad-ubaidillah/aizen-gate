@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const path = require("node:path");
 const chalk = require("chalk");
 const { select, input } = require("@inquirer/prompts");
-const { WorkPackage } = require("./wp-model");
+const { WorkPackage } = require("../tasks/wp-model");
 
 /**
  * Verifier: Handles User Acceptance Testing (UAT) and auto-diagnosis of failures.

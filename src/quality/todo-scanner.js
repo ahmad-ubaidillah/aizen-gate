@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const path = require("node:path");
 const chalk = require("chalk");
-const { TaskCLI } = require("./task-cli");
+const { TaskCLI } = require("../tasks/task-cli");
 
 /**
  * Todo Scanner: Captures code-level TODOs and syncs them with the backlog.

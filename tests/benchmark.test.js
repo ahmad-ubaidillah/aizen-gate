@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 const fs = require("fs-extra");
 const path = require("node:path");
-const { runBenchmark } = require("../scripts/benchmark");
+const { runBenchmark } = require("../src/quality/benchmark");
 
 describe("Aizen-Gate Benchmark Evaluation", () => {
 	test("Calculates perfect score when all artifacts are valid", async () => {

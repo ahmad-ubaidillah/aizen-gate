@@ -6,7 +6,20 @@
   <img src="https://img.shields.io/badge/Security-Hardened-2D9CDB?style=for-the-badge" alt="Security">
 </p>
 
-**Aizen-Gate** is an elite SDLC (Software Development Life Cycle) framework that transforms standard AI interactions into a professional, multi-agent Scrum Team execution. It ensures that your project is not just "coded," but **engineered** through rigorous specification, architectural debate, and isolated parallel execution.
+**Aizen-Gate** is an elite SDLC (Software Development Life Cycle) framework that transforms standard AI interactions into a professional, multi-agent Scrum Team execution. Version 2.1 introduces a high-end **Modular Architecture (`src/`)**, consolidating core logic for maximum scalability, security, and performance.
+
+---
+
+## 🏛️ New in v2.1: Modular Professional Architecture
+
+To support large-scale AI orchestration, we've restructured the entire codebase into domain-specific modules:
+
+- **`src/ai/`**: Intelligent token budget and output filtering.
+- **`src/memory/`**: 5-Tier SQL-backed persistent memory & context engineering.
+- **`src/orchestration/`**: Autonomous loop, dependency graphs, and worktree managers.
+- **`src/quality/`**: Shield diagnostics, benchmarking, and UAT verification.
+- **`src/missions/`**: Unified mission engines for flexible SDLC pipelines.
+- **`src/server/`**: Integrated MCP & Orchestrator API servers.
 
 ---
 
@@ -39,11 +52,13 @@ Aizen is "set and forget." It manages its own energy and focus:
 
 Aizen never forgets a decision. It uses a SQL-backed hierarchical brain:
 
-1.  **Working Memory**: What's happening right now.
-2.  **Episodic Memory**: A time-stamped history of every decision made.
-3.  **Semantic Memory**: Learning your project's technical patterns and coding style.
-4.  **Document Memory**: Keeping your specs, plans, and logs organized.
-5.  **Long Summary Thread (LST)**: A "previously on Aizen-Gate" recap that stays sharp over time.
+1.  **Working Memory**: Immediate task context.
+2.  **Episodic Memory**: Decision history.
+3.  **Semantic Memory**: Technical patterns.
+4.  **Document Memory**: Specs & Plans.
+5.  **Long Summary Thread (LST)**: Sharp rolling recap.
+
+_Powered by the consolidated **ContextEngine** (v2.1)._
 
 ### 3. 🛠️ Dynamic Skill System
 
@@ -76,12 +91,14 @@ Aizen-Gate coordinates a specialized squad. You can address them directly using 
 Aizen-Gate enforces a rigorous process to ensure zero-defect delivery:
 
 1.  **`specify`** — The `[PM]` interviews you to create a bullet-proof `spec.md`.
-2.  **`discuss`** — Resolve gray areas and architectural desires before a single line of code is written.
+2.  **`discuss`** — Resolve gray areas before code is written.
 3.  **`research`** — Parallel technical research via sub-agents into `research.md`.
-4.  **`plan`** — Architectural debate between `[ARCH]` and `[DEV]` to finalize the blueprint.
+4.  **`plan`** — Architectural debate to finalize the blueprint.
 5.  **`tasks`** — Decomposition into Work Packages (WPs) with smart dependency mapping.
 6.  **`auto`** — Autonomous wave execution. Spawns parallel, isolated worktrees per WP.
-7.  **`review`** — `[QA]` performs a code review with Athena quality gates before merging.
+7.  **`review`** — `[QA]` code review with Athena quality gates before merging.
+
+_Orchestrated by the unified **MissionEngine** (v2.1)._
 
 ---
 
@@ -102,11 +119,12 @@ npx aizen-gate merge      # Final branch merging and cleanup
 ### Intelligence & Visibility
 
 ```bash
-npx aizen-gate dashboard  # Launch the Live Kanban Dashboard (Pulse)
-npx aizen-gate status     # View the current Scrum Board and Memory
-npx aizen-gate map        # Generate an architectural map of your codebase
-npx aizen-gate doctor     # Run a workspace protocol health check
-npx aizen-gate tokens     # View token efficiency and savings report
+npx aizen-gate dashboard  # Launch the Live Pulse Dashboard (port 6420)
+npx aizen-gate status     # View Scrum Board & Memory state
+npx aizen-gate map        # Generate architectural codebase map
+npx aizen-gate doctor     # Run workspace protocol health check
+npx aizen-gate benchmark  # Performance/compliance audit
+npx aizen-gate tokens     # View token usage & efficiency report and savings report
 ```
 
 ### Quick Actions & Maintenance

@@ -5,8 +5,8 @@ const {
 	ListToolsRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
 
-const { TaskCLI } = require("./task-cli");
-const { MemoryStore } = require("./memory-store");
+const { TaskCLI } = require("../tasks/task-cli");
+const { MemoryStore } = require("../memory/memory-store");
 const fs = require("fs-extra");
 const path = require("node:path");
 const yaml = require("js-yaml");

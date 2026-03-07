@@ -1,6 +1,6 @@
 {
 	"name": "aizen-gate",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"description": "The Ultimate AI-Orchestration & Specification Shield",
 	"main": "index.js",
 	"type": "commonjs",
@@ -9,7 +9,7 @@
 	},
 	"files": [
 		"bin",
-		"scripts",
+		"src",
 		"adapters",
 		"agents",
 		"commands",
@@ -37,7 +37,7 @@
 		"format": "biome format --write ./",
 		"lint": "biome lint --write ./",
 		"check": "npx @biomejs/biome check --write ./",
-		"security-check": "./scripts/security-check.sh"
+		"security-check": "./src/utils/security-check.sh"
 	},
 	"keywords": [
 		"ai",

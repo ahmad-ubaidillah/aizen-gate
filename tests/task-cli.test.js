@@ -2,8 +2,8 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 const fs = require("fs-extra");
 const path = require("node:path");
-const { TaskCLI } = require("../scripts/task-cli");
-const { TaskSearch } = require("../scripts/task-search");
+const { TaskCLI } = require("../src/tasks/task-cli");
+const { TaskSearch } = require("../src/tasks/task-search");
 
 describe("TaskCLI & TaskSearch - Suite", () => {
 	const testRoot = path.join(__dirname, "test-env-tasks");
