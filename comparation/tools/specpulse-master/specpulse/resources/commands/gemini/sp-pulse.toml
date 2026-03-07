@@ -1,0 +1,102 @@
+[command]
+name = "sp-pulse"
+description = "Initialize new features and manage project context without SpecPulse CLI"
+version = "1.0"
+
+[command.usage]
+pattern = "/sp-pulse [feature-name]"
+examples = [
+  "/sp-pulse user-authentication",
+  "/sp-pulse status",
+  "/sp-pulse list"
+]
+
+[command.implementation]
+# When called with "/sp-pulse {{args}}, I will:
+
+[command.implementation.argument_parsing]
+# Parse arguments to determine action:
+# - If feature name provided → Initialize new feature with that name
+# - If "status" → Show current feature context
+# - If "list" → Show all available features
+# - If no argument → Show current feature status
+
+[command.implementation.feature_initialization]
+# Create comprehensive feature structure:
+
+[command.implementation.feature_initialization.universal_id]
+# Generate Universal Feature ID:
+# - Use Glob tool to scan existing feature directories in ".specpulse/specs/"
+# - Parse directory names using "XXX-feature-name" pattern
+# - Extract numeric IDs and convert to integers
+# - Find maximum value: max_num = max(extracted_numbers) or 0 if empty
+# - Generate next sequential: next_num = max_num + 1
+# - Zero-pad format: format(next_num, '03d') → "001", "002", "003"
+# - Create feature name from input (convert to kebab-case)
+
+[command.implementation.feature_initialization.directory_structure]
+# Create Directory Structure (Atomic Operations):
+# - Use Bash with "mkdir -p" for atomic directory creation
+# - Create parent directories first: ".specpulse/", ".specpulse/specs/", etc.
+# - Validate each directory creation before proceeding
+# - Rollback entire operation if any step fails
+# - Safe File Operations with Write tool and full file content
+# - Validate file paths are within ".specpulse/" directory only
+
+[command.implementation.feature_initialization.specification]
+# Initialize Feature Specification:
+# - Create "spec-001.md" with comprehensive template
+# - Include executive summary placeholder
+# - Add functional requirements structure
+# - Include user stories and acceptance criteria template
+# - Add technical constraints and risk assessment sections
+
+[command.implementation.context_management]
+# Update Project Context:
+# - Update ".specpulse/memory/context.md" with new active feature
+# - Set feature metadata (ID, name, created_at, status)
+# - Update feature history and navigation
+# - Initialize decision log for the feature
+# - Create feature-specific memory file with tracking variables
+
+[command.implementation.universal_id_system]
+# Universal ID System Implementation:
+# - Conflict-free numbering through systematic analysis
+# - Feature ID Generation with zero-padding and conflict detection
+# - File Numbering System across all file types (spec-001.md, plan-001.md, tasks-001.md)
+# - Conflict Prevention with atomic file existence checks
+# - Gap handling: Preserve existing numbering gaps, don't renumber
+
+[command.implementation.error_handling]
+# Error Handling and Recovery:
+# - Feature Creation Failures: Guide user through directory permissions
+# - Directory Exists: Handle existing feature directories gracefully
+# - File System Errors: Provide recovery instructions
+# - Template Missing: Use built-in fallback structure
+# - Context File Corrupted: Rebuild from available feature data
+# - Permission Denied: Clear resolution instructions
+
+[command.features]
+# CLI-Independent Features:
+# - No CLI Dependencies: 100% independent directory creation
+# - Atomic Operations: Create structure with rollback on failure
+# - Template System: Built-in templates for all file types
+# - Validation: Verify structure integrity after creation
+# - Context Management: File-based context tracking
+# - Feature History: Complete navigation history
+# - Decision Logging: Automatic decision documentation
+
+[command.advanced_features]
+# Advanced Features:
+# - Feature Templates (Web Application, API Service, CLI Tool, Library/SDK)
+# - Integration Ready (Git Integration: Automatic branch creation and management)
+# - Testing Setup: Test structure initialization
+# - CI/CD Ready: Pipeline configuration templates
+# - Documentation: Auto-generated README and API docs
+
+[command.workflow_integration]
+# Complete Workflow Support:
+# - Project Structure Creation with guaranteed integrity
+# - Memory Context Management with automatic updates
+# - Progress Tracking with manual calculation from file structure
+# - Cross-platform compatibility with identical functionality

@@ -1,0 +1,117 @@
+import chalk from "chalk";
+import { join } from "node:path";
+import { runTransition } from "../transition/orchestration.js";
+import { PreflightValidationError } from "../transition/preflight.js";
+import { withErrorHandling } from "../utils/errors.js";
+import { exists } from "../utils/file-system.js";
+import { resolveProjectPlatform } from "../platform/resolve.js";
+import { getFullTierPlatformNames } from "../platform/registry.js";
+import type { PreflightIssue } from "../transition/types.js";
+
+interface ImplementOptions {
+  force?: boolean;
+  projectDir: string;
+}
+
+export async function implementCommand(options: ImplementOptions): Promise<void> {
+  await withErrorHandling(() => runImplement(options));
+}
+
+async function runImplement(options: ImplementOptions): Promise<void> {
+  const { projectDir, force } = options;
+
+  // Re-run protection: warn if implement was already run
+  const alreadyRun = await exists(join(projectDir, ".ralph/@fix_plan.md"));
+  if (alreadyRun && !force) {
+    console.log(chalk.yellow("Warning: bmalph implement has already been run."));
+    console.log(
+      "Re-running will overwrite PROMPT.md, PROJECT_CONTEXT.md, @AGENT.md, and SPECS_INDEX.md."
+    );
+    console.log("Fix plan progress will be preserved.\n");
+    console.log(`Use ${chalk.bold("--force")} to proceed anyway.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const platform = await resolveProjectPlatform(projectDir);
+
+  let result;
+  try {
+    result = await runTransition(projectDir, { force });
+  } catch (error) {
+    if (error instanceof PreflightValidationError) {
+      renderPreflightIssues(error.issues);
+    }
+    throw error;
+  }
+
+  // Print preflight issues with severity icons
+  renderPreflightIssues(result.preflightIssues);
+
+  // Print warnings
+  const preflightMessages = new Set(result.preflightIssues.map((issue) => issue.message));
+  const warnings = result.warnings.filter((warning) => !preflightMessages.has(warning));
+
+  if (warnings.length > 0) {
+    for (const warning of warnings) {
+      console.log(chalk.yellow(`  ! ${warning}`));
+    }
+    console.log("");
+  }
+
+  // Generated files summary
+  if (result.generatedFiles.length > 0) {
+    console.log(chalk.bold("\nGenerated files\n"));
+    for (const file of result.generatedFiles) {
+      const icon = file.action === "created" ? chalk.green("+") : chalk.cyan("~");
+      console.log(`  ${icon} ${file.path}`);
+    }
+    console.log("");
+  }
+
+  // Summary
+  const preserved = result.fixPlanPreserved ? chalk.dim(" (progress preserved)") : "";
+  console.log(chalk.green(`Transition complete: ${result.storiesCount} stories`) + preserved);
+
+  if (result.warnings.length > 0) {
+    console.log(chalk.yellow(`  ${result.warnings.length} warning(s)`));
+  }
+
+  // Driver instructions
+  console.log("");
+  if (platform.tier === "full") {
+    console.log(`Start the Ralph loop:\n`);
+    console.log(`    bmalph run`);
+  } else {
+    console.log(
+      `Ralph requires a full-tier platform (${getFullTierPlatformNames()}). ` +
+        `Current platform: ${platform.displayName}`
+    );
+  }
+}
+
+function severityIcon(issue: PreflightIssue): string {
+  switch (issue.severity) {
+    case "error":
+      return chalk.red("\u2717");
+    case "warning":
+      return chalk.yellow("!");
+    case "info":
+      return chalk.dim("i");
+  }
+}
+
+function renderPreflightIssues(issues: PreflightIssue[]): void {
+  if (issues.length === 0) {
+    return;
+  }
+
+  console.log(chalk.bold("\nPre-flight checks\n"));
+  for (const issue of issues) {
+    console.log(`  ${severityIcon(issue)} ${issue.message}`);
+    if (issue.suggestion) {
+      console.log(chalk.dim(`     ${issue.suggestion}`));
+    }
+  }
+  console.log("");
+}

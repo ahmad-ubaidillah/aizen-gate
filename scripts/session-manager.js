@@ -1,71 +1,113 @@
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
+const matter = require('gray-matter');
 
 /**
  * Aizen-Gate Session Manager
  * Handles pausing and resuming work sessions by persisting state.
  */
 async function pauseSession(projectRoot, reason = 'User requested pause') {
-    const statePath = path.join(projectRoot, 'aizen-gate/shared/state.md');
-    const boardPath = path.join(projectRoot, 'aizen-gate/shared/board.md');
+    const sharedDir = path.join(projectRoot, 'aizen-gate', 'shared');
+    const handoffPath = path.join(sharedDir, 'handoff.md');
+    const statePath = path.join(sharedDir, 'state.md');
+    const boardPath = path.join(sharedDir, 'board.md');
 
-    if (!fs.existsSync(statePath)) {
-        console.log(chalk.red('[SA] state.md not found. Cannot pause.'));
-        return;
+    console.log(chalk.yellow(`\n[Aizen] Pausing session: ${reason}`));
+
+    // 1. Collect session state
+    const now = new Date().toISOString();
+    const handoffData = {
+        paused_at: now,
+        reason: reason,
+        active_feature: null,
+        active_wave: [],
+        decisions_summary: '',
+        pitfalls_to_avoid: ''
+    };
+
+    // Try to find active feature from specs dir
+    const specsDir = path.join(projectRoot, 'aizen-gate', 'specs');
+    if (fs.existsSync(specsDir)) {
+        const dirs = await fs.readdir(specsDir);
+        for (const dir of dirs) {
+            const tasksDir = path.join(specsDir, dir, 'tasks');
+            if (fs.existsSync(tasksDir)) {
+                // Check for WPs in 'doing'
+                const { WorkPackage } = require('./wp-model');
+                const wps = await WorkPackage.loadAllWPs(path.join(specsDir, dir));
+                const doingWps = wps.filter(w => w.lane === 'doing');
+                if (doingWps.length > 0) {
+                    handoffData.active_feature = dir;
+                    handoffData.active_wave = doingWps.map(w => w.id);
+                    break;
+                }
+            }
+        }
     }
 
-    console.log(chalk.yellow(`\n[SA] Pausing session: ${reason}`));
+    // 2. Generate Handoff Document
+    const handoffContent = `
+# 🌀 Aizen-Gate Handoff Document
 
-    // 1. Identify active tasks
-    const boardContent = fs.readFileSync(boardPath, 'utf8');
-    const activeTasksMatch = boardContent.match(/\|\s+(T-\d+)\s+\|\s+([^|]+)\s+\|\s+🚧 In Progress/g);
-    const activeTasks = activeTasksMatch ? activeTasksMatch.map(m => m.match(/T-\d+/)[0]) : [];
+This document captures the current state of the architecture and development loop.
+Refer to this when resuming the session.
 
-    // 2. Write to state.md
-    let stateContent = fs.readFileSync(statePath, 'utf8');
-    const now = new Date().toISOString();
-    
-    stateContent = stateContent.replace(/Stopped at: .*/, `Stopped at: ${reason} (Tasks: ${activeTasks.join(', ') || 'None'})`);
-    stateContent = stateContent.replace(/Last session: .*/, `Last session: ${now}`);
-    
-    fs.writeFileSync(statePath, stateContent);
+## System Context
+- **Active Feature:** ${handoffData.active_feature || 'None'}
+- **Active Wave:** ${handoffData.active_wave.join(', ') || 'None'}
 
-    // 3. Create a Resume file (Instructional)
-    const resumePath = path.join(projectRoot, 'aizen-gate/shared/continue-here.md');
-    const resumeContent = `# Resume Work Instructions\n\n**Paused at:** ${now}\n**Reason:** ${reason}\n\n### Steps to Resume:\n1. Run \`npx aizen-gate resume\`\n2. Check \`aizen-gate/shared/board.md\` for tasks marked '🚧 In Progress'.\n3. Continue implementing according to the active PLAYBOOK.\n`;
-    
-    fs.writeFileSync(resumePath, resumeContent);
+## Development Summary
+The session was paused while working on the tasks listed above. 
+Current implementation focus remains on satisfying the Work Package requirements.
 
-    console.log(chalk.green(`\n[SA] Session persisted. Read ${chalk.bold('aizen-gate/shared/continue-here.md')} when you return.`));
+## Blockers & Tensions
+None identified at time of pause.
+
+## Immediate Next Steps
+1. Run \`npx aizen-gate resume\` to restore markers.
+2. Review the active Work Packages in \`aizen-gate/specs/${handoffData.active_feature || '...'}/tasks/\`.
+3. Resume the autonomous implement wave with \`npx aizen-gate auto\`.
+`;
+
+    const finalOutput = matter.stringify(handoffContent, handoffData);
+    await fs.ensureDir(sharedDir);
+    await fs.writeFile(handoffPath, finalOutput);
+
+    // 3. Update state.md if it exists
+    if (fs.existsSync(statePath)) {
+        let stateContent = await fs.readFile(statePath, 'utf8');
+        stateContent = stateContent.replace(/Stopped at: .*/, `Stopped at: ${reason} (Paused)`);
+        stateContent = stateContent.replace(/Last session: .*/, `Last session: ${now}`);
+        await fs.writeFile(statePath, stateContent);
+    }
+
+    console.log(chalk.green(`\n✔ Session paused safely. Summary in ${chalk.bold('aizen-gate/shared/handoff.md')}`));
 }
 
 async function resumeSession(projectRoot) {
-    const statePath = path.join(projectRoot, 'aizen-gate/shared/state.md');
-    const resumePath = path.join(projectRoot, 'aizen-gate/shared/continue-here.md');
+    const handoffPath = path.join(projectRoot, 'aizen-gate', 'shared', 'handoff.md');
 
-    if (!fs.existsSync(statePath)) {
-        console.log(chalk.red('[SA] state.md not found. Cannot resume.'));
+    if (!fs.existsSync(handoffPath)) {
+        console.log(chalk.yellow('[Aizen] No handoff document found. Starting fresh session.'));
         return;
     }
 
-    console.log(chalk.blue.bold('\n--- [SA] Resuming Aizen-Gate Session ---\n'));
+    const fileContent = await fs.readFile(handoffPath, 'utf8');
+    const { data } = matter(fileContent);
 
-    // 1. Read state
-    const stateContent = fs.readFileSync(statePath, 'utf8');
-    const lastStopped = stateContent.match(/Stopped at: (.*)/);
+    console.log(chalk.blue.bold('\n--- ⛩️ Resuming Aizen-Gate Session ---\n'));
+    console.log(`[Aizen] Paused at: ${chalk.cyan(data.paused_at)}`);
+    console.log(`[Aizen] Reason: ${chalk.cyan(data.reason)}`);
     
-    if (lastStopped) {
-        console.log(`[SA] Last activity was: ${chalk.cyan(lastStopped[1])}`);
+    if (data.active_feature) {
+        console.log(`[Aizen] Restoring Active Feature: ${chalk.bold(data.active_feature)}`);
+        console.log(`[Aizen] Active Wave: ${chalk.yellow(data.active_wave.join(', '))}`);
     }
 
-    // 2. Clean up resume file
-    if (fs.existsSync(resumePath)) {
-        fs.unlinkSync(resumePath);
-        console.log(`[SA] Cleaned up temporary resume markers.`);
-    }
-
-    console.log(chalk.green(`[SA] Ready. Run ${chalk.bold('npx aizen-gate status')} or ${chalk.bold('npx aizen-gate auto')} to pick up work.`));
+    // Cleanup handoff
+    await fs.unlink(handoffPath);
+    console.log(chalk.green(`\n✔ Handoff markers cleared. Happy coding!`));
 }
 
 module.exports = { pauseSession, resumeSession };

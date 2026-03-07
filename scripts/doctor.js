@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
+const { KnowledgeGraph } = require('./kg-engine');
 
 /**
  * Aizen-Gate Shield Diagnostics
@@ -29,7 +30,7 @@ async function runDoctor(projectRoot) {
         },
         {
             name: 'Workspace: Shared Memory',
-            check: () => fs.existsSync(path.join(sharedDir, 'memory.md'))
+            check: () => fs.existsSync(path.join(sharedDir, 'memory.db')) || fs.existsSync(path.join(sharedDir, 'memory.sqlite'))
         },
         {
             name: 'Workspace: Shield Board',
@@ -42,6 +43,26 @@ async function runDoctor(projectRoot) {
         {
             name: 'Workspace: Aizen-Gate PRD',
             check: () => fs.existsSync(path.join(sharedDir, 'project.md'))
+        },
+        {
+            name: 'Graph Integrity: Orphan Controls',
+            check: async () => {
+                const kg = new KnowledgeGraph(projectRoot);
+                const allNodes = await kg.memory.search('', { limit: 1000 });
+                
+                const features = allNodes.filter(n => n.meta?.type === 'FEAT');
+                const tasks = allNodes.filter(n => n.meta?.type === 'TASK');
+                const implementsEdges = allNodes.filter(n => n.meta?.relation === 'IMPLEMENTS');
+
+                const orphans = features.filter(f => !implementsEdges.some(e => e.meta?.target === f.id));
+                const unlinkedTasks = tasks.filter(t => !implementsEdges.some(e => e.meta?.source === t.id));
+
+                let report = [];
+                if (orphans.length > 0) report.push(chalk.yellow(`${orphans.length} Orphan Features`));
+                if (unlinkedTasks.length > 0) report.push(chalk.yellow(`${unlinkedTasks.length} Unlinked Tasks`));
+                
+                return report.length > 0 ? report.join(', ') : 'Healthy';
+            }
         },
         {
             name: 'Capacity: Skill Hub Count',
@@ -64,7 +85,7 @@ async function runDoctor(projectRoot) {
     let healthy = true;
     for (const { name, check } of checks) {
         try {
-            const result = check();
+            const result = await Promise.resolve(check());
             if (result === false) {
                 console.log(`${chalk.red('✘')} ${name}: ${chalk.red('Bypassed/Missing')}`);
                 healthy = false;

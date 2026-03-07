@@ -68,51 +68,50 @@ class DependencyGraph {
    * Note: This works correctly because graph keys map ID to its dependencies.
    * If A depends on B, we process A's dependencies first, so we want the order to start from roots.
    */
-  topologicalSort() {
+  /**
+   * Computes dependency-aware waves for parallel execution.
+   * Returns an array of arrays: [ [wave0_ids], [wave1_ids], ... ]
+   */
+  computeWaves() {
     if (this.detectCycles()) {
-      throw new Error("Graph contains a cycle - cannot topologically sort");
+      throw new Error("Graph contains a cycle - cannot compute waves");
     }
 
     const inDegree = {};
-    const reverseAdj = {}; // Map: WP dependency -> List of WPs that depend on it
+    const reverseAdj = {};
+    const ids = Object.keys(this.graph);
 
-    for (const wpId in this.graph) {
-      inDegree[wpId] = (this.graph[wpId] || []).length;
-      reverseAdj[wpId] = [];
+    for (const id of ids) {
+      inDegree[id] = (this.graph[id] || []).length;
+      reverseAdj[id] = [];
     }
 
-    for (const [wpId, deps] of Object.entries(this.graph)) {
+    for (const [id, deps] of Object.entries(this.graph)) {
       for (const dep of deps) {
-        if (!reverseAdj[dep]) {
-          reverseAdj[dep] = [];
-        }
-        reverseAdj[dep].push(wpId);
+        if (!reverseAdj[dep]) reverseAdj[dep] = [];
+        reverseAdj[dep].push(id);
       }
     }
 
-    // Nodes with 0 incoming dependecies (i.e. nothing depends on them, root of dependency tree)
-    const queue = Object.keys(inDegree).filter(wpId => inDegree[wpId] === 0);
-    queue.sort(); 
+    const waves = [];
+    let currentWave = ids.filter(id => inDegree[id] === 0);
 
-    const result = [];
-    while (queue.length > 0) {
-      const node = queue.shift();
-      result.push(node);
-
-      for (const dependent of (reverseAdj[node] || []).sort()) {
-        inDegree[dependent]--;
-        if (inDegree[dependent] === 0) {
-          queue.push(dependent);
-          queue.sort(); // Re-sort safely
+    while (currentWave.length > 0) {
+      waves.push(currentWave.sort());
+      const nextWave = [];
+      
+      for (const node of currentWave) {
+        for (const dependent of (reverseAdj[node] || [])) {
+          inDegree[dependent]--;
+          if (inDegree[dependent] === 0) {
+            nextWave.push(dependent);
+          }
         }
       }
+      currentWave = nextWave;
     }
 
-    if (result.length !== Object.keys(this.graph).length) {
-      throw new Error("Graph failed topological sort (disconnected parts or missing nodes)");
-    }
-
-    return result;
+    return waves;
   }
 
   /**

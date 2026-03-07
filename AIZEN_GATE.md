@@ -19,9 +19,16 @@ Aizen Gate enforces a rigorous SDLC to ensure zero-defect delivery:
 
 ## 🏗️ Technical Foundation
 
-### 1. Multi-Agent Team (11 Personas)
+### 1. Multi-Agent Team (Aizen Orchestration)
 
-Access the full team via ID tagging (e.g., `[Aizen]`, `[ARCH]`, `[DEV]`).
+Access the full team via ID tagging. All user requests are handled by **Aizen ([AZ])**, the Superagent, who coordinates the specialized squad:
+
+- **`[AZ]` — Aizen Orchestrator**: Your primary point of contact. Manages delegation and sprint state.
+- **`[PM]` — Project Manager**: Discovery, user stories, and acceptance criteria.
+- **`[ARCH]` — Lead Architect**: High-level design, model debate, and technical blueprints.
+- **`[DEV]` — Implementation Agent**: Code execution, TDD, and isolated wave implementation.
+- **`[QA]` — Quality Gate**: Verification, UAT facilitation, and security audit.
+- **`[SA]` — Shield Architect**: Framework maintenance, session persistence, and archival.
 
 ### 2. Isolated Execution (Git Worktrees)
 
@@ -68,8 +75,18 @@ npx aizen-gate status     # Scrum Board summary
 npx aizen-gate dashboard  # Launch web UI
 npx aizen-gate map        # Architecture mapping
 npx aizen-gate doctor     # Workspace health check
-npx aizen-gate benchmark  # Protocol audit
+npx aizen-gate benchmark # Protocol audit
+npx aizen-gate clean     # [AZ] Archive finished tasks into timestamped folders
 ```
+
+## 📜 Archival Intelligence
+
+The `clean` command is fully automated. It:
+
+1. Moves all "Done" tasks to `backlog/tasks/archive/<dd-mm-yyyy_HH-mm>`.
+2. Updates task assignees to `[AZ] - Aizen Orchestrator`.
+3. Auto-checks all remaining implementation checklists.
+4. Updates `backlog/readme.md` with the latest archive timestamp.
 
 ---
 

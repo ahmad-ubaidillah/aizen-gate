@@ -1,0 +1,148 @@
+[command]
+name = "sp-task"
+description = "Create and manage tasks without SpecPulse CLI"
+version = "1.0"
+
+[command.usage]
+pattern = "/sp-task [action] [feature-directory]"
+examples = [
+  "/sp-task breakdown",
+  "/sp-task update",
+  "/sp-task status"
+]
+
+[command.implementation]
+# When called with "/sp-task {{args}}, I will:
+
+[command.implementation.argument_parsing]
+# Parse arguments to determine action:
+# - If first argument is breakdown, update, status, execute, or validate → Use that action
+# - If no action specified → Default to breakdown
+# - For other arguments → Look for feature name or use current feature
+
+[command.implementation.feature_context]
+# Detect Current Feature Context:
+# - Check .specpulse/memory/context.md for active feature
+# - Look for most recently modified spec/plan/task directory
+# - Validate feature directory exists and is properly structured
+# - Extract feature ID and name from directory structure
+
+[command.implementation.task_breakdown]
+# For Action: breakdown (default):
+
+[command.implementation.task_breakdown.decomposition_check]
+# Check for Service Decomposition:
+# - Look for .specpulse/specs/[feature]/decomposition/ directory
+# - If decomposition exists, identify service directories
+# - Parse service names for task categorization
+# - Plan service-specific task generation
+
+[command.implementation.task_breakdown.task_generation]
+# Generate Task Breakdown:
+# - Read implementation plan from .specpulse/plans/[feature]/ directory
+# - Analyze plan phases and identify implementation steps
+# - Create detailed tasks with proper dependencies
+# - Assign task IDs using universal numbering system
+
+[command.implementation.task_breakdown.service_tasks]
+# Create Service-Specific Tasks:
+# - Auth Service Tasks: AUTH-T001, AUTH-T002, etc.
+# - User Service Tasks: USER-T001, USER-T002, etc.
+# - Integration Tasks: INT-T001, INT-T002, etc.
+
+[command.implementation.universal_id_system]
+# Universal ID System:
+
+[command.implementation.universal_id_system.task_generation]
+# Task ID Generation Algorithm:
+# - Use Glob tool to scan .specpulse/tasks/[feature]/ directory
+# - Parse existing task files to extract current numbering:
+#   - Global tasks: Extract numbers from T###.md patterns
+#   - Service tasks: Extract from SERVICE-T###.md patterns
+#   - Integration tasks: Extract from INT-T###.md patterns
+# - Create numbering map: {task_type: max_number_used}
+# - Generate next ID: For each task type, use max_num + 1
+# - Zero-pad format: format(next_num, '03d') ensures 001, 002, 003
+
+[command.implementation.universal_id_system.service_patterns]
+# Service-Specific Task Patterns:
+# - Authentication Service: AUTH-T001.md, AUTH-T002.md, etc.
+# - User Management Service: USER-T001.md, USER-T002.md, etc.
+# - API Gateway Service: GATEWAY-T001.md, GATEWAY-T002.md, etc.
+# - Database Service: DB-T001.md, DB-T002.md, etc.
+# - Notification Service: NOTIF-T001.md, NOTIF-T002.md, etc.
+
+[command.implementation.universal_id_system.conflict_prevention]
+# Conflict Prevention Mechanisms:
+# - Atomic file existence check before creating each task file
+# - Validation loop: If conflict detected, increment and retry
+# - Cross-service dependency tracking to ensure logical numbering
+# - Fallback numbering: If directory empty, start from T001.md
+# - Gap handling: Preserve existing numbering gaps, don't renumber
+
+[command.implementation.task_management]
+# Task Management Actions:
+
+[command.implementation.task_management.update]
+# For Action: update:
+# - Scan .specpulse/tasks/[feature]/ directory for task files
+# - Display available task files for selection
+# - Parse current task structure and status
+# - Provide interactive update options:
+#   - Mark tasks as completed/in-progress/blocked
+#   - Update task descriptions or metadata
+#   - Add new tasks or remove obsolete ones
+# - Recalculate progress metrics after updates
+
+[command.implementation.task_management.status]
+# For Action: status:
+# - Scan all task files in current feature
+# - Calculate completion percentages
+# - Show progress by service (if decomposed)
+# - Display task status distribution:
+#   - Completed tasks count and percentage
+#   - In-progress tasks
+#   - Blocked tasks with blockers listed
+#   - Pending tasks available for work
+# - Show SDD Gates compliance status
+# - Calculate velocity metrics (tasks/day)
+# - Identify parallel tasks and sequential chains
+# - Provide recommendations for next actions
+
+[command.implementation.task_management.execute]
+# For Action: execute:
+# - Allow task selection from available pending tasks
+# - Validate task readiness and dependencies
+# - Display task details before execution
+# - Implement task requirements through code changes
+# - Test implementation when applicable
+# - Mark task as completed automatically
+# - Continue with next available task if requested
+# - Update progress metrics and context
+
+[command.implementation.task_management.validate]
+# For Action: validate:
+# - Validate task file structure and format
+# - Check required fields are present and valid
+# - Verify task dependencies exist and are valid
+# - Validate SDD Gates compliance
+# - Check for duplicate task IDs
+# - Verify success criteria are testable
+# - Assess risk levels and mitigation strategies
+# - Report validation results with fixes needed
+
+[command.features]
+# CLI-Independent Features:
+# - No CLI Dependencies: 100% independent of SpecPulse CLI installation
+# - Manual Task Parsing: Direct file content analysis without CLI
+# - Atomic Task Updates: Safe file operations prevent corruption
+# - Progress Tracking: Manual calculation from task files
+# - Error Recovery: Comprehensive error handling
+
+[command.advanced_features]
+# Enhanced Task Generation:
+# - Service-Specific Task Organization with proper categorization
+# - SDD Gates Compliance with comprehensive validation
+# - Universal ID System with conflict prevention
+# - Dependency-aware task scheduling
+# - Progress Analytics and velocity tracking

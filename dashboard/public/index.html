@@ -1,474 +1,501 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aizen-Gate Live Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #3b82f6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #334155;
-            --lane-bg: rgba(30, 41, 59, 0.4);
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        header {
-            padding: 1.25rem 2rem;
-            background-color: rgba(15, 23, 42, 0.9);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #60a5fa, #c084fc);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .controls select {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            outline: none;
-            font-weight: 500;
-        }
-        .progress-wrap {
-            padding: 1rem 2rem;
-            background-color: var(--bg-dark);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .progress-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        .progress-bar-bg {
-            flex-grow: 1;
-            height: 10px;
-            background-color: var(--border);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            background-color: var(--success);
-            width: 0%;
-            transition: width 0.4s ease;
-        }
-        .board-container {
-            display: flex;
-            flex-grow: 1;
-            padding: 1.5rem 2rem;
-            gap: 1.5rem;
-            overflow-x: auto;
-        }
-        .lane {
-            background-color: var(--lane-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-width: 320px;
-            width: 320px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-        }
-        .lane-header {
-            padding: 1rem 1.25rem;
-            font-weight: 600;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.1em;
-            color: var(--text-secondary);
-        }
-        .lane-header.planned { border-top: 3px solid var(--text-secondary); }
-        .lane-header.doing { border-top: 3px solid var(--accent); }
-        .lane-header.review { border-top: 3px solid var(--warning); }
-        .lane-header.done { border-top: 3px solid var(--success); }
-        
-        .badge-count {
-            background-color: var(--border);
-            color: var(--text-primary);
-            padding: 0.2rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-        
-        .task-list {
-            padding: 1rem;
-            flex-grow: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .wp-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 1.25rem;
-            cursor: grab;
-            transition: all 0.2s;
-            position: relative;
-        }
-        .wp-card:active {
-            cursor: grabbing;
-        }
-        .wp-card:hover {
-            border-color: #475569;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
-        .wp-id {
-            font-size: 0.75rem;
-            color: var(--accent);
-            font-family: monospace;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-        .wp-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin: 0 0 1rem 0;
-            line-height: 1.5;
-        }
-        .wp-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.75rem;
-            border-top: 1px solid var(--border);
-            padding-top: 0.75rem;
-            margin-top: 0.5rem;
-        }
-        .wp-agent {
-            background-color: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-            padding: 0.25rem 0.6rem;
-            border-radius: 4px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-        .wp-deps {
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .drag-over {
-            background-color: rgba(59, 130, 246, 0.1);
-            border: 2px dashed var(--accent);
-        }
+      :root {
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --accent: #3b82f6;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --border: #334155;
+        --lane-bg: rgba(30, 41, 59, 0.4);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      header {
+        padding: 1.25rem 2rem;
+        background-color: rgba(15, 23, 42, 0.9);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #60a5fa, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .controls select {
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        outline: none;
+        font-weight: 500;
+      }
+      .progress-wrap {
+        padding: 1rem 2rem;
+        background-color: var(--bg-dark);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .progress-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .progress-bar-bg {
+        flex-grow: 1;
+        height: 10px;
+        background-color: var(--border);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        background-color: var(--success);
+        width: 0%;
+        transition: width 0.4s ease;
+      }
+      .board-container {
+        display: flex;
+        flex-grow: 1;
+        padding: 1.5rem 2rem;
+        gap: 1.5rem;
+        overflow-x: auto;
+      }
+      .lane {
+        background-color: var(--lane-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        min-width: 320px;
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+      }
+      .lane-header {
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        color: var(--text-secondary);
+      }
+      .lane-header.planned {
+        border-top: 3px solid var(--text-secondary);
+      }
+      .lane-header.doing {
+        border-top: 3px solid var(--accent);
+      }
+      .lane-header.review {
+        border-top: 3px solid var(--warning);
+      }
+      .lane-header.done {
+        border-top: 3px solid var(--success);
+      }
+
+      .badge-count {
+        background-color: var(--border);
+        color: var(--text-primary);
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+      }
+
+      .task-list {
+        padding: 1rem;
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .wp-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1.25rem;
+        cursor: grab;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .wp-card:active {
+        cursor: grabbing;
+      }
+      .wp-card:hover {
+        border-color: #475569;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      }
+      .wp-id {
+        font-size: 0.75rem;
+        color: var(--accent);
+        font-family: monospace;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+      .wp-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin: 0 0 1rem 0;
+        line-height: 1.5;
+      }
+      .wp-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        border-top: 1px solid var(--border);
+        padding-top: 0.75rem;
+        margin-top: 0.5rem;
+      }
+      .wp-agent {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        padding: 0.25rem 0.6rem;
+        border-radius: 4px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+      .wp-deps {
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .drag-over {
+        background-color: rgba(59, 130, 246, 0.1);
+        border: 2px dashed var(--accent);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>⚡ Aizen-Gate Board</h1>
-        <div class="controls">
-            <select id="feature-select">
-                <option value="">Select a Feature...</option>
-            </select>
-        </div>
+      <h1>⚡ Aizen-Gate Board</h1>
+      <div class="controls">
+        <select id="feature-select">
+          <option value="">Select a Feature...</option>
+        </select>
+      </div>
     </header>
 
     <div class="progress-wrap">
-        <div style="flex-grow: 1; display: flex; align-items: center; gap: 1rem;">
-            <span class="progress-label" id="progress-text">0% Complete</span>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progress-bar"></div>
-            </div>
+      <div style="flex-grow: 1; display: flex; align-items: center; gap: 1rem">
+        <span class="progress-label" id="progress-text">0% Complete</span>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar"></div>
         </div>
-        <div class="sprint-goal" style="padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; border: 1px solid var(--accent);">
-            <span style="font-size: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase;">Sprint Goal:</span>
-            <span id="sprint-goal-text" style="font-size: 0.875rem; color: var(--text-primary);">Implement core features for feature-001</span>
-        </div>
+      </div>
+      <div
+        class="sprint-goal"
+        style="
+          padding: 0.5rem 1rem;
+          background: rgba(59, 130, 246, 0.1);
+          border-radius: 4px;
+          border: 1px solid var(--accent);
+        "
+      >
+        <span
+          style="
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+          "
+          >Sprint Goal:</span
+        >
+        <span
+          id="sprint-goal-text"
+          style="font-size: 0.875rem; color: var(--text-primary)"
+          >Implement core features for feature-001</span
+        >
+      </div>
     </div>
 
     <div class="board-container">
-        <div class="lane" data-lane="planned">
-            <div class="lane-header planned">
-                Planned
-                <span class="badge-count" id="count-planned">0</span>
-            </div>
-            <div class="task-list" id="list-planned"></div>
+      <div class="lane" data-lane="planned">
+        <div class="lane-header planned">
+          Planned
+          <span class="badge-count" id="count-planned">0</span>
         </div>
-        
-        <div class="lane" data-lane="doing">
-            <div class="lane-header doing">
-                Doing
-                <span class="badge-count" id="count-doing">0</span>
-            </div>
-            <div class="task-list" id="list-doing"></div>
-        </div>
-        
-        <div class="lane" data-lane="review">
-            <div class="lane-header review">
-                Review
-                <span class="badge-count" id="count-review">0</span>
-            </div>
-            <div class="task-list" id="list-review"></div>
-        </div>
-        
-        <div class="lane" data-lane="done">
-            <div class="lane-header done">
-                Done
-                <span class="badge-count" id="count-done">0</span>
-            </div>
-            <div class="task-list" id="list-done"></div>
-        </div>
+        <div class="task-list" id="list-planned"></div>
+      </div>
 
-        <!-- Team Activity Sidebar -->
-        <div class="lane activity" style="min-width: 280px; width: 280px; background: transparent; border: none; box-shadow: none;">
-            <div class="lane-header" style="border: none;">Activity Stream</div>
-            <div class="task-list" id="activity-stream" style="font-size: 0.75rem; color: var(--text-secondary); background: rgba(15, 23, 42, 0.3); border-radius: 8px; border: 1px solid var(--border);">
-                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border);">[SA] Dashboard connected. Waiting for pulse...</div>
-            </div>
+      <div class="lane" data-lane="doing">
+        <div class="lane-header doing">
+          Doing
+          <span class="badge-count" id="count-doing">0</span>
         </div>
+        <div class="task-list" id="list-doing"></div>
+      </div>
+
+      <div class="lane" data-lane="review">
+        <div class="lane-header review">
+          Review
+          <span class="badge-count" id="count-review">0</span>
+        </div>
+        <div class="task-list" id="list-review"></div>
+      </div>
+
+      <div class="lane" data-lane="done">
+        <div class="lane-header done">
+          Done
+          <span class="badge-count" id="count-done">0</span>
+        </div>
+        <div class="task-list" id="list-done"></div>
+      </div>
+
+      <!-- Team Activity Sidebar -->
+      <div
+        class="lane activity"
+        style="
+          min-width: 280px;
+          width: 280px;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+        "
+      >
+        <div class="lane-header" style="border: none">Activity Stream</div>
+        <div
+          class="task-list"
+          id="activity-stream"
+          style="
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+          "
+        >
+          <div style="padding: 0.5rem; border-bottom: 1px solid var(--border)">
+            [SA] Dashboard connected. Waiting for pulse...
+          </div>
+        </div>
+      </div>
     </div>
 
-
     <script>
-        let ws;
-        let currentFeature = '';
-        let workPackages = [];
+      let ws;
+      let tasks = [];
 
-        // DOM Elements
-        const featureSelect = document.getElementById('feature-select');
-        const lists = {
-            planned: document.getElementById('list-planned'),
-            doing: document.getElementById('list-doing'),
-            review: document.getElementById('list-review'),
-            done: document.getElementById('list-done')
+      // DOM Elements
+      const featureSelect = document.getElementById("feature-select");
+      if (featureSelect) featureSelect.style.display = "none"; // hide feature dropdown
+
+      const lists = {
+        Todo: document.getElementById("list-planned"),
+        "In Progress": document.getElementById("list-doing"),
+        Review: document.getElementById("list-review"),
+        Done: document.getElementById("list-done"),
+      };
+      const counts = {
+        Todo: document.getElementById("count-planned"),
+        "In Progress": document.getElementById("count-doing"),
+        Review: document.getElementById("count-review"),
+        Done: document.getElementById("count-done"),
+      };
+      const progressBar = document.getElementById("progress-bar");
+      const progressText = document.getElementById("progress-text");
+
+      async function fetchTasks() {
+        try {
+          const res = await fetch(`/api/tasks`);
+          tasks = await res.json();
+          renderBoard();
+        } catch (err) {
+          console.error("Failed to load tasks:", err);
+        }
+      }
+
+      function initializeWebSocket() {
+        if (ws) {
+          ws.close();
+        }
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ type: "subscribe" }));
         };
-        const counts = {
-            planned: document.getElementById('count-planned'),
-            doing: document.getElementById('count-doing'),
-            review: document.getElementById('count-review'),
-            done: document.getElementById('count-done')
+
+        ws.onmessage = (event) => {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "update") {
+            tasks = payload.data;
+            renderBoard();
+            if (payload.event) logActivity(payload.event);
+          }
         };
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
 
-        // Fetch features on load
-        async function fetchFeatures() {
-            try {
-                const res = await fetch('/api/features');
-                const features = await res.json();
-                
-                features.forEach(f => {
-                    const option = document.createElement('option');
-                    option.value = f;
-                    option.textContent = f;
-                    featureSelect.appendChild(option);
-                });
-
-                if (features.length > 0) {
-                    featureSelect.value = features[0];
-                    selectFeature(features[0]);
-                }
-            } catch (err) {
-                console.error('Failed to load features:', err);
-            }
+        function logActivity(text) {
+          const stream = document.getElementById("activity-stream");
+          const entry = document.createElement("div");
+          entry.style.padding = "0.5rem";
+          entry.style.borderBottom = "1px solid var(--border)";
+          entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+          stream.prepend(entry);
+          if (stream.children.length > 20) stream.lastChild.remove();
         }
 
-        featureSelect.addEventListener('change', (e) => {
-            selectFeature(e.target.value);
+        ws.onclose = () => {
+          setTimeout(initializeWebSocket, 3000); // Reconnect logic
+        };
+      }
+
+      function renderBoard() {
+        // Clear current cards
+        Object.values(lists).forEach((list) => {
+          if (list) list.innerHTML = "";
         });
 
-        function selectFeature(featureId) {
-            if (!featureId) return;
-            currentFeature = featureId;
-            initializeWebSocket();
-            fetchWorkPackages();
-        }
+        let doneCount = 0;
+        const laneMetrics = { Todo: 0, "In Progress": 0, Review: 0, Done: 0 };
 
-        async function fetchWorkPackages() {
-            try {
-                const res = await fetch(`/api/wps/${currentFeature}`);
-                workPackages = await res.json();
-                renderBoard();
-            } catch (err) {
-                console.error('Failed to load work packages:', err);
-            }
-        }
+        // Sort Tasks so they appear consistently based on ID
+        tasks.sort((a, b) => a.id.localeCompare(b.id));
 
-        function initializeWebSocket() {
-            if (ws) {
-                ws.close();
-            }
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}`);
-            
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ type: 'subscribe', featureId: currentFeature }));
-            };
-            
-            ws.onmessage = (event) => {
-                const payload = JSON.parse(event.data);
-                if (payload.type === 'update') {
-                    workPackages = payload.data;
-                    renderBoard();
-                    if (payload.event) logActivity(payload.event);
-                }
-            };
-            
-            function logActivity(text) {
-                const stream = document.getElementById('activity-stream');
-                const entry = document.createElement('div');
-                entry.style.padding = '0.5rem';
-                entry.style.borderBottom = '1px solid var(--border)';
-                entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-                stream.prepend(entry);
-                if (stream.children.length > 20) stream.lastChild.remove();
-            }
-            
-            ws.onclose = () => {
-                setTimeout(initializeWebSocket, 3000); // Reconnect logic
-            };
-        }
+        tasks.forEach((task) => {
+          const lane = task.status || "Todo";
+          if (!lists[lane]) return; // Fallback for invalid lane
 
-        function renderBoard() {
-            // Clear current cards
-            Object.values(lists).forEach(list => list.innerHTML = '');
-            
-            let doneCount = 0;
-            const laneMetrics = { planned: 0, doing: 0, review: 0, done: 0 };
+          laneMetrics[lane]++;
+          if (lane === "Done") doneCount++;
 
-            // Sort WPs so they appear consistently based on ID
-            workPackages.sort((a, b) => a.id.localeCompare(b.id));
+          const card = document.createElement("div");
+          card.className = "wp-card";
+          card.draggable = true;
+          card.dataset.id = task.id;
 
-            workPackages.forEach(wp => {
-                const lane = wp.lane || 'planned';
-                if (!lists[lane]) return; // Fallback for invalid lane
-                
-                laneMetrics[lane]++;
-                if (lane === 'done') doneCount++;
+          card.addEventListener("dragstart", handleDragStart);
+          card.addEventListener("dragend", handleDragEnd);
 
-                const card = document.createElement('div');
-                card.className = 'wp-card';
-                card.draggable = true;
-                card.dataset.id = wp.id;
-                
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
+          let agentHtml =
+            task.assignee !== "@none"
+              ? `<span class="wp-agent">${task.assignee}</span>`
+              : `<span style="color:var(--text-secondary)">Unassigned</span>`;
+          let depsHtml = task.priority
+            ? `<span class="wp-deps">↳ P: ${task.priority}</span>`
+            : `<span></span>`;
 
-                let agentHtml = wp.assignedAgent ? `<span class="wp-agent">${wp.assignedAgent}</span>` : `<span style="color:var(--text-secondary)">Unassigned</span>`;
-                let depsHtml = wp.dependencies && wp.dependencies.length > 0 
-                                ? `<span class="wp-deps">↳ ${wp.dependencies.join(', ')}</span>` 
-                                : `<span></span>`;
-
-                card.innerHTML = `
-                    <span class="wp-id">${wp.id}</span>
-                    <h3 class="wp-title">${wp.title}</h3>
+          card.innerHTML = `
+                    <span class="wp-id">${task.id}</span>
+                    <h3 class="wp-title">${task.title}</h3>
                     <div class="wp-meta">
                         ${agentHtml}
                         ${depsHtml}
                     </div>
                 `;
-                
-                lists[lane].appendChild(card);
-            });
 
-            // Update Counts
-            Object.keys(counts).forEach(lane => {
-                counts[lane].textContent = laneMetrics[lane];
-            });
-
-            // Update Progress
-            const total = workPackages.length || 1; 
-            const pct = Math.round((doneCount / total) * 100);
-            progressBar.style.width = `${pct}%`;
-            progressText.textContent = `${pct}% Complete (${doneCount}/${total})`;
-        }
-
-        // Drag and Drop Logic
-        let draggedItem = null;
-
-        function handleDragStart(e) {
-            draggedItem = this;
-            setTimeout(() => this.style.opacity = '0.5', 0);
-        }
-
-        function handleDragEnd(e) {
-            this.style.opacity = '1';
-            draggedItem = null;
-        }
-
-        Object.keys(lists).forEach(laneKey => {
-            const laneList = lists[laneKey];
-            
-            laneList.parentElement.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                laneList.parentElement.classList.add('drag-over');
-            });
-
-            laneList.parentElement.addEventListener('dragleave', (e) => {
-                laneList.parentElement.classList.remove('drag-over');
-            });
-
-            laneList.parentElement.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                laneList.parentElement.classList.remove('drag-over');
-                if (!draggedItem) return;
-
-                const wpId = draggedItem.dataset.id;
-                const targetLane = laneKey;
-                
-                // Optimistic UI update
-                laneList.appendChild(draggedItem);
-
-                try {
-                    await fetch(`/api/wps/${currentFeature}/${wpId}/move`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ lane: targetLane })
-                    });
-                    // WebSocket will handle the rest
-                } catch (err) {
-                    console.error('Failed to move WP:', err);
-                    // Fetch to reset state on error
-                    fetchWorkPackages();
-                }
-            });
+          lists[lane].appendChild(card);
         });
 
-        // Init
-        fetchFeatures();
+        // Update Counts
+        Object.keys(counts).forEach((lane) => {
+          if (counts[lane]) counts[lane].textContent = laneMetrics[lane];
+        });
+
+        // Update Progress
+        const total = tasks.length || 1;
+        const pct = Math.round((doneCount / total) * 100);
+        progressBar.style.width = `${pct}%`;
+        progressText.textContent = `${pct}% Complete (${doneCount}/${tasks.length})`;
+      }
+
+      // Drag and Drop Logic
+      let draggedItem = null;
+
+      function handleDragStart(e) {
+        draggedItem = this;
+        setTimeout(() => (this.style.opacity = "0.5"), 0);
+      }
+
+      function handleDragEnd(e) {
+        this.style.opacity = "1";
+        draggedItem = null;
+      }
+
+      Object.keys(lists).forEach((laneKey) => {
+        const laneList = lists[laneKey];
+        if (!laneList) return;
+
+        // Note: laneList parent div needs to have laneKey mapping for data-lane since we changed the js mapping.
+        // The HTML still uses data-lane="planned|doing|review|done".
+
+        laneList.parentElement.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          laneList.parentElement.classList.add("drag-over");
+        });
+
+        laneList.parentElement.addEventListener("dragleave", (e) => {
+          laneList.parentElement.classList.remove("drag-over");
+        });
+
+        laneList.parentElement.addEventListener("drop", async (e) => {
+          e.preventDefault();
+          laneList.parentElement.classList.remove("drag-over");
+          if (!draggedItem) return;
+
+          const wpId = draggedItem.dataset.id;
+          const targetLane = laneKey; // e.g. 'In Progress'
+
+          // Optimistic UI update
+          laneList.appendChild(draggedItem);
+
+          try {
+            await fetch(`/api/tasks/${wpId}/move`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: targetLane }),
+            });
+          } catch (err) {
+            console.error("Failed to move WP:", err);
+            fetchTasks(); // reset
+          }
+        });
+      });
+
+      // Init
+      initializeWebSocket();
+      fetchTasks();
     </script>
-</body>
+  </body>
 </html>

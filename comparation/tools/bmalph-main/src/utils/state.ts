@@ -1,0 +1,223 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+import { readJsonFile } from "./json.js";
+import { validateState, validateRalphLoopStatus, normalizeRalphStatus } from "./validate.js";
+import type { RalphLoopStatus } from "./validate.js";
+import { STATE_DIR, RALPH_STATUS_FILE } from "./constants.js";
+import { atomicWriteFile } from "./file-system.js";
+import { warn } from "./logger.js";
+import { formatError } from "./errors.js";
+
+export interface BmalphState {
+  currentPhase: number;
+  status: "planning" | "implementing" | "completed";
+  startedAt: string;
+  lastUpdated: string;
+}
+
+export interface PhaseCommand {
+  code: string;
+  name: string;
+  agent: string;
+  description: string;
+  required: boolean;
+}
+
+export interface PhaseInfo {
+  name: string;
+  agent: string;
+  commands: PhaseCommand[];
+}
+
+export async function readState(projectDir: string): Promise<BmalphState | null> {
+  const data = await readJsonFile<unknown>(join(projectDir, STATE_DIR, "current-phase.json"));
+  if (data === null) return null;
+  try {
+    return validateState(data);
+  } catch (err) {
+    warn(`State file is corrupted, treating as uninitialized: ${formatError(err)}`);
+    return null;
+  }
+}
+
+export async function writeState(projectDir: string, state: BmalphState): Promise<void> {
+  await mkdir(join(projectDir, STATE_DIR), { recursive: true });
+  const target = join(projectDir, STATE_DIR, "current-phase.json");
+  await atomicWriteFile(target, JSON.stringify(state, null, 2) + "\n");
+}
+
+export function getPhaseLabel(phase: number): string {
+  const labels: Record<number, string> = {
+    1: "Analysis",
+    2: "Planning",
+    3: "Solutioning",
+    4: "Implementation",
+  };
+  return labels[phase] ?? "Unknown";
+}
+
+export function getPhaseInfo(phase: number): PhaseInfo {
+  const info: Record<number, PhaseInfo> = {
+    1: {
+      name: "Analysis",
+      agent: "Analyst",
+      commands: [
+        {
+          code: "BP",
+          name: "Brainstorm Project",
+          agent: "analyst",
+          description: "Expert guided facilitation through brainstorming techniques",
+          required: false,
+        },
+        {
+          code: "MR",
+          name: "Market Research",
+          agent: "analyst",
+          description: "Market analysis, competitive landscape, customer needs",
+          required: false,
+        },
+        {
+          code: "DR",
+          name: "Domain Research",
+          agent: "analyst",
+          description: "Industry domain deep dive, subject matter expertise",
+          required: false,
+        },
+        {
+          code: "TR",
+          name: "Technical Research",
+          agent: "analyst",
+          description: "Technical feasibility, architecture options",
+          required: false,
+        },
+        {
+          code: "CB",
+          name: "Create Brief",
+          agent: "analyst",
+          description: "Guided experience to nail down your product idea",
+          required: false,
+        },
+        {
+          code: "VB",
+          name: "Validate Brief",
+          agent: "analyst",
+          description: "Validates product brief completeness",
+          required: false,
+        },
+      ],
+    },
+    2: {
+      name: "Planning",
+      agent: "PM (John)",
+      commands: [
+        {
+          code: "CP",
+          name: "Create PRD",
+          agent: "pm",
+          description: "Expert led facilitation to produce your PRD",
+          required: true,
+        },
+        {
+          code: "VP",
+          name: "Validate PRD",
+          agent: "pm",
+          description: "Validate PRD is comprehensive and cohesive",
+          required: false,
+        },
+        {
+          code: "CU",
+          name: "Create UX",
+          agent: "ux-designer",
+          description: "Guidance through realizing the plan for your UX",
+          required: false,
+        },
+        {
+          code: "VU",
+          name: "Validate UX",
+          agent: "ux-designer",
+          description: "Validates UX design deliverables",
+          required: false,
+        },
+      ],
+    },
+    3: {
+      name: "Solutioning",
+      agent: "Architect",
+      commands: [
+        {
+          code: "CA",
+          name: "Create Architecture",
+          agent: "architect",
+          description: "Guided workflow to document technical decisions",
+          required: true,
+        },
+        {
+          code: "VA",
+          name: "Validate Architecture",
+          agent: "architect",
+          description: "Validates architecture completeness",
+          required: false,
+        },
+        {
+          code: "CE",
+          name: "Create Epics and Stories",
+          agent: "pm",
+          description: "Create the epics and stories listing",
+          required: true,
+        },
+        {
+          code: "VE",
+          name: "Validate Epics and Stories",
+          agent: "pm",
+          description: "Validates epics and stories completeness",
+          required: false,
+        },
+        {
+          code: "QA",
+          name: "QA Automation Test",
+          agent: "qa",
+          description: "Generate automated API and E2E tests for implemented code",
+          required: false,
+        },
+        {
+          code: "IR",
+          name: "Implementation Readiness",
+          agent: "architect",
+          description: "Ensure PRD, UX, architecture, and stories are aligned",
+          required: true,
+        },
+      ],
+    },
+    4: {
+      name: "Implementation",
+      agent: "Developer (Amelia)",
+      commands: [],
+    },
+  };
+  return info[phase] ?? { name: "Unknown", agent: "Unknown", commands: [] };
+}
+
+const DEFAULT_RALPH_STATUS: RalphLoopStatus = {
+  loopCount: 0,
+  status: "not_started",
+  tasksCompleted: 0,
+  tasksTotal: 0,
+};
+
+export async function readRalphStatus(projectDir: string): Promise<RalphLoopStatus> {
+  const data = await readJsonFile<unknown>(join(projectDir, RALPH_STATUS_FILE));
+  if (data === null) {
+    return DEFAULT_RALPH_STATUS;
+  }
+  try {
+    return validateRalphLoopStatus(data);
+  } catch {
+    // camelCase validation failed — try bash snake_case format
+  }
+  try {
+    return normalizeRalphStatus(data);
+  } catch (err) {
+    warn(`Ralph status file is corrupted, using defaults: ${formatError(err)}`);
+    return DEFAULT_RALPH_STATUS;
+  }
+}

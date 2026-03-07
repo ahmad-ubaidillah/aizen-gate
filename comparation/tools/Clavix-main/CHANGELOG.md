@@ -1,0 +1,764 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [7.2.1] - 2026-01-27
+
+### Fixed
+
+- **Missing Skill Templates in Package** - Added skill templates to npm package that were missing from v7.2.0:
+  - `using-clavix.md` meta-skill template
+  - `implement-templates/` directory with subagent prompt templates
+  - Updated `implement.md`, `verify.md`, `plan.md`, `prd.md` skill templates with verification patterns
+
+## [7.2.0] - 2026-01-27
+
+### Added
+
+- **Verification Loop Patterns** - Robust verification and fix loops across Clavix skills:
+  - **Iron Laws**: "No completion without verification evidence" and "Issues found = issues fixed + re-verified"
+  - **Verification Gate Pattern**: IDENTIFY → RUN → READ → VERIFY before any completion claims
+  - **Mandatory Fix Loops**: Cannot proceed until issues are fixed AND re-verified
+  - **3-Strike Rule**: If 3+ fix attempts fail, stop and ask for help
+
+- **`using-clavix` Meta-Skill** - New orchestration skill establishing workflow rules:
+  - Skill invocation requirements (check for skills BEFORE any action)
+  - Complete workflow map showing skill chains
+  - Required skill chains (prd → plan → implement → verify)
+  - Red flags table for catching rationalization patterns
+  - Skill priority order (exploration → planning → implementation → verification)
+
+- **Subagent Templates** - New templates for delegating implementation work:
+  - `clavix-implement/implementer-prompt.md` - Dispatch implementer subagent
+  - `clavix-implement/spec-reviewer-prompt.md` - Dispatch spec compliance reviewer
+  - `clavix-implement/quality-reviewer-prompt.md` - Dispatch code quality reviewer
+  - Two-stage review pattern: spec compliance first, then code quality
+
+- **Required Sub-Skill References** - Explicit skill chain enforcement:
+  - `clavix-prd` → REQUIRED: `clavix-plan`
+  - `clavix-plan` → REQUIRED: `clavix-implement`
+  - `clavix-implement` → REQUIRED: `clavix-verify` (after all tasks)
+
+### Changed
+
+- **`clavix-implement` Skill** - Major verification enhancements:
+  - Added Iron Law section at top of skill
+  - Replaced optional verification with mandatory Verification Gate
+  - Added Fix Loop pattern with re-verification requirement
+  - Added subagent template references
+  - Removed "skip verification" options from troubleshooting
+
+- **`clavix-verify` Skill** - Mandatory fix loops:
+  - Added Iron Law: "Issues found = issues fixed + re-verified"
+  - Changed "Fixing Workflow (Optional Loop)" to "Fixing Workflow (MANDATORY Loop)"
+  - Added evidence requirement for claiming fixes
+  - Added Red Flags table for catching skip temptations
+  - Enhanced After Verification section with mandatory fix loop diagram
+
+- **`clavix-plan` Skill** - Skill chain enforcement:
+  - Added REQUIRED SUB-SKILL header template for generated plans
+  - Added skill chain diagram in Next Steps section
+
+- **`clavix-prd` Skill** - Skill chain enforcement:
+  - Added REQUIRED SUB-SKILL reference to clavix-plan
+  - Added complete skill chain diagram
+  - Updated recommendations table to emphasize verification
+
+### Why v7.2.0?
+
+This is a minor version bump because:
+1. Introduces new meta-skill (`using-clavix`) that orchestrates other skills
+2. Adds new subagent template files to `clavix-implement`
+3. Significantly enhances verification rigor across multiple skills
+4. Establishes mandatory skill chains (breaking previous optional patterns)
+
+## [7.1.1] - 2026-01-23
+
+### Fixed
+
+- **TOML Parsing Error** - Fixed escape character in prompt ID format (`{std\\|comp}` → `{std\|comp}`) that caused gemini-cli to fail parsing improve.toml ([#16](https://github.com/ClavixDev/Clavix/issues/16))
+
+## [7.1.0] - 2026-01-22
+
+### Added
+
+- **Custom Agent Skills Path** - New "Agent Skills - Custom Path" option in `clavix init`:
+  - Users can specify any directory for skills installation (e.g., `.aider-desk/skills`)
+  - Supports both relative paths (from project root) and absolute paths (including `~/`)
+  - Interactive prompt guides path type selection with clear explanations
+  - Path stored in `config.experimental.integrationPaths['agent-skills-custom']`
+
+## [7.0.0] - 2026-01-21
+
+### BREAKING: Agent Skills as Primary Integration
+
+**Clavix v7 introduces Agent Skills as the recommended way to use Clavix.** Agent Skills follow the [agentskills.io](https://agentskills.io) specification and work with any compatible AI tool.
+
+#### Why Agent Skills?
+
+- **Universal compatibility** - Works with any AI tool that supports the Agent Skills spec
+- **Two installation scopes** - Global (`~/.config/agents/skills/`) or Project (`.skills/`)
+- **Efficient context** - Skills optimized for < 500 lines each
+- **Future-proof** - As more tools adopt Agent Skills, your workflows work everywhere
+
+### Added
+
+- **Agent Skills Integration** - Full support for agentskills.io specification:
+  - New `AgentSkillsAdapter` generates skills following the Agent Skills standard
+  - **Two installation scopes**: Global (`~/.config/agents/skills/`) and Project (`.skills/`)
+  - All 10 Clavix workflows available as curated skills
+  - Skills are directory-based with SKILL.md files per agentskills.io spec
+  - New "Agent Skills" section appears FIRST in integration selector during `clavix init`
+  - Skills have optimized descriptions for agent discovery
+
+- **Curated Skill Templates** - New `src/templates/skills/` directory:
+  - 10 condensed, optimized skill templates based on canonical commands
+  - Skills follow < 500 line recommendation for efficient context usage
+  - Each skill includes proper YAML frontmatter (name, description, license)
+  - Skills include: State Assertions, Self-Correction Protocols, Mode Boundaries, File-Saving Protocols, and Workflow Navigation
+
+### Fixed
+
+- **Preserve existing command files during init** - `clavix init` no longer overwrites user's existing command files in shared directories. Only files matching the `clavix-*` prefix pattern are updated.
+
+### Changed
+
+- **README revamp** - Skills-first documentation with cleaner, leaner structure
+- **Integration selector priority** - Agent Skills now appears first for better discoverability
+
+## [6.1.0] - 2026-01-12
+
+### Added
+
+- **GitHub Copilot Custom Slash Commands** - Full integration with VS Code GitHub Copilot:
+  - Replaced global `.github/copilot-instructions.md` with proper slash commands
+  - New adapter generates `.github/prompts/*.prompt.md` files
+  - Commands appear as `/clavix-improve`, `/clavix-prd`, etc. in Copilot Chat
+  - YAML frontmatter with `name`, `description`, `agent`, and `tools`
+  - Smart agent mapping: `ask` for planning commands, `agent` for implementation
+  - Moved from "Universal Adapters" to "IDE & IDE Extensions" category
+
+### Changed
+
+- **CopilotPromptsAdapter** replaces `CopilotInstructionsGenerator`
+- **Integration name**: `copilot-instructions` → `copilot`
+- **File location**: `.github/copilot-instructions.md` → `.github/prompts/clavix-*.prompt.md`
+- **Schema updates**: Added `.prompt.md` extension and `prompt-files` specialAdapter type
+
+### Removed
+
+- `CopilotInstructionsGenerator` class
+- `src/templates/agents/copilot-instructions.md` template
+
+## [6.0.0] - 2026-01-12
+
+### Added
+
+- **New `/clavix:review` Command** - Criteria-driven PR review for team collaboration
+  *(Inspired by [@fmflurry](https://github.com/fmflurry))*:
+  - Review teammate's PRs without requiring them to use Clavix
+  - Conversational intake: asks which branch/PR, which criteria, and team conventions
+  - **5 Review Presets**: Security, Architecture, Standards, Performance, All-Around
+  - **Custom criteria support**: describe specific concerns in natural language
+  - **Structured output**: Executive Summary + Detailed Findings with severity levels
+  - **Severity categories**: 🔴 Critical, 🟠 Major, 🟡 Minor, ⚪ Suggestion
+  - Saves reports to `.clavix/outputs/reviews/` with frontmatter metadata
+  - Differentiates from `/clavix:verify` (which checks YOUR code against YOUR PRD)
+
+- **New Template Components**:
+  - `references/review-criteria.md` - Comprehensive review dimension definitions
+  - `sections/review-presets.md` - Predefined criteria preset configurations
+  - `sections/review-examples.md` - Example review report outputs
+
+- **Comprehensive Test Suite** - 32 new tests for review command:
+  - Template structure validation
+  - Component existence and content checks
+  - MANIFEST and documentation verification
+  - Build artifact verification
+
+### Changed
+
+- **Slash Commands**: Now 10 total (was 9) with addition of `/clavix:review`
+- **MANIFEST.md**: Updated with review command and its components
+- **cli-reference.md**: Added reviews directory to file structure
+- **docs/commands.md**: Full documentation for review command with examples
+
+### Why v6.0.0?
+
+This is a **major version bump** because:
+1. Introduces a significant new workflow (PR review) that expands Clavix beyond personal use to team collaboration
+2. Changes the command count from 9 to 10
+3. Adds new output directory structure (`.clavix/outputs/reviews/`)
+
+## [5.10.3] - 2026-01-09
+
+### Fixed
+
+- **Cursor Integration Path** - Commands now correctly write to `.cursor/commands/` instead of `.cursor/rules/`
+
+## [5.10.0] - 2026-01-02
+
+### Added
+
+- **Vibe CLI Integration** - New first-class integration for Mistral Vibe CLI:
+  - VibeAdapter generates SKILL.md files in `./.vibe/skills/`
+  - All 9 Clavix slash commands available as Vibe skills
+  - Skill files named: `clavix-{command}-skill.md` (e.g., `clavix-improve-skill.md`)
+  - Local project skills priority (`.vibe/skills/` over `~/.vibe/skills/`)
+  - Comprehensive test coverage for all adapter methods
+
+### Changed
+
+- **AgentManager** - Registered VibeAdapter for Vibe CLI support
+- **integrations.json** - Added Vibe CLI configuration entry
+- **AgentType** - Added 'vibe' to type union for type safety
+- Also added missing 'warp-md' to AgentType union
+
+## [5.10.2] - 2026-01-05
+
+### Added
+
+- **Task Selection for Implement Command** - New task selection mode:
+  - `all` - Execute all tasks sequentially
+  - `task N` - Execute specific task by number
+  - Interactive list - Select task from numbered list
+  - Confirmation prompt before starting implementation
+  - Better control over which tasks to execute
+
+## [5.10.1] - 2026-01-04
+
+### Fixed
+
+- **Codex Prompts Subdirectory** - Codex prompts now correctly use `/prompts` subdirectory with `$CODEX_HOME` environment variable
+
+## [5.9.2] - 2026-01-01
+
+### Fixed
+
+- **RooCode Integration Path** - Commands now correctly write to `.roo/commands/` instead of `.roo/rules/` (aligns with official RooCode documentation)
+- Updated integration selector UI to display correct path
+
+## [5.9.1] - 2025-12-31
+
+### Added
+
+- **$CODEX_HOME Environment Variable Support** - Custom Codex prompts directory:
+  - New `src/utils/path-resolver.ts` for centralized path resolution with priority system
+  - Environment variable priority: `$CODEX_HOME` → user config → default path
+  - Interactive prompting during `clavix init` when `$CODEX_HOME` is detected
+  - Custom paths stored in `.clavix/config.json` under `experimental.integrationPaths`
+  - Extensible pattern for future integrations (e.g., `CURSOR_HOME`, `GEMINI_HOME`)
+  - 13 new comprehensive tests (all passing)
+
+### Changed
+
+- **UniversalAdapter** - Updated to use new path resolver instead of direct tilde expansion
+- **AgentManager** - Now accepts and passes `userConfig` to all adapters
+- **All Adapters** - Updated constructors to accept optional `userConfig` parameter:
+  - `ClaudeCodeAdapter`
+  - `GeminiAdapter`, `QwenAdapter`, `LlxprtAdapter` (via `TomlFormattingAdapter`)
+  - `UniversalAdapter`
+
+### Technical Details
+
+- Added `IntegrationPathsConfig` interface to `src/types/config.ts`
+- Added schema validation for `integrationPaths` in `src/utils/schemas.ts`
+- Updated `clavix init` to detect and prompt about `$CODEX_HOME`
+- Updated `clavix update` to pass config to `AgentManager`
+- Backward compatible - existing installations work without changes
+
+## [5.9.0] - 2025-12-23
+
+### Added
+
+- **Architecture & Design Support** - Integrated architectural decision-making into core workflows:
+  - `/clavix:start`: Added explicit probing for architectural patterns and design choices during conversation
+  - `/clavix:summarize`: Added "Architecture & Design" section to requirements extraction and Mini-PRD template
+  - `/clavix:prd`: Added dedicated Question 3.5 to structured Q&A for capturing design patterns (Monolith vs Microservices, Clean Architecture, etc.)
+  - `/clavix:plan`: Added "Architecture First" principle to task generation, prioritizing structural setup tasks
+
+### Changed
+
+- **Agentic Template Improvements**:
+  - Simplified optional questions in `/clavix:prd` by removing "Press Enter to skip" instructions (agents handle optionality natively)
+  - Updated Plan template to enforce architectural setup before implementation tasks
+
+## [5.8.2] - 2025-12-07
+
+### Added
+
+- **Clarifying Questions Protocol** - New systematic protocol for gathering critical information:
+  - Added `clarifying-questions.md` component in `agent-protocols/`
+  - Integrated into AGENT_MANUAL for universal access
+  - Applied to planning/improvement commands: improve, prd, plan, start, summarize
+  - 95% confidence threshold for when to ask questions
+  - Structured format for multiple choice and custom input questions
+  - Best practices and examples for effective questioning
+
+- **Template Customization Documentation** - Comprehensive guide for customizing Clavix templates:
+  - New `docs/template-customization.md` with full integration paths
+  - Complete reference table showing where each integration generates templates
+  - Step-by-step workflows for customizing canonical templates, integration-specific overrides, and components
+  - Common customization examples (project context, security checklists, team standards)
+  - Troubleshooting guide for template customization issues
+
+### Changed
+
+- **MANIFEST.md** - Updated component usage matrix:
+  - Added clarifying-questions.md to agent protocols section
+  - Updated usage matrix to show which commands include the new protocol
+  - Clarified that clarifying-questions is included via AGENT_MANUAL
+
+## [5.6.6] - 2025-11-28
+
+### Added
+
+- **Test Coverage Improvements** - 21 new tests for CLI commands:
+  - 10 command behavior verification tests for `update.ts`
+  - 11 reconfiguration flow tests for `init.ts`
+  - Total test count: 1306 tests passing
+
+- **Template Enhancements**:
+  - Task dependency guidance in `plan.md` with explicit dependency markers
+  - Scope creep detection and handling in `start.md`
+  - Archive size management guidance in `archive.md`
+  - Multi-topic handling in `refine.md` troubleshooting
+
+- **Quality Dimension Documentation**:
+  - Workflow-specific dimension usage table in `quality-dimensions.md`
+  - Documented why `/clavix:summarize` excludes Specificity dimension
+  - Added quality dimensions reference to `refine.md`
+
+### Fixed
+
+- **Documentation Consistency**:
+  - Updated package.json description to list all 9 slash commands
+  - Fixed "19+" to "20" AI tools count in README.md and docs
+  - Standardized quality dimension terminology in `refine.md` (was using "Context/Constraints" instead of standard 6 dimensions)
+
+- **MANIFEST.md** - Added `/clavix:refine` to usage matrix and updated quality-dimensions description
+
+## [5.6.5] - 2025-11-28
+
+### Fixed
+
+- **UserConfigSchema Missing Fields** - Fixed Zod schema to match `ClavixConfig` interface
+
+## [5.6.4] - 2025-11-28
+
+### Fixed
+
+- **UserConfigSchema Missing Fields** - Fixed Zod schema to match `ClavixConfig` interface:
+  - Added `version`, `templates`, `outputs`, `preferences`, `experimental` fields
+  - Eliminates false "Unknown fields" warnings during `clavix update`
+
+## [5.6.3] - 2025-11-28
+
+### Added
+
+- **Zod Schema Validation** - Runtime validation for configuration files:
+  - Added `zod` dependency for robust schema validation
+  - Created `src/utils/schemas.ts` with validation schemas for `integrations.json` and user `config.json`
+  - Integrated validation at adapter registry load time and in CLI commands
+  - Contextual error messages for configuration issues
+
+- **Universal Adapters in integrations.json** - 4 new documentation-only integrations:
+  - `agents-md` - AGENTS.md universal agent guidance
+  - `copilot-instructions` - GitHub Copilot instructions
+  - `octo-md` - OCTO.md octopus format
+  - `warp-md` - WARP.md format
+  - Added `type` field ("standard" or "universal") to all integration entries
+
+- **Template Documentation** - New `docs/templates.md` authoring guide:
+  - Component include system (`{{INCLUDE:}}` markers)
+  - Template anatomy and structure
+  - Quality checklist for contributors
+
+- **Schema Validation Tests** - 23 new tests covering:
+  - `IntegrationEntrySchema`, `IntegrationsConfigSchema`, `UserConfigSchema`
+  - Validation functions and error formatting
+
+### Changed
+
+- **Summarize→Plan Workflow** - Improved template coordination:
+  - Added "Suggest + Confirm" pattern for project name in summarize template
+  - Added fallback detection for `summarize/` directory in plan template
+  - Added confirmation message with task count in implement template
+
+- **Error Output Standardization** - Replaced `console.log`/`console.error` with Oclif methods:
+  - All CLI commands now use `this.log()` and `this.error()` for consistent output
+  - Contextual error hints for common configuration issues
+
+- **Template Header Standardization** - All 9 slash command templates now use consistent format:
+  - "## State Assertion (REQUIRED)" section header
+  - Consistent structure across improve, prd, plan, implement, start, summarize, refine, verify, archive
+
+- **README.md Reorganization** - Workflow-oriented documentation:
+  - Added Mermaid workflow diagram showing command relationships
+  - Organized commands by workflow: Quick Path, Full Planning, Exploratory, Refinement
+  - All 9 slash commands prominently listed
+
+- **CONTRIBUTING.md Updates** - Enhanced contributor guide:
+  - Added "Quick Start for First-Time Contributors" decision table
+  - Emphasized template-first architecture rules
+
+### Fixed
+
+- **JSON Parsing Crashes** - Wrapped all `JSON.parse` calls with try-catch:
+  - `update.ts`, `init.ts`, `version.ts` now handle malformed JSON gracefully
+  - User-friendly error messages instead of stack traces
+
+- **Test Suite Updates** - Fixed tests for adapter count changes (16 → 20):
+  - `agent-manager.test.ts` - Updated expected adapter count
+  - `adapter-interface.test.ts` - Added special case for root directory adapters
+  - `multi-integration-workflow.test.ts` - Added detection markers for universal adapters
+  - `init.test.ts` - Fixed error output assertion
+
+## [5.5.2] - 2025-11-28
+
+### Added
+
+- **`/clavix:refine` Command** - New slash command for refining existing PRDs and prompts:
+  - Auto-detects available refinement targets (PRDs and saved prompts)
+  - Change tracking with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`, `[UNCHANGED]` markers
+  - Before/after quality comparison for prompts
+  - Refinement history tracking in PRD files
+  - Integration guidance for next steps (plan regeneration, implementation)
+
+- **Mandatory AGENTS.md Integration** - Universal agent guidance is now always enabled:
+  - AGENTS.md automatically included in all installations
+  - Removed from user selection (handled internally)
+  - Added `ensureMandatoryIntegrations()` helper function
+  - Users informed during init: "AGENTS.md is always enabled to provide universal agent guidance"
+
+- **New AgentErrorMessages Methods** - Extended error messaging for better diagnostics:
+  - `templateNotFound()` - When template files are missing
+  - `adapterNotFound()` - When adapter lookup fails
+  - `configLoadFailed()` - When configuration parsing fails
+  - `updateFailed()` - When update command encounters issues
+  - `diagnosticFailed()` - When diagnose command finds problems
+
+### Changed
+
+- **Error Handling Consistency** - Replaced generic `Error` throws with typed `DataError`:
+  - `agents-md-generator.ts`, `octo-md-generator.ts`, `warp-md-generator.ts`
+  - `copilot-instructions-generator.ts`, `instructions-generator.ts`
+  - `toml-templates.ts`
+
+- **Constants Consolidation** - Cleaned up `src/constants.ts`:
+  - Removed 11 unused constants
+  - Kept only `CLAVIX_BLOCK_START` and `CLAVIX_BLOCK_END`
+  - Updated all imports to use constants instead of hardcoded values
+
+- **CONTRIBUTING.md Updates** - Added explicit architecture boundaries:
+  - "Explicitly Forbidden Features" section with 4 rejected proposals
+  - Clear explanations for WHY certain features don't fit the architecture
+  - Guidance on what TO do instead of forbidden patterns
+
+### Fixed
+
+- **Documentation Accuracy** - Fixed coverage claims and output paths:
+  - Updated TESTING.md: Changed 100% to 70%+ (actual thresholds)
+  - Updated getting-started.md: Added summarize outputs documentation
+  - Updated docs/commands.md with full refine command documentation
+
+## [5.5.1] - 2025-11-28
+
+### Added
+
+- **CONTRIBUTING.md** - Comprehensive contributor guide with architecture principles:
+  - Documents agentic-first architecture and why it must remain so
+  - Explains what CAN and CANNOT be changed (TypeScript won't help slash commands)
+  - Full development setup, testing instructions, and PR process
+
+- **Command Format Visibility** - Users now see their command format prominently:
+  - `clavix init` output shows format at the TOP (e.g., "Your command format: /clavix:improve")
+  - Generated `INSTRUCTIONS.md` includes command format table
+  - All docs include format reference tables
+
+### Changed
+
+- **Documentation Consolidation** - Reduced 18+ scattered files to 5 focused documents:
+  - `docs/README.md` - Single entry point with navigation
+  - `docs/architecture.md` - Consolidated from how-it-works.md + philosophy.md
+  - `docs/commands.md` - All 12 command docs in one file
+  - `docs/getting-started.md` - Consolidated from 4 guide files
+  - `docs/integrations.md` - Added Format column to integration tables
+
+- **README.md** - Slimmed down with prominent command format section and links to consolidated docs
+
+### Removed
+
+- Deleted `docs/commands/` directory (12 individual command files)
+- Deleted `docs/guides/` directory (4 guide files)
+- Deleted `docs/how-it-works.md`, `docs/philosophy.md`, `docs/why-clavix.md` (merged into architecture.md)
+
+## [5.5.0] - 2025-11-27
+
+### Changed
+
+- **Adapter Architecture Refactor** - Unified adapter system using config-driven factory pattern:
+  - Migrated 12 simple adapters to `UniversalAdapter` class with `ADAPTER_CONFIGS` registry
+  - Kept dedicated classes for special adapters: `ClaudeCodeAdapter` (doc injection), `GeminiAdapter`, `QwenAdapter`, `LlxprtAdapter` (TOML format)
+  - Reduced code duplication significantly while maintaining all functionality
+
+- **Error Handling Improvements**:
+  - Template assembly failures now throw `DataError` instead of silent warnings
+  - Standardized all `console.warn` calls to use `logger.warn` utility
+  - Fixed deprecated `escapeRegex` wrapper in `base-adapter.ts`
+
+### Removed
+
+- **Code Consolidation**:
+  - Deleted 12 redundant adapter source files (cursor, windsurf, kilocode, roocode, cline, droid, opencode, crush, codebuddy, amp, augment, codex)
+  - Deleted corresponding 12 adapter test files
+  - Removed deprecated archive documentation files
+
+- **Documentation Cleanup**:
+  - Removed v4-era configuration references from `docs/guides/configuration.md`
+  - Removed outdated session references from command documentation
+  - Deleted `docs/archive/` directory with obsolete files
+
+### Fixed
+
+- Updated test files to use dynamic adapter paths instead of hardcoded directories
+- Fixed adapter contract tests to work with new factory pattern
+- Fixed multi-integration workflow tests for correct adapter detection
+
+## [5.4.0] - 2025-11-27
+
+### Changed
+
+- **Documentation cleanup** - Comprehensive review and update of all documentation:
+  - Removed outdated `/docs/clavix-intelligence.md` (referenced removed pattern system)
+  - Updated `/docs/guides/workflows.md` for v5 architecture (no more `clavix fast`/`clavix deep`)
+  - Updated `/docs/how-it-works.md` to explain agentic-first architecture
+  - Fixed `/src/templates/instructions/README.md` component references
+
+- **Consistent terminology** - Standardized naming across all files:
+  - "Optimize" → "Improve" in template naming and documentation
+  - "provider" → "integration" in code comments and variables
+  - "execute" → "implement" in agent templates
+
+- **Template improvements** - Enhanced agent instruction quality:
+  - Added Self-Correction Protocol to `implement.md`, `verify.md`, `archive.md`
+  - Added State Assertion blocks for mode enforcement
+  - Softened defensive tone in `improve.md` while maintaining mode boundaries
+
+### Removed
+
+- **Dead code cleanup**:
+  - Removed `preserveSessions` from `PreferencesConfig` (sessions removed in v5.3.0)
+  - Removed `sessionNotFound()` from `AgentErrorMessages`
+  - Removed session directory references from error messages
+
+- **Outdated documentation**:
+  - Deleted `/docs/clavix-intelligence.md`
+  - Removed broken links from `/docs/README.md`
+
+### Fixed
+
+- **Test factory alignment** - Updated `config-factory.ts` to match current `ClavixConfig` shape
+- **Instructions README** - Fixed references to non-existent component files
+
+---
+
+## [5.3.1] - 2025-11-27
+
+### Fixed
+
+- **Cline integration cleanup bug** - When deselecting Cline during `clavix init` reconfiguration and choosing "Clean up", the `.clinerules/workflows/clavix/` subdirectory is now properly removed. Previously, `removeAllCommands()` only removed files, ignoring subdirectories.
+
+---
+
+## [5.3.0] - 2025-11-27
+
+### BREAKING CHANGES
+
+- **Session persistence removed** - The `.clavix/sessions/` directory is no longer created or used. Session-based workflows are now handled entirely by AI agent context.
+
+### Added
+
+- **Adapter registry infrastructure** - New config-driven adapter system (`adapter-registry.ts`, `universal-adapter.ts`) enables consistent adapter behavior through configuration rather than code duplication.
+
+- **Init reconfiguration menu** - When running `clavix init` in an already-initialized project, a menu offers three options:
+  - "Reconfigure integrations" - Change selected integrations
+  - "Update existing" - Regenerate commands for current integrations
+  - "Cancel" - Exit without changes
+
+- **Removed commands consistency test** - New test suite (`removed-commands.test.ts`) verifies deprecated commands are properly removed from CLI, manifest, and documentation.
+
+- **Template component manifest** - New `MANIFEST.md` documents all reusable components in the template system.
+
+### Changed
+
+- **Config command eliminated** - `clavix config` functionality has been merged into `clavix init`:
+  - Use `clavix init` → "Reconfigure integrations" to change integrations
+  - Use `clavix init` → "Update existing" to regenerate commands
+
+- **Legacy cleanup utility deprecated** - `legacy-command-cleanup.ts` is now marked for removal in v6.0.0 as the transition period for old naming patterns completes.
+
+### Removed
+
+- **`clavix config` command** - Use `clavix init` instead (see Changed section)
+
+- **Orphaned template components** - Removed unused `decision-rules.md` and `error-handling.md` from `_components/`
+
+- **Session references in templates** - Removed session-related content from `agents.md`, `copilot-instructions.md`, `warp.md`, `plan.md`, and `file-operations.md`
+
+### Fixed
+
+- **Test suite improvements** - Added comprehensive tests for:
+  - Update command flag behavior (docs-only, commands-only, force)
+  - Init reconfiguration menu flows
+  - v5.3 removed features (sessions directory, config command)
+
+---
+
+## [5.2.1] - 2025-11-27
+
+### Fixed
+
+- **Diagnose command false warnings** - Fixed 3 bugs where `clavix diagnose` showed incorrect warnings after successful `clavix init`:
+  - No longer expects `.clavix/commands/` directory (commands go to adapter-specific directories)
+  - Recognizes doc generator integrations (agents-md, octo-md, warp-md, copilot-instructions) as valid
+  - Removed misleading "No slash commands installed" check
+
+---
+
+## [5.2.0] - 2025-11-27
+
+### Added
+
+- **New `clavix diagnose` command** - Full diagnostic report for troubleshooting installations
+  - Version check
+  - Directory structure validation
+  - Config integrity verification
+  - Integration status with command counts
+  - Template integrity check
+  - Summary with recommendations
+
+- **Slash commands in `--help`** - Help output now shows available slash commands alongside CLI commands
+
+- **Feature matrix in README** - Clear comparison of capabilities across integrations (Claude Code, Cursor, Gemini, etc.)
+
+### Changed
+
+- **DRY adapter architecture** - Created `TomlFormattingAdapter` base class eliminating ~140 lines of duplication across Gemini, Qwen, and LLXPRT adapters
+
+- **DRY documentation generators** - Refactored `AgentsMdGenerator`, `OctoMdGenerator`, `WarpMdGenerator`, and `CopilotInstructionsGenerator` to use `DocInjector` utility
+
+- **Verify/Archive reorganized** - Now clearly documented as "Agentic Utilities" separate from core workflow commands
+
+### Removed
+
+- **Global config flag** - Removed unimplemented `-g/--global` flag from `clavix config` command
+
+- **Vestigial v4 config types** - Removed ~90 lines of unused `IntelligenceConfig`, `EscalationThresholdsConfig`, `QualityWeightsConfig`, and `PatternSettingsConfig` interfaces
+
+### Fixed
+
+- **Consistent documentation** - All agent templates (CLAUDE.md, AGENTS.md, OCTO.md, WARP.md, copilot-instructions.md) now have consistent verify/archive categorization
+
+---
+
+## [5.1.1] - 2025-11-27
+
+### Changed
+
+- Consolidated `execute` into `implement` command
+- Removed standalone `prompts` command (now part of implement workflow)
+
+---
+
+## [5.0.0] - 2025-11-27
+
+### BREAKING: Agentic-First Architecture
+
+**Clavix v5 is a complete architectural rewrite.** The TypeScript intelligence layer has been removed in favor of a lean, agentic-first design where markdown templates are the product.
+
+#### Why This Change?
+
+Analysis revealed that **99% of Clavix usage was through slash commands** in AI IDEs (Claude Code, Cursor, etc.), where AI agents read markdown templates and execute them using their native tools. The TypeScript intelligence layer (~18,500 lines) only executed via rarely-used CLI commands.
+
+v5 embraces reality: **templates instruct agents directly**, no TypeScript code runs during workflow execution.
+
+#### What's Removed
+
+| Component | Lines Removed |
+|-----------|---------------|
+| CLI commands (15) | ~5,800 |
+| Intelligence layer | ~7,790 |
+| Core managers (14) | ~5,200 |
+| Tests for removed code | ~31,300 |
+| **Total** | **~50,000 lines** |
+
+##### Removed CLI Commands
+- `clavix improve`, `clavix prd`, `clavix plan`, `clavix implement`
+- `clavix start`, `clavix summarize`, `clavix execute`, `clavix verify`
+- `clavix archive`, `clavix analyze`, `clavix task-complete`
+- `clavix list`, `clavix show`, `clavix prompts list/clear`
+
+##### Removed Core Modules
+- `universal-optimizer.ts`, `quality-assessor.ts`, `pattern-library.ts`
+- `intent-detector.ts`, `confidence-calculator.ts`
+- 20 pattern files in `intelligence/patterns/`
+- `prompt-manager.ts`, `session-manager.ts`, `task-manager.ts`
+- `archive-manager.ts`, `git-manager.ts`, `prd-generator.ts`
+- `verification-manager.ts`, `question-engine.ts`
+
+#### What Remains
+
+**4 CLI Commands (for setup only):**
+| Command | Purpose |
+|---------|---------|
+| `clavix init` | Initialize Clavix in a project |
+| `clavix update` | Update templates after package update |
+| `clavix config` | Manage configuration |
+| `clavix version` | Show version |
+
+**8 Slash Commands (executed by AI agents):**
+- `/clavix:improve` - Prompt optimization
+- `/clavix:prd` - PRD generation
+- `/clavix:plan` - Task breakdown
+- `/clavix:implement` - Task/prompt execution (auto-detects source)
+- `/clavix:start` - Conversational exploration
+- `/clavix:summarize` - Extract requirements from conversation
+- `/clavix:verify` - Verify implementation
+- `/clavix:archive` - Archive completed projects
+
+**22 Integration Adapters** - All adapters remain for multi-tool support.
+
+#### How It Works Now
+
+1. User runs `/clavix:improve "prompt"` in their AI IDE
+2. AI agent reads the markdown template at `.clavix/commands/improve.md`
+3. Agent follows instructions using native tools (Write, Read, Edit, etc.)
+4. Output saved to `.clavix/outputs/`
+
+No TypeScript code executes. Templates are self-contained instructions.
+
+#### Template Updates
+
+Templates updated for v5 agentic-first approach:
+- Removed CLI command references (agents use native tools)
+- Removed `.index.json` - prompts use frontmatter metadata
+- Added explicit "How I Do It" sections for agent operations
+- Updated file format documentation
+
+#### Migration from v4
+
+If you have v4 projects:
+1. Run `npm install -g clavix@latest`
+2. Run `clavix update` in your project
+3. Old outputs in `.clavix/outputs/` are preserved
+4. v4 CLI commands no longer exist - use slash commands instead
+
+#### For v4 Documentation
+
+See [docs/archive/v4-architecture.md](docs/archive/v4-architecture.md) for the previous architecture.
+
+---

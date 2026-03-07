@@ -1,0 +1,83 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { codexPlatform } from "../../src/platform/codex.js";
+
+describe("codexPlatform", () => {
+  it("has correct id, displayName, and tier", () => {
+    expect(codexPlatform.id).toBe("codex");
+    expect(codexPlatform.displayName).toBe("OpenAI Codex");
+    expect(codexPlatform.tier).toBe("full");
+  });
+
+  it("instructionsFile is AGENTS.md", () => {
+    expect(codexPlatform.instructionsFile).toBe("AGENTS.md");
+  });
+
+  it("commandDelivery is skills kind", () => {
+    expect(codexPlatform.commandDelivery).toEqual({ kind: "skills" });
+  });
+
+  it("generateInstructionsSnippet contains BMAD-METHOD Integration", () => {
+    const snippet = codexPlatform.generateInstructionsSnippet();
+    expect(snippet).toContain("BMAD-METHOD Integration");
+  });
+
+  it("generateInstructionsSnippet references $command-name syntax", () => {
+    const snippet = codexPlatform.generateInstructionsSnippet();
+    expect(snippet).toContain("$command-name");
+    expect(snippet).toContain("Codex Skills");
+  });
+
+  it("generateInstructionsSnippet does not contain slash command syntax", () => {
+    const snippet = codexPlatform.generateInstructionsSnippet();
+    expect(snippet).not.toMatch(/\/bmalph\b/);
+    expect(snippet).not.toMatch(/\/analyst\b/);
+    expect(snippet).not.toMatch(/\/architect\b/);
+  });
+
+  it("getDoctorChecks returns 4 checks (command-index, skills, lite-workflow, instructions-file)", () => {
+    const checks = codexPlatform.getDoctorChecks();
+    expect(checks).toHaveLength(4);
+    expect(checks.map((c) => c.id)).toEqual([
+      "command-index",
+      "skills",
+      "lite-workflow",
+      "instructions-file",
+    ]);
+  });
+
+  describe("doctor checks", () => {
+    let testDir: string;
+
+    beforeEach(async () => {
+      testDir = join(tmpdir(), `bmalph-codex-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      await mkdir(testDir, { recursive: true });
+    });
+
+    afterEach(async () => {
+      try {
+        await rm(testDir, { recursive: true, force: true });
+      } catch {
+        // Windows file locking
+      }
+    });
+
+    it("instructions-file check passes when AGENTS.md has marker", async () => {
+      await writeFile(join(testDir, "AGENTS.md"), "## BMAD-METHOD Integration\nContent here");
+      const checks = codexPlatform.getDoctorChecks();
+      const instrCheck = checks.find((c) => c.id === "instructions-file")!;
+      const result = await instrCheck.check(testDir);
+      expect(result.passed).toBe(true);
+    });
+
+    it("instructions-file check fails when AGENTS.md missing", async () => {
+      const checks = codexPlatform.getDoctorChecks();
+      const instrCheck = checks.find((c) => c.id === "instructions-file")!;
+      const result = await instrCheck.check(testDir);
+      expect(result.passed).toBe(false);
+      expect(result.detail).toContain("not found");
+    });
+  });
+});

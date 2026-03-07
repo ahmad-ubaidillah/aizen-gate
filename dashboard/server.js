@@ -3,17 +3,21 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs-extra');
-const { WorkPackage } = require('../scripts/wp-model');
+const yaml = require('js-yaml');
 
 class DashboardServer {
-  constructor(projectDir, port = 6420) {
+  constructor(projectDir = process.cwd(), port = 6420) {
     this.projectDir = projectDir;
     this.port = port;
     this.app = express();
     this.server = http.createServer(this.app);
     this.wss = new WebSocket.Server({ server: this.server });
-    this.watchers = {};
+    this.tasksDir = path.join(this.projectDir, 'backlog', 'tasks');
+    this.boardPath = path.join(this.projectDir, 'aizen-gate', 'shared', 'board.md');
+    this.watcher = null;
     
+    fs.ensureDirSync(this.tasksDir);
+
     this.app.use(express.static(path.join(__dirname, 'public')));
     this.app.use(express.json());
 
@@ -21,39 +25,71 @@ class DashboardServer {
     this.setupWebSockets();
   }
 
-  setupRoutes() {
-    this.app.get('/api/features', async (req, res) => {
-      const specsDir = path.join(this.projectDir, 'aizen-gate', 'specs');
-      if (!fs.existsSync(specsDir)) return res.json([]);
-      const dirs = await fs.readdir(specsDir);
-      const validFeatures = [];
-      for (const dir of dirs) {
-        if ((await fs.stat(path.join(specsDir, dir))).isDirectory()) {
-          validFeatures.push(dir);
-        }
-      }
-      res.json(validFeatures);
-    });
-
-    this.app.get('/api/wps/:featureId', async (req, res) => {
-      const featureDir = path.join(this.projectDir, 'aizen-gate', 'specs', req.params.featureId);
+  async loadAllTasks() {
+    const files = fs.readdirSync(this.tasksDir).filter(f => f.endsWith('.md'));
+    const tasks = [];
+    
+    for (const f of files) {
       try {
-        const wps = await WorkPackage.loadAllWPs(featureDir);
-        res.json(wps);
+        const content = fs.readFileSync(path.join(this.tasksDir, f), 'utf8');
+        const match = content.match(/---\n([\s\S]*?)\n---/);
+        const titleMatch = content.match(/# (.*)/);
+        
+        if (match) {
+          const fm = yaml.load(match[1]);
+          tasks.push({
+            id: fm.id,
+            filename: f,
+            title: titleMatch ? titleMatch[1] : fm.id,
+            status: fm.status || 'Todo',
+            priority: fm.priority || 'medium',
+            assignee: fm.assignee || '@none',
+            labels: fm.labels || []
+          });
+        }
+      } catch (e) {
+        console.error(`Failed to load task ${f}`, e);
+      }
+    }
+    return tasks;
+  }
+
+  setupRoutes() {
+    this.app.get('/api/tasks', async (req, res) => {
+      try {
+        const tasks = await this.loadAllTasks();
+        res.json(tasks);
       } catch (e) {
         res.status(500).json({ error: e.message });
       }
     });
 
-    this.app.post('/api/wps/:featureId/:wpId/move', async (req, res) => {
-      const { lane } = req.body;
-      const wpPath = path.join(this.projectDir, 'aizen-gate', 'specs', req.params.featureId, 'tasks', `${req.params.wpId}.md`);
+    this.app.post('/api/tasks/:taskId/move', async (req, res) => {
+      const { status } = req.body;
+      const { taskId } = req.params;
+      
       try {
-        const wp = await WorkPackage.loadFromFile(wpPath);
-        const oldLane = wp.lane;
-        await wp.setLane(lane);
-        res.json({ success: true, wp });
-        this.broadcastUpdate(req.params.featureId, `${wp.id} moved from ${oldLane} to ${lane}`);
+        const files = fs.readdirSync(this.tasksDir);
+        const targetFile = files.find(f => f.toLowerCase().includes(taskId.toLowerCase()));
+        
+        if (!targetFile) return res.status(404).json({ error: 'Task not found' });
+
+        const filePath = path.join(this.tasksDir, targetFile);
+        let content = fs.readFileSync(filePath, 'utf8');
+        const match = content.match(/---\n([\s\S]*?)\n---/);
+        
+        if (match) {
+          let fm = yaml.load(match[1]);
+          const oldStatus = fm.status;
+          fm.status = status;
+          content = content.replace(match[0], `---\n${yaml.dump(fm)}---`);
+          fs.writeFileSync(filePath, content);
+          
+          res.json({ success: true, taskId, status });
+          this.broadcastUpdate(`Task ${taskId} moved from ${oldStatus} to ${status}`);
+          
+          // Note: in a full implementation we'd also update board.md here.
+        }
       } catch (e) {
         res.status(500).json({ error: e.message });
       }
@@ -62,52 +98,56 @@ class DashboardServer {
 
   setupWebSockets() {
     this.wss.on('connection', (ws) => {
+      ws.isAlive = true;
+      ws.on('pong', () => ws.isAlive = true);
+      
       ws.on('message', (message) => {
         try {
           const data = JSON.parse(message);
           if (data.type === 'subscribe') {
-            ws.featureId = data.featureId;
-            this.watchFeature(data.featureId);
-            this.broadcastUpdate(data.featureId, `New client connected to ${data.featureId}`);
+            this.watchTasks();
+            this.broadcastUpdate(`New client connected.`);
           }
         } catch(e) {
           console.error('[Dashboard] Error processing WS message:', e);
         }
       });
     });
+
+    const interval = setInterval(() => {
+      this.wss.clients.forEach(function each(ws) {
+        if (ws.isAlive === false) return ws.terminate();
+        ws.isAlive = false;
+        ws.ping();
+      });
+    }, 30000);
+    this.wss.on('close', () => clearInterval(interval));
   }
 
-  watchFeature(featureId) {
-    if (this.watchers[featureId]) return;
-
-    const tasksDir = path.join(this.projectDir, 'aizen-gate', 'specs', featureId, 'tasks');
-    if (!fs.existsSync(tasksDir)) return;
+  watchTasks() {
+    if (this.watcher) return;
 
     let timeout = null;
-    this.watchers[featureId] = fs.watch(tasksDir, (eventType, filename) => {
+    this.watcher = fs.watch(this.tasksDir, (eventType, filename) => {
       if (filename && filename.endsWith('.md')) {
         if (timeout) clearTimeout(timeout);
         timeout = setTimeout(() => {
-          this.broadcastUpdate(featureId, `File change detected: ${filename}`);
-        }, 100);
+          this.broadcastUpdate(`File change detected: ${filename}`);
+        }, 150);
       }
     });
   }
 
-  async broadcastUpdate(featureId, eventMessage = null) {
-    const featureDir = path.join(this.projectDir, 'aizen-gate', 'specs', featureId);
+  async broadcastUpdate(eventMessage = null) {
     let payload = { type: 'update', data: [], event: eventMessage };
-    if (fs.existsSync(featureDir)) {
-      try {
-        const wps = await WorkPackage.loadAllWPs(featureDir);
-        payload.data = wps;
-      } catch(e) {
-        console.error('[Dashboard] Failed to read WPs:', e.message);
-      }
+    try {
+      payload.data = await this.loadAllTasks();
+    } catch(e) {
+      console.error('[Dashboard] Failed to read tasks:', e.message);
     }
     
     this.wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN && client.featureId === featureId) {
+      if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(payload));
       }
     });

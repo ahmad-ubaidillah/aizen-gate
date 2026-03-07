@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run fmt:check
+
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Install bats and helpers
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bats
+          mkdir -p tests/bash/test_helper
+          git clone --depth 1 https://github.com/bats-core/bats-support tests/bash/test_helper/bats-support
+          git clone --depth 1 https://github.com/bats-core/bats-assert tests/bash/test_helper/bats-assert
+
+      - name: Bash tests
+        if: matrix.os == 'ubuntu-latest'
+        run: bats tests/bash/*.bats tests/bash/drivers/*.bats
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == 22 && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+      - name: Validate npm package
+        run: npm pack --dry-run
+
+  ci-success:
+    name: ci
+    if: always()
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ "${{ needs.lint.result }}" != "success" || "${{ needs.test.result }}" != "success" ]]; then
+            echo "CI failed: lint=${{ needs.lint.result }}, test=${{ needs.test.result }}"
+            exit 1
+          fi

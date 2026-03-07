@@ -1,0 +1,1363 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+
+vi.mock("chalk");
+
+// Wrap fs/promises so readFile and stat are spy-able vi.fn() instances
+// that delegate to the real implementation by default.
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    readFile: vi.fn(actual.readFile),
+    stat: vi.fn(actual.stat),
+  };
+});
+
+// Test version for upstream version tracking
+const TEST_BMAD_COMMIT = "test1234";
+
+vi.mock("../../src/installer.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/installer.js")>();
+  return {
+    ...actual,
+    getBundledVersions: vi.fn(async () => ({
+      bmadCommit: TEST_BMAD_COMMIT,
+    })),
+  };
+});
+
+vi.mock("../../src/utils/github.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/utils/github.js")>();
+  return {
+    ...actual,
+    checkUpstream: vi.fn(),
+    clearCache: vi.fn(),
+  };
+});
+
+describe("doctor command", () => {
+  let testDir: string;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `bmalph-doctor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(testDir, { recursive: true });
+    vi.resetModules();
+    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    consoleSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+    vi.restoreAllMocks();
+    try {
+      await rm(testDir, { recursive: true, force: true });
+    } catch {
+      // Windows file locking
+    }
+  });
+
+  async function setupFullProject(): Promise<void> {
+    // Create minimal valid project structure
+    await mkdir(join(testDir, "bmalph"), { recursive: true });
+    await writeFile(
+      join(testDir, "bmalph/config.json"),
+      JSON.stringify({
+        name: "test",
+        description: "test desc",
+        createdAt: "2025-01-01T00:00:00.000Z",
+        upstreamVersions: {
+          bmadCommit: TEST_BMAD_COMMIT,
+        },
+      })
+    );
+    await mkdir(join(testDir, "_bmad/lite"), { recursive: true });
+    await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+    await writeFile(join(testDir, "_bmad/lite/create-prd.md"), "# PRD Generator");
+    await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+    await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\necho hello\n");
+    await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+    await writeFile(
+      join(testDir, "CLAUDE.md"),
+      "# Project\n\n## BMAD-METHOD Integration\n\nSome content"
+    );
+    await writeFile(join(testDir, ".gitignore"), ".ralph/logs/\n_bmad-output/\n");
+  }
+
+  describe("Node version check", () => {
+    it("passes when Node version is >= 20", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("Node version >= 20");
+      // Should show check mark (or just pass without showing fail detail)
+      expect(output).not.toContain("got v");
+    });
+  });
+
+  describe("bash available check", () => {
+    it("checks for bash availability", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("bash available");
+    });
+  });
+
+  describe("jq available check", () => {
+    it("checks for jq availability", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("jq available");
+    });
+
+    it("passes when jq is installed", async () => {
+      await setupFullProject();
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+      const registry = buildCheckRegistry(claudeCodePlatform);
+      const jqCheck = registry.find((c) => c.id === "jq-available")!;
+      expect(jqCheck).toBeDefined();
+
+      const result = await jqCheck.run(testDir);
+      expect(result.label).toBe("jq available");
+      // jq may or may not be installed in CI — just verify the shape
+      expect(typeof result.passed).toBe("boolean");
+      if (!result.passed) {
+        expect(result.detail).toBe("jq not found in PATH");
+        expect(result.hint).toBeDefined();
+      }
+    });
+  });
+
+  describe("config.json check", () => {
+    it("passes when config.json exists and is valid JSON", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("bmalph/config.json exists and valid");
+      expect(output).not.toContain("file not found");
+    });
+
+    it("fails when config.json does not exist", async () => {
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("file not found");
+    });
+
+    it("fails when config.json contains invalid JSON", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await writeFile(join(testDir, "bmalph/config.json"), "{ invalid json!!!");
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("bmalph/config.json");
+      // Should indicate an error/failure
+    });
+  });
+
+  describe("_bmad directory check", () => {
+    it("passes when _bmad/ directory exists", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("_bmad/ directory present");
+    });
+
+    it("fails when _bmad/ directory does not exist", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("_bmad/ directory present");
+      expect(output).toContain("not found");
+    });
+  });
+
+  describe("ralph_loop.sh check", () => {
+    it("passes when ralph_loop.sh exists and has content", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("ralph_loop.sh present and has content");
+    });
+
+    it("fails when ralph_loop.sh does not exist", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("ralph_loop.sh present and has content");
+      expect(output).toContain("not found");
+    });
+
+    it("fails when ralph_loop.sh is empty", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("ralph_loop.sh");
+    });
+  });
+
+  describe(".ralph/lib directory check", () => {
+    it("passes when .ralph/lib/ directory exists", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".ralph/lib/ directory present");
+    });
+
+    it("fails when .ralph/lib/ directory does not exist", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".ralph/lib/ directory present");
+      expect(output).toContain("not found");
+    });
+  });
+
+  describe("slash command check", () => {
+    it("passes when .claude/commands/bmalph.md exists", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".claude/commands/bmalph.md present");
+    });
+
+    it("fails when .claude/commands/bmalph.md does not exist", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".claude/commands/bmalph.md present");
+      expect(output).toContain("not found");
+    });
+  });
+
+  describe("CLAUDE.md check", () => {
+    it("passes when CLAUDE.md contains BMAD snippet", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("CLAUDE.md contains BMAD snippet");
+    });
+
+    it("fails when CLAUDE.md does not exist", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("CLAUDE.md contains BMAD snippet");
+      expect(output).toContain("CLAUDE.md not found");
+    });
+
+    it("fails when CLAUDE.md exists but lacks BMAD snippet", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+      await writeFile(join(testDir, "CLAUDE.md"), "# Project\n\nNo BMAD here.");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("CLAUDE.md contains BMAD snippet");
+      // Should fail silently (no explicit error detail for missing snippet)
+    });
+  });
+
+  describe(".gitignore check", () => {
+    it("passes when .gitignore has all required entries", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".gitignore has required entries");
+    });
+
+    it("fails when .gitignore is missing", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+      await writeFile(join(testDir, "CLAUDE.md"), "## BMAD-METHOD Integration\n");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain(".gitignore has required entries");
+      expect(output).toContain(".gitignore not found");
+    });
+
+    it("fails when .gitignore lacks .ralph/logs/ entry", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+      await writeFile(join(testDir, "CLAUDE.md"), "## BMAD-METHOD Integration\n");
+      await writeFile(join(testDir, ".gitignore"), "_bmad-output/\n");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("missing: .ralph/logs/");
+    });
+
+    it("fails when .gitignore lacks _bmad-output/ entry", async () => {
+      await mkdir(join(testDir, "bmalph"), { recursive: true });
+      await mkdir(join(testDir, "_bmad"), { recursive: true });
+      await mkdir(join(testDir, ".ralph/lib"), { recursive: true });
+      await mkdir(join(testDir, ".claude/commands"), { recursive: true });
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\n");
+      await writeFile(join(testDir, ".claude/commands/bmalph.md"), "# bmalph");
+      await writeFile(join(testDir, "CLAUDE.md"), "## BMAD-METHOD Integration\n");
+      await writeFile(join(testDir, ".gitignore"), ".ralph/logs/\n");
+      await writeFile(join(testDir, "bmalph/config.json"), JSON.stringify({ name: "test" }));
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("missing: _bmad-output/");
+    });
+  });
+
+  describe("version marker check", () => {
+    it("passes when version marker matches package version", async () => {
+      await setupFullProject();
+      // Get package version and update ralph_loop.sh with marker
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("version marker matches");
+      expect(output).toContain(`v${version}`);
+    });
+
+    it("passes with detail when no version marker present (pre-0.8.0)", async () => {
+      await setupFullProject();
+      // ralph_loop.sh without version marker
+      await writeFile(join(testDir, ".ralph/ralph_loop.sh"), "#!/bin/bash\necho hello\n");
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("version marker matches");
+      expect(output).toContain("no marker");
+    });
+
+    it("fails when version marker does not match", async () => {
+      await setupFullProject();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        "#!/bin/bash\n# bmalph-version: 0.1.0\necho hello\n"
+      );
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("version marker matches");
+      expect(output).toContain("installed: 0.1.0");
+    });
+  });
+
+  describe("runDoctor integration", () => {
+    it("outputs title", async () => {
+      await setupFullProject();
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("bmalph doctor");
+    });
+
+    it("outputs summary with pass count", async () => {
+      await setupFullProject();
+      // Add version marker to make all tests pass
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("passed");
+    });
+
+    it("shows failed count when checks fail", async () => {
+      // Empty project - most checks will fail
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("failed");
+    });
+
+    it("shows all checks OK when fully configured", async () => {
+      await setupFullProject();
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("all checks OK");
+    });
+  });
+
+  describe("error handling", () => {
+    it("catches and reports unexpected errors without crashing", async () => {
+      // Mock readJsonFile to throw unexpected error
+      vi.doMock("../../src/utils/json.js", () => ({
+        readJsonFile: vi.fn().mockRejectedValue(new Error("Unexpected error")),
+      }));
+
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+
+      // Should complete without throwing an unhandled exception
+      await expect(runDoctor({ projectDir: testDir })).resolves.not.toThrow();
+
+      // Unmock for subsequent tests
+      vi.doUnmock("../../src/utils/json.js");
+    });
+  });
+
+  describe("exit code behavior", () => {
+    let originalExitCode: number | undefined;
+
+    beforeEach(() => {
+      // Reset modules to ensure clean state for exit code tests
+      vi.resetModules();
+      // Save and reset process.exitCode
+      originalExitCode = process.exitCode;
+      process.exitCode = undefined;
+    });
+
+    afterEach(() => {
+      // Restore original exit code
+      process.exitCode = originalExitCode;
+    });
+
+    it("sets exitCode to 1 when checks fail", async () => {
+      // Empty project - most checks will fail
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: null,
+        errors: [{ type: "network", message: "offline", repo: "bmad" }],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      expect(process.exitCode).toBe(1);
+    });
+
+    it("does not set exitCode to 1 when all checks pass", async () => {
+      await setupFullProject();
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      // Mock checkUpstream to return success
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: {
+          bundledSha: TEST_BMAD_COMMIT,
+          latestSha: TEST_BMAD_COMMIT,
+          isUpToDate: true,
+          compareUrl: "https://github.com/bmad-code-org/BMAD-METHOD/compare/...",
+        },
+        errors: [],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      // Should NOT set exit code when all checks pass
+      expect(process.exitCode).toBeUndefined();
+    });
+
+    it("sets exitCode to 1 in JSON mode when checks fail", async () => {
+      // Empty project - most checks will fail
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: null,
+        errors: [{ type: "network", message: "offline", repo: "bmad" }],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ json: true, projectDir: testDir });
+
+      expect(process.exitCode).toBe(1);
+    });
+
+    it("does not set exitCode to 1 in JSON mode when all checks pass", async () => {
+      await setupFullProject();
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: {
+          bundledSha: TEST_BMAD_COMMIT,
+          latestSha: TEST_BMAD_COMMIT,
+          isUpToDate: true,
+          compareUrl: "https://github.com/bmad-code-org/BMAD-METHOD/compare/...",
+        },
+        errors: [],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ json: true, projectDir: testDir });
+
+      expect(process.exitCode).toBeUndefined();
+    });
+  });
+
+  describe("Ralph health checks", () => {
+    describe("circuit breaker check", () => {
+      it("shows CLOSED state when circuit breaker is healthy", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/.circuit_breaker_state"),
+          JSON.stringify({
+            state: "CLOSED",
+            consecutive_no_progress: 0,
+            last_progress_loop: 5,
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("CLOSED");
+      });
+
+      it("shows warning when circuit breaker is HALF_OPEN", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/.circuit_breaker_state"),
+          JSON.stringify({
+            state: "HALF_OPEN",
+            consecutive_no_progress: 2,
+            reason: "Monitoring: 2 loops without progress",
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("HALF_OPEN");
+      });
+
+      it("shows failure when circuit breaker is OPEN", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/.circuit_breaker_state"),
+          JSON.stringify({
+            state: "OPEN",
+            consecutive_no_progress: 3,
+            reason: "No progress detected in 3 consecutive loops",
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("OPEN");
+      });
+
+      it("shows not running when no circuit breaker state file", async () => {
+        await setupFullProject();
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("not running");
+      });
+
+      it("handles corrupt circuit breaker JSON (parse error)", async () => {
+        await setupFullProject();
+        await writeFile(join(testDir, ".ralph/.circuit_breaker_state"), "{ invalid json syntax");
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("corrupt state file");
+      });
+
+      it("handles invalid state value (not CLOSED/HALF_OPEN/OPEN)", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/.circuit_breaker_state"),
+          JSON.stringify({
+            state: "INVALID_STATE",
+            consecutive_no_progress: 0,
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("circuit breaker");
+        expect(output).toContain("corrupt state file");
+      });
+    });
+
+    describe("session age check", () => {
+      it("shows session age when Ralph session exists", async () => {
+        await setupFullProject();
+        const now = new Date();
+        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+        await writeFile(
+          join(testDir, ".ralph/.ralph_session"),
+          JSON.stringify({
+            session_id: "ralph-12345",
+            created_at: twoHoursAgo.toISOString(),
+            last_used: now.toISOString(),
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("session");
+        expect(output).toMatch(/\d+h/); // Should show hours
+      });
+
+      it("shows no active session when session file missing", async () => {
+        await setupFullProject();
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("session");
+        expect(output).toContain("no active session");
+      });
+
+      it("warns when session age exceeds 24h", async () => {
+        await setupFullProject();
+        const now = new Date();
+        const thirtyHoursAgo = new Date(now.getTime() - 30 * 60 * 60 * 1000);
+        await writeFile(
+          join(testDir, ".ralph/.ralph_session"),
+          JSON.stringify({
+            session_id: "ralph-12345",
+            created_at: thirtyHoursAgo.toISOString(),
+            last_used: now.toISOString(),
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("session");
+        // Session older than 24h should be flagged
+      });
+
+      it("handles corrupt ralph session JSON (parse error)", async () => {
+        await setupFullProject();
+        await writeFile(join(testDir, ".ralph/.ralph_session"), "not valid json {{{");
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("session");
+        expect(output).toContain("corrupt session file");
+      });
+
+      it("handles future created_at timestamp", async () => {
+        await setupFullProject();
+        const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h in the future
+        await writeFile(
+          join(testDir, ".ralph/.ralph_session"),
+          JSON.stringify({
+            session_id: "ralph-12345",
+            created_at: futureDate.toISOString(),
+            last_used: new Date().toISOString(),
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("session");
+        expect(output).toContain("invalid timestamp");
+        expect(output).toContain("future");
+      });
+    });
+
+    describe("API calls check", () => {
+      it("shows API call count from status file", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/status.json"),
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            loop_count: 5,
+            calls_made_this_hour: 12,
+            max_calls_per_hour: 100,
+            status: "running",
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("API calls");
+        expect(output).toContain("12/100");
+      });
+
+      it("shows not running when status file missing", async () => {
+        await setupFullProject();
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("API calls");
+        expect(output).toContain("not running");
+      });
+
+      it("warns when API calls approach limit", async () => {
+        await setupFullProject();
+        await writeFile(
+          join(testDir, ".ralph/status.json"),
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            loop_count: 50,
+            calls_made_this_hour: 95,
+            max_calls_per_hour: 100,
+            status: "running",
+          })
+        );
+
+        const { doctorCommand } = await import("../../src/commands/doctor.js");
+        await doctorCommand({ projectDir: testDir });
+
+        const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+        expect(output).toContain("API calls");
+        expect(output).toContain("95/100");
+      });
+    });
+  });
+
+  describe("JSON output", () => {
+    it("outputs valid JSON when json flag is true", async () => {
+      await setupFullProject();
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      await runDoctor({ json: true, projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      // Should be valid JSON
+      const parsed = JSON.parse(output);
+      expect(parsed).toHaveProperty("results");
+      expect(parsed).toHaveProperty("summary");
+    });
+
+    it("JSON output contains check results with expected shape", async () => {
+      await setupFullProject();
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      await runDoctor({ json: true, projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      const parsed = JSON.parse(output);
+
+      expect(Array.isArray(parsed.results)).toBe(true);
+      expect(parsed.results.length).toBeGreaterThan(0);
+
+      // Each result should have label and passed
+      for (const result of parsed.results) {
+        expect(result).toHaveProperty("label");
+        expect(result).toHaveProperty("passed");
+        expect(typeof result.passed).toBe("boolean");
+      }
+    });
+
+    it("JSON output includes summary counts", async () => {
+      await setupFullProject();
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      await runDoctor({ json: true, projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      const parsed = JSON.parse(output);
+
+      expect(parsed.summary).toHaveProperty("passed");
+      expect(parsed.summary).toHaveProperty("failed");
+      expect(parsed.summary).toHaveProperty("total");
+      expect(typeof parsed.summary.passed).toBe("number");
+      expect(typeof parsed.summary.failed).toBe("number");
+      expect(typeof parsed.summary.total).toBe("number");
+    });
+
+    it("JSON output includes hints when checks fail", async () => {
+      // Empty project - most checks will fail
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      await runDoctor({ json: true, projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      const parsed = JSON.parse(output);
+
+      // Find a failed check that should have a hint
+      const failedWithHint = parsed.results.find(
+        (r: { passed: boolean; hint?: string }) => !r.passed && r.hint
+      );
+      expect(failedWithHint).toBeDefined();
+    });
+
+    it("does not output colored text in JSON mode", async () => {
+      await setupFullProject();
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      await runDoctor({ json: true, projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      // Should not contain ANSI escape codes (ESC[)
+      // eslint-disable-next-line no-control-regex
+      expect(output).not.toMatch(/\x1b\[/);
+      // eslint-disable-next-line no-control-regex
+      expect(output).not.toMatch(/\u001b\[/);
+    });
+  });
+
+  describe("projectDir option", () => {
+    it("uses projectDir instead of process.cwd() when provided", async () => {
+      await setupFullProject();
+      const { getPackageVersion } = await import("../../src/installer.js");
+      const version = await getPackageVersion();
+      await writeFile(
+        join(testDir, ".ralph/ralph_loop.sh"),
+        `#!/bin/bash\n# bmalph-version: ${version}\necho hello\n`
+      );
+
+      const { runDoctor } = await import("../../src/commands/doctor.js");
+      const result = await runDoctor({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("bmalph/config.json exists and valid");
+      expect(result.failed).toBeLessThanOrEqual(2); // upstream checks may vary
+    });
+  });
+
+  describe("check registry pattern", () => {
+    it("buildCheckRegistry returns all expected checks for claude-code", async () => {
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+
+      const registry = buildCheckRegistry(claudeCodePlatform);
+
+      expect(Array.isArray(registry)).toBe(true);
+      expect(registry.length).toBe(17);
+
+      // All checks should have required properties
+      for (const check of registry) {
+        expect(check).toHaveProperty("id");
+        expect(check).toHaveProperty("run");
+        expect(typeof check.id).toBe("string");
+        expect(typeof check.run).toBe("function");
+      }
+    });
+
+    it("buildCheckRegistry contains expected check IDs in order for claude-code", async () => {
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+
+      const registry = buildCheckRegistry(claudeCodePlatform);
+
+      const expectedIds = [
+        "node-version",
+        "bash-available",
+        "jq-available",
+        "config-valid",
+        "bmad-dir",
+        "ralph-loop",
+        "ralph-lib",
+        "slash-command",
+        "lite-workflow",
+        "instructions-file",
+        "gitignore",
+        "version-marker",
+        "upstream-versions",
+        "circuit-breaker",
+        "ralph-session",
+        "api-calls",
+        "upstream-github",
+      ];
+
+      const actualIds = registry.map((c) => c.id);
+      expect(actualIds).toEqual(expectedIds);
+    });
+
+    it("individual check functions return CheckResult", async () => {
+      await setupFullProject();
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+
+      const registry = buildCheckRegistry(claudeCodePlatform);
+
+      // Test a few checks directly
+      const configCheck = registry.find((c) => c.id === "config-valid");
+      expect(configCheck).toBeDefined();
+
+      const result = await configCheck!.run(testDir);
+      expect(result).toHaveProperty("label");
+      expect(result).toHaveProperty("passed");
+      expect(typeof result.passed).toBe("boolean");
+    });
+
+    it("CheckResult type includes optional detail and hint", async () => {
+      // Empty project - config check will fail
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+
+      const registry = buildCheckRegistry(claudeCodePlatform);
+
+      const configCheck = registry.find((c) => c.id === "config-valid");
+      const result = await configCheck!.run(testDir);
+
+      // Failed check should have detail and hint
+      expect(result.passed).toBe(false);
+      expect(result).toHaveProperty("detail");
+      expect(result).toHaveProperty("hint");
+    });
+
+    it("buildCheckRegistry includes platform-specific checks for codex", async () => {
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { codexPlatform } = await import("../../src/platform/codex.js");
+
+      const checks = buildCheckRegistry(codexPlatform);
+      const ids = checks.map((c) => c.id);
+
+      // Core checks present
+      expect(ids).toContain("node-version");
+      expect(ids).toContain("config-valid");
+
+      // Codex platform check present
+      expect(ids).toContain("instructions-file");
+
+      // Claude Code-specific checks should NOT be present
+      expect(ids).not.toContain("slash-command");
+      expect(ids).not.toContain("claude-md");
+
+      // Trailing checks still present
+      expect(ids).toContain("gitignore");
+      expect(ids).toContain("circuit-breaker");
+    });
+
+    it("buildCheckRegistry includes platform-specific checks for cursor", async () => {
+      const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+      const { cursorPlatform } = await import("../../src/platform/cursor.js");
+
+      const checks = buildCheckRegistry(cursorPlatform);
+      const ids = checks.map((c) => c.id);
+
+      expect(ids).toContain("instructions-file");
+      expect(ids).not.toContain("slash-command");
+      expect(ids).not.toContain("claude-md");
+    });
+  });
+
+  describe("upstream GitHub status check", () => {
+    it("shows status when BMAD is up to date", async () => {
+      await setupFullProject();
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: {
+          bundledSha: TEST_BMAD_COMMIT,
+          latestSha: TEST_BMAD_COMMIT,
+          isUpToDate: true,
+          compareUrl: "https://github.com/bmad-code-org/BMAD-METHOD/compare/...",
+        },
+        errors: [],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("upstream status");
+      expect(output).toContain("up to date");
+    });
+
+    it("shows warning when BMAD has updates", async () => {
+      await setupFullProject();
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: {
+          bundledSha: TEST_BMAD_COMMIT,
+          latestSha: "newbmad1",
+          isUpToDate: false,
+          compareUrl: "https://github.com/bmad-code-org/BMAD-METHOD/compare/...",
+        },
+        errors: [],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("upstream status");
+      expect(output).toContain("behind");
+    });
+
+    it("shows skipped when offline", async () => {
+      await setupFullProject();
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: null,
+        errors: [{ type: "network", message: "Network error", repo: "bmad" }],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("upstream status");
+      expect(output).toContain("skipped");
+      expect(output).toContain("network error");
+    });
+
+    it("shows skipped when rate limited", async () => {
+      await setupFullProject();
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: null,
+        errors: [{ type: "rate-limit", message: "Rate limited", repo: "bmad" }],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      expect(output).toContain("upstream status");
+      expect(output).toContain("skipped");
+      expect(output).toContain("rate");
+    });
+
+    it("does not fail overall doctor check due to network issues", async () => {
+      await setupFullProject();
+      const { checkUpstream } = await import("../../src/utils/github.js");
+      vi.mocked(checkUpstream).mockResolvedValue({
+        bmad: null,
+        errors: [{ type: "network", message: "Network error", repo: "bmad" }],
+      });
+
+      const { doctorCommand } = await import("../../src/commands/doctor.js");
+      await doctorCommand({ projectDir: testDir });
+
+      const output = consoleSpy.mock.calls.map((c) => c[0]).join("\n");
+      // Upstream status check should pass even when network fails
+      expect(output).toContain("upstream status");
+      expect(output).toContain("skipped: network error");
+      // The ✓ symbol indicates it passed (not ✗)
+      expect(output).toMatch(/✓.*upstream status/);
+    });
+  });
+
+  describe("error discrimination in catch blocks", () => {
+    function eaccesError(syscall: string, path: string): NodeJS.ErrnoException {
+      const err = new Error(
+        `EACCES: permission denied, ${syscall} '${path}'`
+      ) as NodeJS.ErrnoException;
+      err.code = "EACCES";
+      return err;
+    }
+
+    describe("checkDir (stat errors)", () => {
+      it("reports 'not found' for ENOENT errors", async () => {
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const bmadCheck = registry.find((c) => c.id === "bmad-dir")!;
+        const result = await bmadCheck.run(testDir);
+        expect(result.passed).toBe(false);
+        expect(result.detail).toBe("not found");
+      });
+
+      it("reports actual error detail for EACCES on stat", async () => {
+        const { stat: mockStat } = await import("fs/promises");
+        const statErr = eaccesError("stat", join(testDir, "_bmad"));
+        vi.mocked(mockStat).mockRejectedValueOnce(statErr);
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const bmadCheck = registry.find((c) => c.id === "bmad-dir")!;
+        const result = await bmadCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).not.toBe("not found");
+        expect(result.detail).toContain("EACCES");
+      });
+    });
+
+    describe("checkFileHasContent (readFile errors)", () => {
+      it("reports 'not found' for ENOENT errors", async () => {
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const ralphLoopCheck = registry.find((c) => c.id === "ralph-loop")!;
+        const result = await ralphLoopCheck.run(testDir);
+        expect(result.passed).toBe(false);
+        expect(result.detail).toBe("not found");
+      });
+
+      it("reports actual error detail for EACCES on readFile", async () => {
+        const { readFile: mockReadFile } = await import("fs/promises");
+        const readErr = eaccesError("open", join(testDir, ".ralph/ralph_loop.sh"));
+        vi.mocked(mockReadFile).mockRejectedValueOnce(readErr);
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const ralphLoopCheck = registry.find((c) => c.id === "ralph-loop")!;
+        const result = await ralphLoopCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).not.toBe("not found");
+        expect(result.detail).toContain("EACCES");
+      });
+    });
+
+    describe("checkInstructionsFile (readFile errors)", () => {
+      it("reports 'CLAUDE.md not found' for ENOENT errors", async () => {
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const instructionsCheck = registry.find((c) => c.id === "instructions-file")!;
+        const result = await instructionsCheck.run(testDir);
+        expect(result.passed).toBe(false);
+        expect(result.detail).toBe("CLAUDE.md not found");
+      });
+
+      it("reports actual error detail for EACCES on CLAUDE.md", async () => {
+        const { readFile: mockReadFile } = await import("fs/promises");
+        const readErr = eaccesError("open", join(testDir, "CLAUDE.md"));
+        vi.mocked(mockReadFile).mockRejectedValueOnce(readErr);
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const instructionsCheck = registry.find((c) => c.id === "instructions-file")!;
+        const result = await instructionsCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).not.toBe("CLAUDE.md not found");
+      });
+    });
+
+    describe("checkGitignore (readFile errors)", () => {
+      it("reports '.gitignore not found' for ENOENT errors", async () => {
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const gitignoreCheck = registry.find((c) => c.id === "gitignore")!;
+        const result = await gitignoreCheck.run(testDir);
+        expect(result.passed).toBe(false);
+        expect(result.detail).toBe(".gitignore not found");
+      });
+
+      it("reports actual error detail for EACCES on .gitignore", async () => {
+        const { readFile: mockReadFile } = await import("fs/promises");
+        const readErr = eaccesError("open", join(testDir, ".gitignore"));
+        vi.mocked(mockReadFile).mockRejectedValueOnce(readErr);
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const gitignoreCheck = registry.find((c) => c.id === "gitignore")!;
+        const result = await gitignoreCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).not.toBe(".gitignore not found");
+        expect(result.detail).toContain("EACCES");
+      });
+    });
+
+    describe("checkVersionMarker (readFile errors)", () => {
+      it("reports 'no marker found' for ENOENT errors", async () => {
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const markerCheck = registry.find((c) => c.id === "version-marker")!;
+        const result = await markerCheck.run(testDir);
+        expect(result.passed).toBe(true);
+        expect(result.detail).toBe("no marker found");
+      });
+
+      it("reports actual error detail for EACCES on ralph_loop.sh", async () => {
+        const { readFile: mockReadFile } = await import("fs/promises");
+        const readErr = eaccesError("open", join(testDir, ".ralph/ralph_loop.sh"));
+        vi.mocked(mockReadFile).mockRejectedValueOnce(readErr);
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const markerCheck = registry.find((c) => c.id === "version-marker")!;
+        const result = await markerCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).not.toBe("no marker found");
+        expect(result.detail).toContain("EACCES");
+      });
+    });
+
+    describe("checkUpstreamVersions (readConfig errors)", () => {
+      it("reports actual error detail instead of generic message", async () => {
+        vi.doMock("../../src/utils/config.js", () => ({
+          readConfig: vi.fn().mockRejectedValue(new Error("disk I/O error")),
+        }));
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const versionsCheck = registry.find((c) => c.id === "upstream-versions")!;
+        const result = await versionsCheck.run(testDir);
+
+        expect(result.passed).toBe(false);
+        expect(result.detail).toContain("disk I/O error");
+        expect(result.detail).not.toBe("error reading versions");
+
+        vi.doUnmock("../../src/utils/config.js");
+      });
+    });
+
+    describe("checkUpstreamGitHubStatus (catch errors)", () => {
+      it("reports actual error detail instead of generic 'skipped: error'", async () => {
+        const { checkUpstream } = await import("../../src/utils/github.js");
+        vi.mocked(checkUpstream).mockRejectedValueOnce(new Error("DNS resolution failed"));
+
+        const { buildCheckRegistry } = await import("../../src/commands/doctor.js");
+        const { claudeCodePlatform } = await import("../../src/platform/claude-code.js");
+        const registry = buildCheckRegistry(claudeCodePlatform);
+        const upstreamCheck = registry.find((c) => c.id === "upstream-github")!;
+        const result = await upstreamCheck.run(testDir);
+
+        expect(result.passed).toBe(true);
+        expect(result.detail).toContain("DNS resolution failed");
+        expect(result.detail).not.toBe("skipped: error");
+      });
+    });
+  });
+});

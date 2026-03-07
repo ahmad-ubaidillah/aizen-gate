@@ -40,3 +40,12 @@ directories:
   - "{implementation_artifacts}"
   - "{project_knowledge}"
   - "aizen-gate/shared"
+  - "aizen-gate/specs"
+
+circuit_breaker:
+  max_retries: 3
+  stall_threshold_ms: 5000
+
+tdd:
+  enabled: true
+  enforcement: "strict" # options: "disabled", "enabled", "strict"

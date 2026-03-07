@@ -17,7 +17,19 @@ version: 1.0
 | **[ANALYST]** | Research, Scraping | — | ✅ | — |
 | **[QUICK]** | Small Fixes, CLI | — | — | ✅ |
 
+# 🤖 Model Family Routing
+# Families catch different blind spots - use Sonnet for implementation, Opus for reasoning
+
+families:
+  reasoning: ["anthropic/claude-3-opus", "google/gemini-1.5-pro"]
+  implementation: ["anthropic/claude-3-5-sonnet", "openai/gpt-4o"]
+  verification: ["anthropic/claude-3-7-sonnet", "google/gemini-2.0-flash"]
+  budget: ["anthropic/claude-3-haiku", "openai/gpt-4o-mini"]
+
+fallback_chain: ["implementation", "reasoning", "budget"]
+
 # ⚙️ Task Profiles
+# ...
 
 - **Research**: Use **Standard** for accuracy + speed.
 - **Planning**: Use **High-End** for maximum reasoning.

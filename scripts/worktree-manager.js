@@ -46,6 +46,17 @@ class WorktreeManager {
         console.log(`[WorktreeManager] Creating parallel worktree for ${wpId}...`);
         execSync(`git worktree add -b ${branchName} ${worktreePath}`, { stdio: 'pipe', cwd: this.projectDir });
       }
+
+      // ⛩️ Symlink Constitution for standard adherence
+      const sharedConst = path.join(this.projectDir, 'aizen-gate', 'shared', 'constitution.md');
+      const wtConst = path.join(worktreePath, 'CONSTITUTION.md');
+      if (fs.existsSync(sharedConst)) {
+          try {
+              fs.ensureSymlinkSync(sharedConst, wtConst);
+              console.log(`[WorktreeManager] 📖 Linked Project Constitution to ${wpId}`);
+          } catch(e) {}
+      }
+
       return worktreePath;
     } catch(e) {
       console.error(`[WorktreeManager] Failed to create worktree: ${e.message}`);
