@@ -1,0 +1,30 @@
+---
+name: Aizen-Gate Model Profiles
+description: Maps agents and tasks to the most efficient LLM models.
+version: 1.0
+---
+
+# 🤖 Agent Model Mapping
+
+| Agent | Task | High-End (Opus) | Standard (Sonnet) | Budget (Mini) |
+|-------|------|----------|----------|----------|
+| **[ARCH]** | Architecture, Complex Logic | ✅ | — | — |
+| **[PM]** | PRD, User Stories | ✅ | ✅ | — |
+| **[DEV]** | Implementation, TDD | — | ✅ | — |
+| **[DESIGN]** | UI/UX, CSS, Layouts | — | ✅ | — |
+| **[QA]** | Verification, Logic check | — | ✅ | — |
+| **[DOCS]** | README, Retrospective | — | — | ✅ |
+| **[ANALYST]** | Research, Scraping | — | ✅ | — |
+| **[QUICK]** | Small Fixes, CLI | — | — | ✅ |
+
+# ⚙️ Task Profiles
+
+- **Research**: Use **Standard** for accuracy + speed.
+- **Planning**: Use **High-End** for maximum reasoning.
+- **Coding**: Use **Standard** for high coding benchmarks.
+- **Verification**: Use **Standard** or **High-End** for logic verification.
+- **Reporting**: Use **Budget** for low-cost token consumption.
+
+---
+
+**[Aizen] Profiles configured.** This map ensures we spend tokens where they matter most.

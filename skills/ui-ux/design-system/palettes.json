@@ -1,0 +1,46 @@
+{
+  "palettes": [
+    {
+      "name": "Aizen-Gate-Dark",
+      "slug": "za-dark",
+      "colors": {
+        "primary": "#0a0a0b",
+        "secondary": "#1a1a1c",
+        "accent": "#6d5dfc",
+        "text": "#f0f0f0",
+        "sub-text": "#a0a0a0",
+        "error": "#ff4d4d",
+        "success": "#47d7ac"
+      }
+    },
+    {
+      "name": "Editorial-Grey",
+      "slug": "ed-grey",
+      "colors": {
+        "primary": "#ffffff",
+        "secondary": "#f4f4f4",
+        "accent": "#000000",
+        "text": "#111111",
+        "sub-text": "#666666",
+        "border": "#e0e0e0"
+      }
+    },
+    {
+      "name": "Midnight-Violet",
+      "slug": "mv-24",
+      "colors": {
+        "primary": "#050014",
+        "secondary": "#0c002b",
+        "accent": "#8a2be2",
+        "glow": "rgba(138, 43, 226, 0.4)",
+        "text": "#e1d9ff"
+      }
+    }
+  ],
+  "fonts": [
+    { "name": "Inter", "category": "Sans-serif" },
+    { "name": "JetBrains Mono", "category": "Monospaced" },
+    { "name": "Playfair Display", "category": "Serif" },
+    { "name": "Outfit", "category": "Geometric" }
+  ]
+}

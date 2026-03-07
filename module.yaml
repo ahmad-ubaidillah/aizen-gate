@@ -1,0 +1,42 @@
+code: aizen-gate
+name: "Aizen-Gate Universal AI Framework"
+description: "A comprehensive multi-agent scrum framework for any LLM and platform."
+default_selected: true
+
+project_name:
+  prompt: "What is your project called?"
+  default: "{directory_name}"
+  result: "{value}"
+
+user_skill_level:
+  prompt: "What is your development experience level?"
+  default: "intermediate"
+  result: "{value}"
+  single-select:
+    - value: "beginner"
+      label: "Beginner - Guided mode (no full specs)"
+    - value: "intermediate"
+      label: "Intermediate - Balanced"
+    - value: "expert"
+      label: "Expert - Minimalist / Direct"
+
+planning_artifacts:
+  prompt: "Where should planning artifacts be stored?"
+  default: "aizen-gate/artifacts/planning"
+  result: "{project-root}/{value}"
+
+implementation_artifacts:
+  prompt: "Where should implementation artifacts be stored?"
+  default: "aizen-gate/artifacts/implementation"
+  result: "{project-root}/{value}"
+
+project_knowledge:
+  prompt: "Where should long-term project knowledge be stored?"
+  default: "aizen-gate/docs"
+  result: "{project-root}/{value}"
+
+directories:
+  - "{planning_artifacts}"
+  - "{implementation_artifacts}"
+  - "{project_knowledge}"
+  - "aizen-gate/shared"
