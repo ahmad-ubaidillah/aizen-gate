@@ -2,6 +2,7 @@ const chalk = require("chalk");
 const path = require("node:path");
 const fs = require("fs-extra");
 const yaml = require("js-yaml");
+const { note, cancel } = require("@clack/prompts");
 
 function registerCore(program) {
 	// 1. Install
@@ -11,7 +12,20 @@ function registerCore(program) {
 		.option("-y, --yes", "Skip interactive prompts and use defaults")
 		.action(async (options) => {
 			const { installAizenGate } = require("../../installer/src/install");
+			const { runOnboarding } = require("../../src/setup/onboarding");
 			await installAizenGate(process.cwd());
+			if (!options.yes) {
+				await runOnboarding(process.cwd());
+			}
+		});
+
+	// 1.5. Onboarding
+	program
+		.command("onboarding")
+		.description("Launch the user guidance wizard")
+		.action(async () => {
+			const { runOnboarding } = require("../../src/setup/onboarding");
+			await runOnboarding(process.cwd());
 		});
 
 	// 2. Start (Session Init)
@@ -31,10 +45,10 @@ function registerCore(program) {
 			const boardPath = path.join(process.cwd(), "aizen-gate/shared/board.md");
 			if (fs.existsSync(boardPath)) {
 				const board = await fs.readFile(boardPath, "utf8");
-				console.log(chalk.cyan("\n--- ⛩️ [Aizen] Sprint Board Status ---"));
-				console.log(board);
+				note(board, chalk.cyan("⛩️  Sprint Board Status"));
 			} else {
-				console.log(chalk.red("\n❌ No active board found. Run 'npx aizen-gate start' first."));
+				cancel("No active board found.");
+				console.log(chalk.dim("Run 'npx aizen-gate start' first.\n"));
 			}
 		});
 
@@ -57,26 +71,28 @@ function registerCore(program) {
 		.action(async (action, key, value) => {
 			const configPath = path.join(process.cwd(), "aizen-gate/shared/config.json");
 			if (!fs.existsSync(configPath)) {
-				console.log(chalk.red("\n❌ Config file not found."));
+				cancel("Config file not found.");
 				return;
 			}
 
 			const config = await fs.readJson(configPath);
 
 			if (action === "list") {
-				console.log(chalk.cyan("\n--- ⛩️ [Aizen] Project Configuration ---"));
-				console.log(yaml.dump(config));
+				note(yaml.dump(config), chalk.cyan("⛩️  Project Configuration"));
 			} else if (action === "get") {
-				if (!key) return console.log(chalk.red("Error: Key required."));
-				console.log(`${key}: ${config[key] || "not set"}`);
+				if (!key) return cancel("Key required for 'get' action.");
+				console.log(`\n  ${chalk.cyan(key)}: ${config[key] || chalk.dim("not set")}\n`);
 			} else if (action === "set") {
-				if (!key || !value) return console.log(chalk.red("Error: Key and value required."));
+				if (!key || !value) return cancel("Key and value required for 'set' action.");
 				const normalizedKey = key.replace(".", "_");
 				config[normalizedKey] = value;
 				await fs.writeJson(configPath, config, { spaces: 2 });
-				console.log(chalk.green(`\n✔ Configuration updated: ${normalizedKey} = ${value}`));
+				console.log(
+					chalk.green(
+						`\n  ✔ Configuration updated: ${chalk.cyan(normalizedKey)} = ${chalk.yellow(value)}\n`,
+					),
+				);
 			}
-			console.log("");
 		});
 
 	// 6. Clean

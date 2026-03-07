@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Aizen-Gate CLI - Entry Point (v2.1)
+ * Aizen-Gate CLI - Entry Point (v2.2)
  *
- * Refactored for maintainability. Core logic moved to src/ and bin/commands/.
+ * Refactored for modern UX with branded aesthetics.
  */
 
 const { Command } = require("commander");
 const chalk = require("chalk");
 const path = require("node:path");
 const fs = require("fs-extra");
+const { cancel } = require("@clack/prompts");
 
 const program = new Command();
 
@@ -30,8 +31,9 @@ const program = new Command();
 
 program
 	.name("aizen-gate")
-	.description("The Ultimate AI-Orchestration & Specification Shield")
-	.version("2.1.3");
+	.description(chalk.dim("The Ultimate AI-Orchestration & Specification Shield"))
+	.version("2.2.0")
+	.addHelpText("before", `\n${chalk.cyan.bold("⛩️  AIZEN-GATE")} ${chalk.dim("v2.2.0")}\n`);
 
 // --- Command Groups ---
 
@@ -110,9 +112,8 @@ program.arguments("[unrecognized]").action(async (cmd) => {
 	if (fs.existsSync(playbookPath) || fs.existsSync(installedPath)) {
 		runPlaybook(cmd, process.cwd());
 	} else {
-		console.log(chalk.red(`Error: Unknown command "${cmd}".`));
-		console.log(chalk.yellow(`Try "npx aizen-gate --help" for available commands.`));
-		program.help();
+		cancel(`Unknown command "${chalk.yellow(cmd)}".`);
+		console.log(chalk.dim(`Try "npx aizen-gate --help" for available commands.\n`));
 	}
 });
 
