@@ -148,6 +148,13 @@ program
   });
 
 program
+  .command('mcp')
+  .description('Launch the Aizen-Gate MCP Server via stdio for AI integration')
+  .action(() => {
+    require('../scripts/mcp-server');
+  });
+
+program
   .command('dashboard')
   .description('Launch the live Kanban dashboard server')
   .option('-p, --port <number>', 'Port to run the dashboard on', '6420')
@@ -279,6 +286,23 @@ program
   .action(async () => {
     console.log(chalk.red('\n--- ⛩️ [Aizen] Launching az-merge Playbook ---\n'));
     console.log(chalk.gray(`Invoke agent: "Read aizen-gate/commands/za-merge.md and start consensus sequence."`));
+  });
+
+program
+  .command('export')
+  .description('Export the current Kanban board to a versioned snapshot')
+  .action(async () => {
+    const { exportBoard } = require('../scripts/board-export');
+    await exportBoard(process.cwd());
+  });
+
+program
+  .command('ingest')
+  .description('Ingest a text or markdown document into the Aizen-Gate Memory Store')
+  .argument('<path>', 'File path to ingest')
+  .action(async (targetPath) => {
+    const { ingestDocument } = require('../scripts/ingest');
+    await ingestDocument(process.cwd(), targetPath);
   });
 
 program

@@ -46,16 +46,21 @@ class KnowledgeGraph {
     const tags = [`lgm:node:${type.toLowerCase()}`, `lgm:id:${id}`];
     if (metadata.tags) tags.push(...metadata.tags);
 
+    const validFrom = metadata.valid_from || new Date().toISOString();
+    const validTo = metadata.valid_to || '9999-12-31T23:59:59.999Z';
+
     const mem = await this.memory.add(content, {
       ...metadata,
       id,
       type,
       tags,
+      valid_from: validFrom,
+      valid_to: validTo,
       namespace: this.namespace,
       updated_at: Date.now()
     });
 
-    console.log(chalk.gray(`[KG] Node added: [${type}] ${id}`));
+    console.log(chalk.gray(`[KG] Temporal Node added: [${type}] ${id} (Valid from: ${validFrom})`));
     return mem;
   }
 
@@ -63,18 +68,17 @@ class KnowledgeGraph {
    * Adds a relationship between two nodes.
    * Uses waypoints in openmemory-js.
    */
-  async addEdge(sourceId, targetId, type, weight = 1.0) {
-    // Relationship weighted by type importance
+  async addEdge(sourceId, targetId, type, weight = 1.0, metadata = {}) {
     const finalWeight = this._getEdgeWeight(type, weight);
-    
-    // In openmemory-js, we can add waypoints between IDs
-    // We'll use the internal HSG mechanism via memory.add with specific relation tags
-    // or direct DB access if needed. Here we use tags for high-level retrieval.
+    const validFrom = metadata.valid_from || new Date().toISOString();
+    const validTo = metadata.valid_to || '9999-12-31T23:59:59.999Z';
     
     await this.memory.add(`Relation: ${sourceId} ${type} ${targetId}`, {
       source: sourceId,
       target: targetId,
       relation: type,
+      valid_from: validFrom,
+      valid_to: validTo,
       tags: [`lgm:edge:${type.toLowerCase()}`, `source:${sourceId}`, `target:${targetId}`],
       namespace: this.namespace
     });
@@ -94,13 +98,22 @@ class KnowledgeGraph {
   }
 
   /**
-   * Queries the graph for relevant nodes.
+   * Queries the graph for relevant nodes with Point-in-Time filtering.
    */
-  async query(text, limit = 5) {
-    return await this.memory.search(text, {
+  async query(text, limit = 5, asOfDate = new Date().toISOString()) {
+    const rawResults = await this.memory.search(text, {
       namespace: this.namespace,
-      limit
+      limit: limit * 2 // Fetch extra to account for temporal filtering
     });
+
+    // Temporal point-in-time filter
+    const validResults = rawResults.filter(r => {
+        const from = r.meta?.valid_from || '1970-01-01T00:00:00.000Z';
+        const to = r.meta?.valid_to || '9999-12-31T23:59:59.999Z';
+        return asOfDate >= from && asOfDate <= to;
+    });
+
+    return validResults.slice(0, limit);
   }
 
   /**
