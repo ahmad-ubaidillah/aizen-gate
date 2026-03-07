@@ -65,9 +65,7 @@ function registerTasks(program) {
 		.action(async () => {
 			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-specify Playbook ---\n"));
 			console.log(
-				chalk.gray(
-					`Invoke agent: "Read aizen-gate/commands/az-specify.md and conduct discovery."`,
-				),
+				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-specify.md and conduct discovery."`),
 			);
 		});
 

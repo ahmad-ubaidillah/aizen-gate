@@ -205,4 +205,3 @@ Execute WP ${wp.id} now following the above context and constraints.
 }
 
 module.exports = { ContextEngine, ContextManager: ContextEngine };
-

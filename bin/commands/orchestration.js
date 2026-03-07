@@ -37,9 +37,7 @@ function registerOrchestration(program) {
 					`\n--- ⛩️ [Aizen] Launching az-review Playbook for ${wpId || "next available"} ---\n`,
 				),
 			);
-			console.log(
-				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-review.md and review."`),
-			);
+			console.log(chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-review.md and review."`));
 		});
 
 	program
@@ -55,9 +53,7 @@ function registerOrchestration(program) {
 		.description("Merge a completed feature branch into the main trunk")
 		.action(async () => {
 			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-merge Playbook ---\n"));
-			console.log(
-				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-merge.md and merge."`),
-			);
+			console.log(chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-merge.md and merge."`));
 		});
 
 	// Research
@@ -67,9 +63,7 @@ function registerOrchestration(program) {
 		.action(async () => {
 			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching az-research Playbook ---\n"));
 			console.log(
-				chalk.gray(
-					`Invoke agent: "Read aizen-gate/commands/az-research.md and start research."`,
-				),
+				chalk.gray(`Invoke agent: "Read aizen-gate/commands/az-research.md and start research."`),
 			);
 		});
 
