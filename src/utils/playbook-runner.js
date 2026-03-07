@@ -29,7 +29,11 @@ function runPlaybook(cmd, projectRoot = process.cwd(), extraArgs = null) {
 	if (extraArgs) console.log(chalk.cyan(`Target: ${extraArgs}`));
 	console.log(chalk.cyan(`Playbook: ${playbookPath}`));
 	console.log(chalk.yellow(`\nOverview:\n${overview}\n`));
-	console.log(chalk.gray(`Invoke agent: "Read ${playbookPath} and execute${extraArgs ? " for " + extraArgs : ""}."`));
+	console.log(
+		chalk.gray(
+			`Invoke agent: "Read ${playbookPath} and execute${extraArgs ? " for " + extraArgs : ""}."`,
+		),
+	);
 }
 
 module.exports = { runPlaybook };

@@ -19,10 +19,8 @@ function registerCore(program) {
 		.command("start")
 		.description("Initialize a new Aizen session and grooming phase")
 		.action(async () => {
-			console.log(chalk.red.bold("\n--- ⛩️ [Aizen] Session Started ---\n"));
-			console.log(
-				chalk.yellow(`[Aizen] Loading personas for grooming. Try 'npx aizen-gate specify'.`),
-			);
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("start", process.cwd());
 		});
 
 	// 3. Status
