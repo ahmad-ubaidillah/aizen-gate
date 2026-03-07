@@ -21,7 +21,7 @@ Every ADR file should follow this structure:
 
 ## Process Flow
 
-1. **Identify Decision**: When the team reaches consensus on a major trade-off (during `za-discuss` or `za-plan`).
+1. **Identify Decision**: When the team reaches consensus on a major trade-off (during `az-discuss` or `az-plan`).
 2. **Draft the record**: Use the **[ARCH] Winston** agent to draft the ADR.
 3. **Review**: Invite the **[SA] Scrum Master** and **[QA] Argus** to review for gaps.
 4. **Finalize**: Save to `shared/decisions/YYYY-MM-DD-adr-xxx.md`.

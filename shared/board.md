@@ -8,9 +8,9 @@ Due: 2026-03-09
 
 | ID        | Task                  | User Story                                                            | Agent | Files      | Status  | Expectation                               |
 | :-------- | :-------------------- | :-------------------------------------------------------------------- | :---- | :--------- | :------ | :---------------------------------------- |
-| **T-015** | Plugin Registry Core  | As a dev, I want to fetch and install community skills dynamically.   | @OPS  | `scripts/` | ⬜ Todo | `sa-skill install` command is functional. |
+| **T-015** | Plugin Registry Core  | As a dev, I want to fetch and install community skills dynamically.   | @OPS  | `scripts/` | ⬜ Todo | `az-skill install` command is functional. |
 | **T-016** | Slash Commands Integ. | As a user, I want IDE-native slash commands linked to core scripts.   | @SA   | `config/`  | ⬜ Todo | Commands in `.cursorrules` / `CLAUDE.md`. |
-| **T-017** | Agent Evaluation Sys. | As a manager, I need to evaluate agent adherence to skill guidelines. | @QA   | `scripts/` | ⬜ Todo | `sa-benchmark` logic measures compliance. |
+| **T-017** | Agent Evaluation Sys. | As a manager, I need to evaluate agent adherence to skill guidelines. | @QA   | `scripts/` | ⬜ Todo | `az-benchmark` logic measures compliance. |
 
 ---
 

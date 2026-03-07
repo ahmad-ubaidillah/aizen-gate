@@ -1,52 +1,62 @@
-const { scrapeUrl } = require('./src/scraper');
-const { generateSkillPrompt } = require('./src/skill-generator');
-const { detectStack } = require('./src/tech-detector');
-const { mapCodebase } = require('./src/map-codebase');
-const fs = require('fs');
-const path = require('path');
+const { scrapeUrl } = require("./src/scraper");
+const { generateSkillPrompt } = require("./src/skill-generator");
+const { detectStack } = require("./src/tech-detector");
+const { mapCodebase } = require("./src/map-codebase");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Aizen-Gate Skill Creator Entry Point
  */
-async function createSkill(url, outputPath) {
-    try {
-        const scrapedData = await scrapeUrl(url);
-        const prompt = generateSkillPrompt(scrapedData);
-        
-        console.log(`[SA] Skill prompt generated for: ${url}`);
-        const draftPath = outputPath.replace('.md', '.draft.md');
-        fs.writeFileSync(draftPath, prompt);
-        
-        return { success: true, draftPath };
-    } catch (error) {
-        console.error(`[SA] Skill creation failed: ${error.message}`);
-        return { success: false, error: error.message };
-    }
+/**
+ * Aizen-Gate Skill Creator Entry Point (v2.0)
+ */
+async function runSkillCreator(projectRoot, links) {
+	const skillsDir = path.join(projectRoot, "aizen-gate", "skills", "custom");
+	await fs.promises.mkdir(skillsDir, { recursive: true });
+
+	for (const url of links) {
+		console.log(`[SkillCreator] Processing knowledge from: ${url}`);
+		const scrapedData = await scrapeUrl(url);
+		if (!scrapedData || !scrapedData.title) continue;
+
+		const skillId = scrapedData.title.toLowerCase().replace(/\s+/g, "-");
+		const skillPath = path.join(skillsDir, `${skillId}.md`);
+		const prompt = generateSkillPrompt(scrapedData);
+
+		// In local mode, we save the "Instruction" block as the skill
+		// In production Aizen, it would call an LLM to refine this into a SKILL.md
+		const skillDoc = `# Skill: ${scrapedData.title}\n\n## Source\n${url}\n\n## Patterns & Best Practices\n${scrapedData.text.slice(0, 1000)}...\n\n[AZ] This skill was auto-generated from documentation. Refer to sources for details.`;
+
+		fs.writeFileSync(skillPath, skillDoc);
+		console.log(`[SkillCreator] ✔ Generated skill profile: ${skillPath}`);
+	}
 }
 
-// CLI usage (internal trial)
-if (require.main === module) {
-    const args = process.argv.slice(2);
-    const command = args[0];
+async function autoGenerateSkills(projectRoot) {
+	console.log(`[AZ] Scanning project dependencies for skill opportunities...`);
+	const stack = await detectStack(projectRoot);
+	const dependencies = stack.dependencies || [];
 
-    if (command === 'map') {
-        const root = args[1] || process.cwd();
-        const mapPath = mapCodebase(root);
-        console.log(`[SA] Map generated: ${mapPath}`);
-    } else if (command === 'create') {
-        const url = args[1];
-        const outputPath = args[2] || path.join(__dirname, '../skills/custom/new-skill.md');
-        if (!url) {
-            console.log('Usage: node index.js create <url> [output-path]');
-            process.exit(1);
-        }
-        createSkill(url, outputPath);
-    } else {
-        console.log('Usage:');
-        console.log('  node index.js map [project-root]    - Generate project.md');
-        console.log('  node index.js create <url> [output]  - Scrape and create skill');
-        process.exit(1);
-    }
+	// Example: only auto-generate for major libraries
+	const shortlist = dependencies.filter((d) =>
+		["express", "nestjs", "react", "vue", "django", "flask", "fastapi"].includes(d.toLowerCase()),
+	);
+
+	for (const dep of shortlist) {
+		console.log(`[AZ] Auto-detecting skill for: ${dep}`);
+		// Here we would call a search API to find the docs, then runSkillCreator
+		// Mocking documentation search results for demonstration
+		const docLinks = {
+			express: ["https://expressjs.com/"],
+			nestjs: ["https://docs.nestjs.com/"],
+			react: ["https://react.dev/"],
+		};
+
+		if (docLinks[dep]) {
+			await runSkillCreator(projectRoot, docLinks[dep]);
+		}
+	}
 }
 
-module.exports = { createSkill, detectStack, mapCodebase };
+module.exports = { createSkill, runSkillCreator, autoGenerateSkills, detectStack, mapCodebase };

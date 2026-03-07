@@ -408,11 +408,11 @@
           card.addEventListener("dragstart", handleDragStart);
           card.addEventListener("dragend", handleDragEnd);
 
-          let agentHtml =
+          const agentHtml =
             task.assignee !== "@none"
               ? `<span class="wp-agent">${task.assignee}</span>`
               : `<span style="color:var(--text-secondary)">Unassigned</span>`;
-          let depsHtml = task.priority
+          const depsHtml = task.priority
             ? `<span class="wp-deps">↳ P: ${task.priority}</span>`
             : `<span></span>`;
 

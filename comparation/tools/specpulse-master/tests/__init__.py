@@ -1,3 +1,0 @@
-"""
-SpecPulse test suite
-"""

@@ -4,7 +4,6 @@ installer/node_modules/
 skill-creator/node_modules/
 
 # Package lock files (use Yarn or pnpm if preferred)
-package-lock.json
 installer/package-lock.json
 skill-creator/package-lock.json
 

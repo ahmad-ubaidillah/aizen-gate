@@ -1,9 +1,9 @@
-const fs = require('fs-extra');
-const path = require('path');
-const crypto = require('crypto');
-const chalk = require('chalk');
-const Database = require('better-sqlite3');
-const { localEmbedding } = require('./local-embed');
+const fs = require("fs-extra");
+const path = require("path");
+const crypto = require("crypto");
+const chalk = require("chalk");
+const Database = require("better-sqlite3");
+const { localEmbedding } = require("./local-embed");
 
 /**
  * [AZ] Semantic Unified Memory Store
@@ -11,25 +11,25 @@ const { localEmbedding } = require('./local-embed');
  * Unified with openmemory-js by sharing the same database file.
  */
 class MemoryStore {
-  constructor(projectRoot) {
-    this.projectRoot = projectRoot;
-    this.memoryPath = path.join(projectRoot, 'aizen-gate', 'shared', 'memory.db');
-    this.legacyJsonPath = path.join(projectRoot, 'aizen-gate', 'shared', 'memory-facts.json');
-    this.db = null;
-    this.init();
-  }
+	constructor(projectRoot) {
+		this.projectRoot = projectRoot;
+		this.memoryPath = path.join(projectRoot, "aizen-gate", "shared", "memory.db");
+		this.legacyJsonPath = path.join(projectRoot, "aizen-gate", "shared", "memory-facts.json");
+		this.db = null;
+		this.init();
+	}
 
-  init() {
-    fs.ensureDirSync(path.dirname(this.memoryPath));
-    this.db = new Database(this.memoryPath);
-    
-    // Create unified tables specifically for the local-embed
-    this.db.exec(`
+	init() {
+		fs.ensureDirSync(path.dirname(this.memoryPath));
+		this.db = new Database(this.memoryPath);
+
+		// Create unified tables specifically for the local-embed
+		this.db.exec(`
       CREATE TABLE IF NOT EXISTS aizen_facts (
         id TEXT PRIMARY KEY,
         text TEXT NOT NULL,
         source TEXT,
-        sector TEXT,
+        sector TEXT, -- working, episodic, semantic, document, summary
         salience REAL DEFAULT 1.0,
         decay_lambda REAL DEFAULT 0.015,
         last_seen_at INTEGER,
@@ -44,252 +44,380 @@ class MemoryStore {
         weight REAL DEFAULT 1.0,
         PRIMARY KEY (source_id, target_id)
       );
+      CREATE TABLE IF NOT EXISTS aizen_documents (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        path TEXT,
+        content TEXT,
+        created_at INTEGER,
+        updated_at INTEGER,
+        vector BLOB
+      );
+      CREATE TABLE IF NOT EXISTS aizen_summary (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        thread TEXT,
+        updated_at INTEGER
+      );
     `);
 
-    this.migrateLegacyPayload();
-  }
+		this.migrateLegacyPayload();
+	}
 
-  /**
-   * Auto-migrate legacy JSON payload to SQLite on first run
-   */
-  migrateLegacyPayload() {
-    if (fs.existsSync(this.legacyJsonPath)) {
-      try {
-        const facts = fs.readJsonSync(this.legacyJsonPath);
-        console.log(chalk.cyan(`[Mem0] Migrating ${facts.length} legacy facts to SQLite...`));
-        
-        const insert = this.db.prepare(`
+	/**
+	 * Auto-migrate legacy JSON payload to SQLite on first run
+	 */
+	migrateLegacyPayload() {
+		if (fs.existsSync(this.legacyJsonPath)) {
+			try {
+				const facts = fs.readJsonSync(this.legacyJsonPath);
+				console.log(chalk.cyan(`[Mem0] Migrating ${facts.length} legacy facts to SQLite...`));
+
+				const insert = this.db.prepare(`
           INSERT OR IGNORE INTO aizen_facts 
           (id, text, source, sector, last_seen_at, created_at, updated_at, hits, vector)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
-        
-        const now = Date.now();
-        this.db.transaction(() => {
-          for (const f of facts) {
-            const vecBlob = f.vector ? Buffer.from(new Float32Array(f.vector).buffer) : null;
-            // Legacy items default to semantic sector
-            insert.run(f.id, f.text, f.source || 'session', 'semantic', 
-              now, new Date(f.created_at).getTime(), new Date(f.updated_at).getTime(), f.hits || 0, vecBlob);
-          }
-        })();
-        
-        fs.renameSync(this.legacyJsonPath, `${this.legacyJsonPath}.migrated`);
-        console.log(chalk.green(`[Mem0] Migration complete.`));
-      } catch (e) {
-        console.error(chalk.red(`[Mem0] Failed migration: ${e.message}`));
-      }
-    }
-  }
 
-  /**
-   * Fast Heuristic Classifier into 5 Multi-Sectors
-   * Returns: { primary: string, decay: number }
-   */
-  classifySector(text) {
-    const t = text.toLowerCase();
-    
-    if (/(feel|happy|sad|angry|frustrated|excited)/i.test(t)) {
-      return { primary: 'emotional', decay: 0.020 };
-    }
-    if (/(think|realize|insight|learned|understand)/i.test(t)) {
-      return { primary: 'reflective', decay: 0.001 };
-    }
-    if (/(how to|step|process|procedure|method)/i.test(t)) {
-      return { primary: 'procedural', decay: 0.008 };
-    }
-    if (/(today|yesterday|remember when|was completed|occurred)/i.test(t)) {
-      return { primary: 'episodic', decay: 0.015 };
-    }
-    // Default to semantic (facts)
-    return { primary: 'semantic', decay: 0.005 };
-  }
+				const now = Date.now();
+				this.db.transaction(() => {
+					for (const f of facts) {
+						const vecBlob = f.vector ? Buffer.from(new Float32Array(f.vector).buffer) : null;
+						// Legacy items default to semantic sector
+						insert.run(
+							f.id,
+							f.text,
+							f.source || "session",
+							"semantic",
+							now,
+							new Date(f.created_at).getTime(),
+							new Date(f.updated_at).getTime(),
+							f.hits || 0,
+							vecBlob,
+						);
+					}
+				})();
 
-  /**
-   * Adds a new fact or updates an existing one if similar.
-   */
-  async add(factText, source = 'session') {
-    const id = crypto.createHash('md5').update(factText.toLowerCase().trim()).digest('hex');
-    const existing = this.db.prepare('SELECT id FROM aizen_facts WHERE id = ?').get(id);
+				fs.renameSync(this.legacyJsonPath, `${this.legacyJsonPath}.migrated`);
+				console.log(chalk.green(`[Mem0] Migration complete.`));
+			} catch (e) {
+				console.error(chalk.red(`[Mem0] Failed migration: ${e.message}`));
+			}
+		}
+	}
 
-    const now = Date.now();
-    let vector = await localEmbedding.embed(factText);
-    const vecBlob = vector ? Buffer.from(new Float32Array(vector).buffer) : null;
+	/**
+	 * Robust Classifier into 5 Strategic Tiers
+	 * Returns: { primary: string, decay: number }
+	 */
+	classifySector(text) {
+		const t = text.toLowerCase();
 
-    if (existing) {
-      this.db.prepare(`
+		// Document Memory (DM): Architecture, Specs, etc.
+		if (/(spec|specification|architecture|blueprint|design document|planning artifact)/i.test(t)) {
+			return { primary: "document", decay: 0.0001 }; // Very slow decay
+		}
+
+		// Semantic Memory (SM): Patterns, preferences, knowledge.
+		if (/(preference|pattern|standard|learned|habit|user likes|convention)/i.test(t)) {
+			return { primary: "semantic", decay: 0.002 };
+		}
+
+		// Episodic Memory (EM): Events, session history, decisions.
+		if (/(decided|completed|occurred|happened|session|meeting|sprint)/i.test(t)) {
+			return { primary: "episodic", decay: 0.01 };
+		}
+
+		// Working Memory (WM): Immediate task context.
+		if (/(currently|now|working on|task|wp|input|instruction)/i.test(t)) {
+			return { primary: "working", decay: 0.05 }; // Rapid decay (short-term)
+		}
+
+		// Default to semantic (facts)
+		return { primary: "semantic", decay: 0.005 };
+	}
+
+	/**
+	 * Adds a new fact or updates an existing one if similar.
+	 */
+	async add(factText, source = "session", forceSector = null) {
+		const id = crypto.createHash("md5").update(factText.toLowerCase().trim()).digest("hex");
+		const existing = this.db.prepare("SELECT id FROM aizen_facts WHERE id = ?").get(id);
+
+		const now = Date.now();
+		const vector = await localEmbedding.embed(factText);
+		const vecBlob = vector ? Buffer.from(new Float32Array(vector).buffer) : null;
+
+		if (existing) {
+			this.db
+				.prepare(`
         UPDATE aizen_facts 
         SET updated_at = ?, last_seen_at = ?, hits = hits + 1, vector = ?
         WHERE id = ?
-      `).run(now, now, vecBlob, id);
-      return 'UPDATE';
-    }
+      `)
+				.run(now, now, vecBlob, id);
+			return "UPDATE";
+		}
 
-    const { primary: sector, decay } = this.classifySector(factText);
+		const { primary: sector, decay } = forceSector
+			? { primary: forceSector, decay: 0.01 }
+			: this.classifySector(factText);
 
-    this.db.prepare(`
+		this.db
+			.prepare(`
       INSERT INTO aizen_facts (id, text, source, sector, decay_lambda, last_seen_at, created_at, updated_at, hits, vector)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
-    `).run(id, factText, source, sector, decay, now, now, now, vecBlob);
+    `)
+			.run(id, factText, source, sector, decay, now, now, now, vecBlob);
 
-    // Waypoint Linking: Find best match and create an edge
-    if (vector) {
-      this.createWaypointLink(id, vector);
-    }
+		// Waypoint Linking: Find best match and create an edge
+		if (vector) {
+			this.createWaypointLink(id, vector);
+		}
 
-    return 'ADD';
-  }
+		return "ADD";
+	}
 
-  /**
-   * Find highest similarity match and link it via waypoint table
-   */
-  createWaypointLink(id, vector) {
-    const facts = this.db.prepare('SELECT id, vector FROM aizen_facts WHERE id != ? AND vector IS NOT NULL').all(id);
-    let bestMatch = null;
-    let maxSim = 0;
+	/**
+	 * Specialized Document Memory (DM) storage
+	 */
+	async addDocument(name, path, content) {
+		const id = crypto.createHash("md5").update(path).digest("hex");
+		const vector = await localEmbedding.embed(content.slice(0, 2000)); // Embed start of doc
+		const vecBlob = vector ? Buffer.from(new Float32Array(vector).buffer) : null;
+		const now = Date.now();
 
-    for (const f of facts) {
-      const dbVec = new Float32Array(f.vector.buffer, f.vector.byteOffset, f.vector.byteLength / 4);
-      const sim = localEmbedding.similarity(vector, Array.from(dbVec));
-      if (sim > maxSim) {
-        maxSim = sim;
-        bestMatch = f.id;
-      }
-    }
+		this.db
+			.prepare(`
+      INSERT OR REPLACE INTO aizen_documents (id, name, path, content, created_at, updated_at, vector)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+			.run(id, name, path, content, now, now, vecBlob);
 
-    if (maxSim >= 0.75 && bestMatch) {
-      this.db.prepare(`INSERT OR IGNORE INTO aizen_waypoints (source_id, target_id, weight) VALUES (?, ?, ?)`).run(id, bestMatch, maxSim);
-      this.db.prepare(`INSERT OR IGNORE INTO aizen_waypoints (source_id, target_id, weight) VALUES (?, ?, ?)`).run(bestMatch, id, maxSim);
-    }
-  }
+		return id;
+	}
 
-  /**
-   * Exponential decay calculation
-   */
-  calculateDecay(salience, lambda, lastSeenMs) {
-    const days = (Date.now() - lastSeenMs) / (1000 * 60 * 60 * 24);
-    return salience * Math.exp(-lambda * days);
-  }
+	/**
+	 * Long Summary Thread (LST) management
+	 */
+	async updateLST(newSummary) {
+		const now = Date.now();
+		this.db
+			.prepare(`
+      INSERT OR REPLACE INTO aizen_summary (id, thread, updated_at)
+      VALUES (1, ?, ?)
+    `)
+			.run(newSummary, now);
+	}
 
-  expandWaypoints(scoredResults) {
-    const expanded = new Map();
-    // Add primary hits
-    scoredResults.forEach(r => expanded.set(r.id, r));
+	async getLST() {
+		const row = this.db.prepare("SELECT thread FROM aizen_summary WHERE id = 1").get();
+		return row ? row.thread : "";
+	}
 
-    // Expand 1 hop
-    const getWays = this.db.prepare(`SELECT target_id, weight FROM aizen_waypoints WHERE source_id = ? AND weight > 0.05`);
-    const getFact = this.db.prepare(`SELECT * FROM aizen_facts WHERE id = ?`);
+	/**
+	 * Find highest similarity match and link it via waypoint table
+	 */
+	createWaypointLink(id, vector) {
+		const facts = this.db
+			.prepare("SELECT id, vector FROM aizen_facts WHERE id != ? AND vector IS NOT NULL")
+			.all(id);
+		let bestMatch = null;
+		let maxSim = 0;
 
-    for (const r of scoredResults) {
-      const edges = getWays.all(r.id);
-      for (const e of edges) {
-        if (!expanded.has(e.target_id)) {
-          const target = getFact.get(e.target_id);
-          if (target) {
-            const decayedSalience = this.calculateDecay(target.salience, target.decay_lambda, target.last_seen_at);
-            // Factor waypoint strength
-            const baseScore = 0.5 * decayedSalience + 0.1 * e.weight;
-            expanded.set(target.id, { ...target, finalScore: baseScore, isWaypoint: true });
-          }
-        }
-      }
-    }
-    return Array.from(expanded.values());
-  }
+		for (const f of facts) {
+			const dbVec = new Float32Array(f.vector.buffer, f.vector.byteOffset, f.vector.byteLength / 4);
+			const sim = localEmbedding.similarity(vector, Array.from(dbVec));
+			if (sim > maxSim) {
+				maxSim = sim;
+				bestMatch = f.id;
+			}
+		}
 
-  /**
-   * Semantic + Keyword Retrieval with Composite Scoring
-   */
-  async findRelevant(query, topK = 3) {
-    if (!query) return [];
+		if (maxSim >= 0.75 && bestMatch) {
+			this.db
+				.prepare(
+					`INSERT OR IGNORE INTO aizen_waypoints (source_id, target_id, weight) VALUES (?, ?, ?)`,
+				)
+				.run(id, bestMatch, maxSim);
+			this.db
+				.prepare(
+					`INSERT OR IGNORE INTO aizen_waypoints (source_id, target_id, weight) VALUES (?, ?, ?)`,
+				)
+				.run(bestMatch, id, maxSim);
+		}
+	}
 
-    const queryVector = await localEmbedding.embed(query);
-    const queryTerms = query.toLowerCase().match(/\w+/g) || [];
-    
-    const allFacts = this.db.prepare('SELECT * FROM aizen_facts').all();
-    if (allFacts.length === 0) return [];
+	/**
+	 * Exponential decay calculation
+	 */
+	calculateDecay(salience, lambda, lastSeenMs) {
+		const days = (Date.now() - lastSeenMs) / (1000 * 60 * 60 * 24);
+		return salience * Math.exp(-lambda * days);
+	}
 
-    const scored = allFacts.map(fact => {
-      let simScore = 0;
-      
-      if (queryVector && fact.vector) {
-        const dbVec = new Float32Array(fact.vector.buffer, fact.vector.byteOffset, fact.vector.byteLength / 4);
-        simScore = localEmbedding.similarity(queryVector, Array.from(dbVec));
-      }
+	expandWaypoints(scoredResults) {
+		const expanded = new Map();
+		// Add primary hits
+		scoredResults.forEach((r) => expanded.set(r.id, r));
 
-      // Keyword matching 
-      const factTerms = fact.text.toLowerCase().match(/\w+/g) || [];
-      let keywordScore = 0;
-      queryTerms.forEach(term => {
-        if (factTerms.includes(term)) {
-          keywordScore += 1 / (1 + Math.log(factTerms.length));
-        }
-      });
-      const keySim = (keywordScore > 0 ? (keywordScore / queryTerms.length) : 0);
+		// Expand 1 hop
+		const getWays = this.db.prepare(
+			`SELECT target_id, weight FROM aizen_waypoints WHERE source_id = ? AND weight > 0.05`,
+		);
+		const getFact = this.db.prepare(`SELECT * FROM aizen_facts WHERE id = ?`);
 
-      const baseSim = (simScore * 0.7) + (keySim * 0.3);
-      
-      // Decay Engine
-      const activeSalience = this.calculateDecay(fact.salience, fact.decay_lambda, fact.last_seen_at);
-      
-      // Composite Scoring: 0.6x similarity + 0.2x salience + 0.1x recency + 0.1x waypoint (0 for direct queries)
-      // Recency bonus: higher if recently seen
-      const daysSince = (Date.now() - fact.last_seen_at) / (1000 * 60 * 60 * 24);
-      const recency = Math.max(0, 1.0 - (daysSince / 30)); 
+		for (const r of scoredResults) {
+			const edges = getWays.all(r.id);
+			for (const e of edges) {
+				if (!expanded.has(e.target_id)) {
+					const target = getFact.get(e.target_id);
+					if (target) {
+						const decayedSalience = this.calculateDecay(
+							target.salience,
+							target.decay_lambda,
+							target.last_seen_at,
+						);
+						// Factor waypoint strength
+						const baseScore = 0.5 * decayedSalience + 0.1 * e.weight;
+						expanded.set(target.id, { ...target, finalScore: baseScore, isWaypoint: true });
+					}
+				}
+			}
+		}
+		return Array.from(expanded.values());
+	}
 
-      const finalScore = (0.6 * baseSim) + (0.2 * activeSalience) + (0.1 * recency);
+	/**
+	 * Semantic + Keyword Retrieval with Composite Scoring
+	 */
+	async findRelevant(query, topK = 3) {
+		if (!query) return [];
 
-      return { ...fact, finalScore, baseSim, activeSalience, sector: fact.sector };
-    });
+		const queryVector = await localEmbedding.embed(query);
+		const queryTerms = query.toLowerCase().match(/\w+/g) || [];
 
-    // Take top raw hits above threshold
-    let topHits = scored.filter(f => f.baseSim > 0.05).sort((a, b) => b.finalScore - a.finalScore).slice(0, topK * 2);
-    
-    // 1-hop Graph Expansion
-    let expanded = this.expandWaypoints(topHits);
+		// 1. Search Facts
+		const allFacts = this.db.prepare("SELECT * FROM aizen_facts").all();
+		const scoredFacts = this.scoreCollection(allFacts, queryVector, queryTerms);
 
-    let finalResults = expanded.sort((a, b) => b.finalScore - a.finalScore).slice(0, topK);
+		// 2. Search Documents
+		const allDocs = this.db.prepare("SELECT * FROM aizen_documents").all();
+		const scoredDocs = this.scoreCollection(
+			allDocs.map((d) => ({ ...d, text: d.content.slice(0, 1000) })),
+			queryVector,
+			queryTerms,
+		);
 
-    // Reinforce recalled items
-    const reinforce = this.db.prepare('UPDATE aizen_facts SET hits = hits + 1, last_seen_at = ?, salience = MIN(1.0, salience + 0.1) WHERE id = ?');
-    const now = Date.now();
-    this.db.transaction(() => {
-      for (const r of finalResults) {
-        reinforce.run(now, r.id);
-      }
-    })();
+		const scored = [...scoredFacts, ...scoredDocs.map((d) => ({ ...d, sector: "document" }))];
 
-    // Explainable Recall Trace
-    return finalResults.map(r => ({
-      text: r.text,
-      hits: r.hits + 1,
-      trace: {
-        sector: r.sector,
-        similarity: r.baseSim || 0,
-        decay: r.activeSalience || 0,
-        waypoint_expanded: !!r.isWaypoint
-      }
-    }));
-  }
+		if (scored.length === 0) return [];
 
-  /**
-   * Formats relevant memories into a concise text block for prompt injection.
-   */
-  async getFormattedMemory(query) {
-    const relevant = await this.findRelevant(query);
-    if (relevant.length === 0) return "";
-    
-    let block = "\n--- MEMORY (Semantic Distillation) ---\n";
-    relevant.forEach((f, i) => {
-      block += `${i + 1}. [${f.trace.sector.toUpperCase()}] ${f.text}\n    (Sim: ${f.trace.similarity.toFixed(2)} | Salience: ${f.trace.decay.toFixed(2)}${f.trace.waypoint_expanded ? ' | 1-Hop Graph Expand' : ''})\n`;
-    });
-    block += "--- END MEMORY ---\n";
-    return block;
-  }
+		// Take top raw hits above threshold
+		const topHits = scored
+			.filter((f) => f.baseSim > 0.05)
+			.sort((a, b) => b.finalScore - a.finalScore)
+			.slice(0, topK * 2);
 
-  // Preserve backwards compat API
-  async save() { }
-  extract(text) { return []; } 
+		// 1-hop Graph Expansion (only for facts)
+		const factHits = topHits.filter((h) => h.id.length === 32); // MD5 fact IDs
+		const expanded = this.expandWaypoints(factHits);
+
+		const finalResults = [...expanded, ...topHits.filter((h) => h.sector === "document")]
+			.sort((a, b) => b.finalScore - a.finalScore)
+			.slice(0, topK);
+
+		// Reinforce recalled items
+		const reinforce = this.db.prepare(
+			"UPDATE aizen_facts SET hits = hits + 1, last_seen_at = ?, salience = MIN(1.0, salience + 0.1) WHERE id = ?",
+		);
+		const now = Date.now();
+		this.db.transaction(() => {
+			for (const r of finalResults) {
+				if (r.id.length === 32 && r.sector !== "document") {
+					try {
+						reinforce.run(now, r.id);
+					} catch (e) {}
+				}
+			}
+		})();
+
+		return finalResults.map((r) => ({
+			text: r.text || r.content,
+			hits: (r.hits || 0) + 1,
+			trace: {
+				sector: r.sector,
+				similarity: r.baseSim || 0,
+				decay: r.activeSalience || 1.0,
+				waypoint_expanded: !!r.isWaypoint,
+			},
+		}));
+	}
+
+	scoreCollection(items, queryVector, queryTerms) {
+		return items.map((item) => {
+			let simScore = 0;
+			if (queryVector && item.vector) {
+				const dbVec = new Float32Array(
+					item.vector.buffer,
+					item.vector.byteOffset,
+					item.vector.byteLength / 4,
+				);
+				simScore = localEmbedding.similarity(queryVector, Array.from(dbVec));
+			}
+
+			const itemText = item.text || item.content || "";
+			const factTerms = itemText.toLowerCase().match(/\w+/g) || [];
+			let keywordScore = 0;
+			queryTerms.forEach((term) => {
+				if (factTerms.includes(term)) {
+					keywordScore += 1 / (1 + Math.log(factTerms.length));
+				}
+			});
+			const keySim = keywordScore > 0 ? keywordScore / queryTerms.length : 0;
+			const baseSim = simScore * 0.7 + keySim * 0.3;
+
+			const activeSalience = item.salience
+				? this.calculateDecay(item.salience, item.decay_lambda, item.last_seen_at)
+				: 1.0;
+			const daysSince = item.last_seen_at
+				? (Date.now() - item.last_seen_at) / (1000 * 60 * 60 * 24)
+				: 0;
+			const recency = Math.max(0, 1.0 - daysSince / 30);
+
+			const finalScore = 0.6 * baseSim + 0.2 * activeSalience + 0.1 * recency;
+			return { ...item, finalScore, baseSim, activeSalience, sector: item.sector };
+		});
+	}
+
+	/**
+	 * Formats relevant memories into a concise text block for prompt injection.
+	 */
+	async getFormattedMemory(query) {
+		const relevant = await this.findRelevant(query);
+		const lst = await this.getLST();
+
+		let block = "\n--- [AZ] 5-TIER MEMORY DISTILLATION ---\n";
+
+		if (lst) {
+			block += `\n[LONG SUMMARY THREAD]\n${lst}\n`;
+		}
+
+		if (relevant.length > 0) {
+			block += "\n[RELEVANT RECALLS]\n";
+			relevant.forEach((f, i) => {
+				block += `${i + 1}. [${f.trace.sector.toUpperCase()}] ${f.text.slice(0, 500)}${f.text.length > 500 ? "..." : ""}\n`;
+			});
+		}
+
+		block += "\n--- END MEMORY ---\n";
+		return block;
+	}
+
+	// Preserve backwards compat API
+	async save() {}
+	extract(text) {
+		return [];
+	}
 }
 
 module.exports = { MemoryStore };

@@ -31,7 +31,7 @@ Total verification of the application from the user's perspective. Ensures that 
 
 ### 3. Automated Regression
 
-- Run tests in every `za-auto` loop.
+- Run tests in every `az-auto` loop.
 - Generate a "Health Heatmap" to identify fragile components.
 
 ---

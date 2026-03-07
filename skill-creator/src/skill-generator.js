@@ -4,9 +4,9 @@
  * Note: In the final app, this will be handled by the LLM.
  */
 function generateSkillPrompt(scrapedData) {
-    const { url, title, description, text } = scrapedData;
+	const { url, title, description, text } = scrapedData;
 
-    return `
+	return `
 # INSTRUCTION: Generate a Aizen-Gate SKILL.md
 
 You are the [SA] Skill Generator. Convert the following documentation into a standardized Aizen-Gate SKILL.md file.

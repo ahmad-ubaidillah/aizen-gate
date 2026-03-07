@@ -1,76 +1,81 @@
-const fs = require('fs-extra');
-const path = require('path');
-const matter = require('gray-matter');
-const chalk = require('chalk');
+const fs = require("fs-extra");
+const path = require("path");
+const matter = require("gray-matter");
+const chalk = require("chalk");
 
 /**
  * archiveTasks: Updates task status and moves them to a timestamped archive folder.
  */
 async function archiveTasks(projectRoot) {
-    const tasksDir = path.join(projectRoot, 'backlog', 'tasks');
-    const archiveRoot = path.join(tasksDir, 'archive');
-    const readmePath = path.join(projectRoot, 'backlog', 'readme.md');
-    
-    if (!fs.existsSync(tasksDir)) return;
+	const tasksDir = path.join(projectRoot, "backlog", "tasks");
+	const archiveRoot = path.join(tasksDir, "archive");
+	const readmePath = path.join(projectRoot, "backlog", "readme.md");
 
-    const files = await fs.readdir(tasksDir);
-    const taskFiles = files.filter(f => f.endsWith('.md') && !f.includes('archive'));
+	if (!fs.existsSync(tasksDir)) return;
 
-    if (taskFiles.length === 0) {
-        console.log(chalk.gray(`[AZ] No tasks found in backlog/tasks/ to archive.`));
-        return;
-    }
+	const files = await fs.readdir(tasksDir);
+	const taskFiles = files.filter((f) => f.endsWith(".md") && !f.includes("archive"));
 
-    // Generate Timestamp: dd-mm-yyyy_HH-mm
-    const now = new Date();
-    const pad = (n) => n.toString().padStart(2, '0');
-    const timestamp = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
-    const archiveDir = path.join(archiveRoot, timestamp);
-    
-    await fs.ensureDir(archiveDir);
+	if (taskFiles.length === 0) {
+		console.log(chalk.gray(`[AZ] No tasks found in backlog/tasks/ to archive.`));
+		return;
+	}
 
-    console.log(chalk.blue(`[AZ] Archiving ${taskFiles.length} task(s) into ${timestamp}...`));
+	// Generate Timestamp: dd-mm-yyyy_HH-mm
+	const now = new Date();
+	const pad = (n) => n.toString().padStart(2, "0");
+	const timestamp = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+	const archiveDir = path.join(archiveRoot, timestamp);
 
-    for (const file of taskFiles) {
-        const filePath = path.join(tasksDir, file);
-        const content = await fs.readFile(filePath, 'utf8');
-        
-        let { data, content: body } = matter(content);
+	await fs.ensureDir(archiveDir);
 
-        // 1. Update Frontmatter
-        data.status = "Done";
-        data.assignee = ["[AZ] - Aizen Orchestrator"];
-        data.updated_date = new Date().toISOString().slice(0, 16).replace('T', ' ');
+	console.log(chalk.blue(`[AZ] Archiving ${taskFiles.length} task(s) into ${timestamp}...`));
 
-        // 2. Mark Checkboxes in content
-        const updatedBody = body.replace(/\[ \]/g, '[x]');
+	for (const file of taskFiles) {
+		const filePath = path.join(tasksDir, file);
+		const content = await fs.readFile(filePath, "utf8");
 
-        // 3. Re-stringify
-        const updatedContent = matter.stringify(updatedBody, data);
+		const { data, content: body } = matter(content);
 
-        // 4. Move to Timestamped Archive
-        const destPath = path.join(archiveDir, file);
-        await fs.writeFile(destPath, updatedContent);
-        await fs.remove(filePath);
+		// [AZ] Only archive if status is Done
+		if (data.status !== "Done") {
+			console.log(chalk.gray(`   - Skipping active task: ${file} (Status: ${data.status})`));
+			continue;
+		}
 
-        console.log(chalk.green(`   ✔ Archived: ${file}`));
-    }
+		// 1. Update Frontmatter
+		data.assignee = ["[AZ] - Aizen Orchestrator"];
+		data.updated_date = new Date().toISOString().slice(0, 16).replace("T", " ");
 
-    // 5. Update README.md
-    if (fs.existsSync(readmePath)) {
-        let readmeContent = await fs.readFile(readmePath, 'utf8');
-        // Update statuses in the table
-        readmeContent = readmeContent.replace(/✅ Done/g, `✅ Archived (${timestamp})`);
-        readmeContent = readmeContent.replace(/✅ Archived/g, `✅ Archived (${timestamp})`);
-        await fs.writeFile(readmePath, readmeContent);
-        console.log(chalk.cyan(`[AZ] Updated backlog/readme.md with archive timestamp.`));
-    }
+		// 2. Mark Checkboxes in content
+		const updatedBody = body.replace(/\[ \]/g, "[x]");
 
-    console.log(chalk.green(`\n[AZ] Workspace optimized. History tracked in archive/${timestamp}.`));
+		// 3. Re-stringify
+		const updatedContent = matter.stringify(updatedBody, data);
+
+		// 4. Move to Timestamped Archive
+		const destPath = path.join(archiveDir, file);
+		await fs.writeFile(destPath, updatedContent);
+		await fs.remove(filePath);
+
+		console.log(chalk.green(`   ✔ Archived: ${file}`));
+	}
+
+	// 5. Update README.md
+	if (fs.existsSync(readmePath)) {
+		let readmeContent = await fs.readFile(readmePath, "utf8");
+		// Update statuses in the table
+		readmeContent = readmeContent.replace(/✅ Done/g, `✅ Archived (${timestamp})`);
+		readmeContent = readmeContent.replace(/✅ Archived/g, `✅ Archived (${timestamp})`);
+		await fs.writeFile(readmePath, readmeContent);
+		console.log(chalk.cyan(`[AZ] Updated backlog/readme.md with archive timestamp.`));
+	}
+
+	console.log(chalk.green(`\n[AZ] Workspace optimized. History tracked in archive/${timestamp}.`));
 }
 
 if (require.main === module) {
-    archiveTasks(process.cwd()).catch(e => console.error(e));
+	archiveTasks(process.cwd()).catch((e) => console.error(e));
 }
 
 module.exports = { archiveTasks };

@@ -1,22 +1,22 @@
 {
-  "za-specify": {
-    "description": "Start discovery and create a feature spec",
-    "prompt": "Read aizen-gate/commands/za-specify.md and adopt the [PM] persona to interview me about a new feature. Once clear, generate a formal spec.md in a new aizen-gate/specs/{feature-slug}/ directory."
-  },
-  "za-tasks": {
-    "description": "Break down a feature spec into Work Packages",
-    "prompt": "Read aizen-gate/commands/za-tasks.md and the feature spec.md I point you to. Decompose it into Work Packages (WP01, WP02, etc.) inside the tasks/ folder, ensuring YAML frontmatter accurately maps topological dependencies."
-  },
-  "za-implement": {
-    "description": "Implement a specific Work Package",
-    "prompt": "Read aizen-gate/commands/za-implement.md. Find the target Work Package. If required, setup the git worktree using npx aizen-gate implement (which leverages WorktreeManager). Then implement the code adhering to the WP's acceptance criteria."
-  },
-  "za-review": {
-    "description": "Review a Work Package for QA",
-    "prompt": "Read aizen-gate/commands/za-review.md. Adopt the [QA] persona. Check the assigned Work Package implementation against its acceptance criteria and the project constitution before moving it to the 'done' lane."
-  },
-  "za-merge": {
-    "description": "Merge a Feature Branch sequentially into main",
-    "prompt": "Read aizen-gate/commands/za-merge.md. Initialize the MergeEngine to run the preflight check, forecast conflicts via the DAG, and execute serialized topological merging of the Work Packages."
-  }
+	"specify": {
+		"description": "Start discovery and create a feature spec",
+		"prompt": "Read aizen-gate/commands/az-specify.md and adopt the [PM] persona to interview me about a new feature. Once clear, generate a formal spec.md in a new aizen-gate/specs/{feature-slug}/ directory."
+	},
+	"tasks": {
+		"description": "Break down a feature spec into Work Packages",
+		"prompt": "Read aizen-gate/commands/az-tasks.md and the feature spec.md I point you to. Decompose it into Work Packages (WP01, WP02, etc.) inside the tasks/ folder, ensuring YAML frontmatter accurately maps topological dependencies."
+	},
+	"implement": {
+		"description": "Implement a specific Work Package",
+		"prompt": "Read aizen-gate/commands/az-implement.md. Find the target Work Package. If required, setup the git worktree using npx aizen-gate implement (which leverages WorktreeManager). Then implement the code adhering to the WP's acceptance criteria."
+	},
+	"review": {
+		"description": "Review a Work Package for QA",
+		"prompt": "Read aizen-gate/commands/az-review.md. Adopt the [QA] persona. Check the assigned Work Package implementation against its acceptance criteria and the project constitution before moving it to the 'done' lane."
+	},
+	"merge": {
+		"description": "Merge a Feature Branch sequentially into main",
+		"prompt": "Read aizen-gate/commands/az-merge.md. Initialize the MergeEngine to run the preflight check, forecast conflicts via the DAG, and execute serialized topological merging of the Work Packages."
+	}
 }
