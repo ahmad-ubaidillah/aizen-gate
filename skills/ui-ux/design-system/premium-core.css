@@ -1,0 +1,82 @@
+/* 
+  Superagent Premium Design System v1.0
+  Inspired by high-end editorial and modern SaaS interfaces.
+*/
+
+:root {
+  --sa-bg-dark: #0a0a0b;
+  --sa-bg-card: rgba(255, 255, 255, 0.03);
+  --sa-bg-glass: rgba(255, 255, 255, 0.05);
+  --sa-border: rgba(255, 255, 255, 0.1);
+  --sa-accent: #6d5dfc;
+  --sa-accent-glow: rgba(109, 93, 252, 0.3);
+  --sa-text-primary: #f0f0f0;
+  --sa-text-secondary: #a0a0a0;
+  --sa-font-main: "Inter", system-ui, -apple-system, sans-serif;
+  --sa-font-mono: "JetBrains Mono", monospace;
+}
+
+/* 🧊 Glassmorphism Card */
+.glass-card {
+  background: var(--sa-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--sa-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--sa-accent);
+}
+
+/* 🖋️ Editorial Typography */
+.editorial-h1 {
+  font-family: var(--sa-font-main);
+  font-weight: 800;
+  font-size: 3.5rem;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ✨ Glow Button */
+.glow-button {
+  background: var(--sa-accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--sa-accent-glow);
+  transition: all 0.3s ease;
+}
+
+.glow-button:hover {
+  box-shadow: 0 0 25px var(--sa-accent);
+  transform: scale(1.02);
+}
+
+/* 🧩 Micro-Animation: Subtle Reveal */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-reveal {
+  animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
