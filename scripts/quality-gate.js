@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const _path = require("node:path");
 const chalk = require("chalk");
 
 /**

@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
-const path = require("path");
-const chalk = require("chalk");
+const path = require("node:path");
+const _chalk = require("chalk");
 const { TokenBudget } = require("./token-budget");
 const { OutputFilter } = require("./output-filter");
 const { MemoryStore } = require("./memory-store");
@@ -93,7 +93,7 @@ Execute WP ${wp.id} now following the above context and constraints.
 	/**
 	 * Assembles a fresh context for a specific WP with priority-based trimming.
 	 */
-	async assembleWPContext(featureDir, wp) {
+	async assembleWPContext(featureDir, _wp) {
 		const components = [];
 
 		// 1. Load Specs (Priority: Mid)

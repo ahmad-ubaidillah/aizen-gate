@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 
 /**
@@ -11,7 +11,7 @@ async function generateDocs(projectRoot) {
 
 	// Default directory mapping logic checks
 	const docsDir = path.join(projectRoot, "docs");
-	const saSharedDir = path.join(projectRoot, "aizen-gate", "shared");
+	const _saSharedDir = path.join(projectRoot, "aizen-gate", "shared");
 
 	try {
 		await fs.ensureDir(docsDir);

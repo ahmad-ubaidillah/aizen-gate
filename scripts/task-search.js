@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const yaml = require("js-yaml");
 
@@ -27,7 +27,7 @@ class TaskSearch {
 				if (options.priority && fm.priority !== options.priority) return;
 				if (options.assignee && fm.assignee !== options.assignee) return;
 
-				const textToSearch = (f + " " + content).toLowerCase();
+				const textToSearch = `${f} ${content}`.toLowerCase();
 				const searchTerms = query.toLowerCase().split(/\s+/);
 
 				searchTerms.forEach((term) => {

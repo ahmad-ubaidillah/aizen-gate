@@ -1,7 +1,7 @@
 const express = require("express");
-const http = require("http");
+const http = require("node:http");
 const WebSocket = require("ws");
-const path = require("path");
+const path = require("node:path");
 const fs = require("fs-extra");
 const yaml = require("js-yaml");
 
@@ -55,7 +55,7 @@ class DashboardServer {
 	}
 
 	setupRoutes() {
-		this.app.get("/api/tasks", async (req, res) => {
+		this.app.get("/api/tasks", async (_req, res) => {
 			try {
 				const tasks = await this.loadAllTasks();
 				res.json(tasks);
@@ -128,8 +128,8 @@ class DashboardServer {
 		if (this.watcher) return;
 
 		let timeout = null;
-		this.watcher = fs.watch(this.tasksDir, (eventType, filename) => {
-			if (filename && filename.endsWith(".md")) {
+		this.watcher = fs.watch(this.tasksDir, (_eventType, filename) => {
+			if (filename?.endsWith(".md")) {
 				if (timeout) clearTimeout(timeout);
 				timeout = setTimeout(() => {
 					this.broadcastUpdate(`File change detected: ${filename}`);

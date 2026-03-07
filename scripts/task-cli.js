@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const yaml = require("js-yaml");
 
@@ -24,8 +24,8 @@ class TaskCLI {
 		let highest = 0;
 		files.forEach((f) => {
 			const match = f.match(/aizen-(\d+)/i);
-			if (match && parseInt(match[1]) > highest) {
-				highest = parseInt(match[1]);
+			if (match && parseInt(match[1], 10) > highest) {
+				highest = parseInt(match[1], 10);
 			}
 		});
 		return `aizen-${String(highest + 1).padStart(3, "0")}`;

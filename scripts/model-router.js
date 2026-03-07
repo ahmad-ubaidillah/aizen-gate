@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const yaml = require("js-yaml");
 const chalk = require("chalk");
 
@@ -25,7 +25,7 @@ class ModelRouter {
 		if (!fs.existsSync(this.configPath)) return { model_family: "Balanced" };
 		try {
 			return yaml.load(fs.readFileSync(this.configPath, "utf8"));
-		} catch (e) {
+		} catch (_e) {
 			return { model_family: "Balanced" };
 		}
 	}
@@ -54,7 +54,7 @@ class ModelRouter {
 	 */
 	resolveModel(taskType = "implementation", level = "standard") {
 		const families = this.profiles.families || {};
-		const family = families[taskType] || families["implementation"];
+		const family = families[taskType] || families.implementation;
 
 		if (!family || family.length === 0) return "anthropic/claude-3-5-sonnet";
 
@@ -106,7 +106,7 @@ class ModelRouter {
 		};
 
 		const shortName = model.split("/").pop().toLowerCase();
-		const rate = Object.entries(rates).find(([k]) => shortName.includes(k))?.[1] || rates["sonnet"];
+		const rate = Object.entries(rates).find(([k]) => shortName.includes(k))?.[1] || rates.sonnet;
 
 		const cost = (tokensIn / 1000000) * rate.in + (tokensOut / 1000000) * rate.out;
 
@@ -146,7 +146,7 @@ class ModelRouter {
 				});
 				if (ledger.length > 200) ledger.shift();
 				await fs.writeJson(this.ledgerPath, ledger, { spaces: 2 });
-			} catch (e) {
+			} catch (_e) {
 				/* silent on ledger errs */
 			}
 		}

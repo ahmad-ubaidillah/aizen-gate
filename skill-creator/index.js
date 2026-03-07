@@ -2,8 +2,8 @@ const { scrapeUrl } = require("./src/scraper");
 const { generateSkillPrompt } = require("./src/skill-generator");
 const { detectStack } = require("./src/tech-detector");
 const { mapCodebase } = require("./src/map-codebase");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 /**
  * Aizen-Gate Skill Creator Entry Point
@@ -22,7 +22,7 @@ async function runSkillCreator(projectRoot, links) {
 
 		const skillId = scrapedData.title.toLowerCase().replace(/\s+/g, "-");
 		const skillPath = path.join(skillsDir, `${skillId}.md`);
-		const prompt = generateSkillPrompt(scrapedData);
+		const _prompt = generateSkillPrompt(scrapedData);
 
 		// In local mode, we save the "Instruction" block as the skill
 		// In production Aizen, it would call an LLM to refine this into a SKILL.md

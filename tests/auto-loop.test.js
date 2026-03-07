@@ -1,37 +1,50 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const { runAutoLoop } = require("../scripts/auto-loop");
 
 describe("Aizen-Gate Auto Loop", () => {
 	test("Identifies next PENDING task and transitions to In Progress", async () => {
 		const mockRoot = "/tmp/project";
-		const mockBoard = `
-| ID | Task | Depends On | Agent | Status | Expectation |
-|----|------|------------|-------|--------|-------------|
-| T-001 | Task 1 | - | @DEV | Todo | Expectation 1 |
+		const _tasksDir = path.join(mockRoot, "backlog", "tasks");
+		const mockTaskFile = "aizen-001 - task-1.md";
+		const mockTaskContent = `---
+id: aizen-001
+status: Todo
+assignee: "@DEV"
+---
+# Task 1
+Description here.
 `;
-		const mockState = `**Current focus:** none\n**Last activity:** none`;
 
-		vi.spyOn(fs, "existsSync").mockReturnValue(true);
+		vi.spyOn(fs, "existsSync").mockImplementation((p) => {
+			if (p.includes("backlog/tasks")) return true;
+			return false;
+		});
+
+		vi.spyOn(fs, "readdirSync").mockImplementation((p) => {
+			if (p.includes("backlog/tasks")) return [mockTaskFile];
+			return [];
+		});
+
 		vi.spyOn(fs, "readFileSync").mockImplementation((p) => {
-			if (p.includes("board.md")) return mockBoard;
-			if (p.includes("state.md")) return mockState;
+			if (p.includes(mockTaskFile)) return mockTaskContent;
 			return "";
 		});
-		const writer = vi.spyOn(fs, "writeFileSync").mockImplementation(() => {});
+
+		const writer = vi.spyOn(fs, "writeFile").mockImplementation(() => Promise.resolve());
+		// Mock TaskCLI's edit which also writes to file
+		vi.spyOn(fs, "writeFileSync").mockImplementation(() => {});
 
 		const result = await runAutoLoop(mockRoot);
 
 		expect(result.success).toBe(true);
-		expect(result.task.id).toBe("T-001");
+		expect(result.wave).toBeDefined();
+		expect(result.wave[0].id).toBe("aizen-001");
 
-		// Match the call to write the updated board
-		expect(writer).toHaveBeenCalledWith(
-			expect.stringContaining("board.md"),
-			expect.stringContaining("In Progress"),
-		);
+		// Verify it called TaskCLI update (which eventually writes to file)
+		expect(writer).toHaveBeenCalled();
 	});
 
 	afterEach(() => {

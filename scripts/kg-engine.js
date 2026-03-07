@@ -1,6 +1,6 @@
 const { Memory } = require("openmemory-js/dist/core/memory");
-const path = require("path");
-const fs = require("fs-extra");
+const path = require("node:path");
+const _fs = require("fs-extra");
 const chalk = require("chalk");
 
 // GLOBAL LOG SUPPRESSION for OpenMemory noise
@@ -78,7 +78,7 @@ class KnowledgeGraph {
 	 * Uses waypoints in openmemory-js.
 	 */
 	async addEdge(sourceId, targetId, type, weight = 1.0, metadata = {}) {
-		const finalWeight = this._getEdgeWeight(type, weight);
+		const _finalWeight = this._getEdgeWeight(type, weight);
 		const validFrom = metadata.valid_from || new Date().toISOString();
 		const validTo = metadata.valid_to || "9999-12-31T23:59:59.999Z";
 

@@ -443,12 +443,12 @@
       // Drag and Drop Logic
       let draggedItem = null;
 
-      function handleDragStart(e) {
+      function handleDragStart(_e) {
         draggedItem = this;
         setTimeout(() => (this.style.opacity = "0.5"), 0);
       }
 
-      function handleDragEnd(e) {
+      function handleDragEnd(_e) {
         this.style.opacity = "1";
         draggedItem = null;
       }
@@ -465,7 +465,7 @@
           laneList.parentElement.classList.add("drag-over");
         });
 
-        laneList.parentElement.addEventListener("dragleave", (e) => {
+        laneList.parentElement.addEventListener("dragleave", (_e) => {
           laneList.parentElement.classList.remove("drag-over");
         });
 

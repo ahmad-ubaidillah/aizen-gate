@@ -43,14 +43,12 @@ class DependencyGraph {
 			const deps = this.graph[node] || [];
 			for (const neighbor of deps) {
 				if (color[neighbor] === GRAY) {
-					// Back-edge found -> cycle
 					const cycleStart = path.indexOf(neighbor);
 					if (cycleStart !== -1) {
 						cycles.push([...path.slice(cycleStart), neighbor]);
 					}
 				} else if (color[neighbor] === WHITE) {
-					// Recurse
-					dfs(neighbor, [...path]); // copy path
+					dfs(neighbor, [...path]);
 				}
 			}
 
@@ -65,6 +63,14 @@ class DependencyGraph {
 		}
 
 		return cycles.length > 0 ? cycles : null;
+	}
+
+	/**
+	 * Flat list of WP IDs in dependency order.
+	 */
+	topologicalSort() {
+		const waves = this.computeWaves();
+		return waves.flat();
 	}
 
 	/**

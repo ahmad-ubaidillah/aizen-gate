@@ -8,7 +8,7 @@ const {
 const { TaskCLI } = require("./task-cli");
 const { MemoryStore } = require("./memory-store");
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const yaml = require("js-yaml");
 
 const projectRoot = process.env.AIZEN_PROJECT_ROOT || process.cwd();
@@ -103,7 +103,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 			let output = "";
 			const originalLog = console.log;
 			console.log = (msg) => {
-				output += msg + "\n";
+				output += `${msg}\n`;
 			};
 
 			try {
@@ -146,7 +146,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 			let output = "";
 			const originalLog = console.log;
 			console.log = (msg) => {
-				output += msg + "\n";
+				output += `${msg}\n`;
 			};
 
 			try {

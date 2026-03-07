@@ -1,5 +1,5 @@
-const { execSync } = require("child_process");
-const path = require("path");
+const { execSync } = require("node:child_process");
+const path = require("node:path");
 const fs = require("fs-extra");
 const chalk = require("chalk");
 
@@ -54,20 +54,20 @@ class MergeEngine {
 						stdio: "ignore",
 					});
 					execSync('git commit -m "Test Merge"', { cwd: this.projectDir, stdio: "ignore" });
-				} catch (err) {
+				} catch (_err) {
 					// Merge failed, means a conflict
 					conflicts.push({ wpId, branchName });
 					execSync("git merge --abort", { cwd: this.projectDir, stdio: "ignore" });
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			// Ignore if branches don't exist in dry run, or simply log it
 		} finally {
 			// Clean up temp branch completely
 			try {
 				execSync(`git checkout ${targetBranch}`, { cwd: this.projectDir, stdio: "ignore" });
 				execSync(`git branch -D ${tempBranch}`, { cwd: this.projectDir, stdio: "ignore" });
-			} catch (e) {}
+			} catch (_e) {}
 		}
 
 		if (conflicts.length > 0) {
@@ -120,7 +120,7 @@ class MergeEngine {
 						cwd: this.projectDir,
 						stdio: "inherit",
 					});
-				} catch (err) {
+				} catch (_err) {
 					console.error(
 						chalk.red.bold(`\n[Merge Conflict] Conflict encountered in ${branchName}.`),
 					);

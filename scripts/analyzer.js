@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
-const yaml = require("js-yaml");
+const _yaml = require("js-yaml");
 
 /**
  * Local helper to load WPs from a feature directory
@@ -107,7 +107,7 @@ async function runAnalyzer(projectRoot, featureName) {
 	}
 
 	// 3. SCOPE CREEP (WPs without trace in Spec/Plan)
-	wps.forEach((wp) => {
+	wps.forEach((_wp) => {
 		// Logic for scope creep detection (placeholder)
 	});
 

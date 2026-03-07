@@ -1,8 +1,7 @@
-import fs from "fs-extra";
-import path from "path";
+const fs = require("fs-extra");
+const path = require("node:path");
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DependencyGraph } from "../scripts/dependency-graph";
-import { WorkPackage } from "../scripts/wp-model";
+const { DependencyGraph } = require("../scripts/dependency-graph");
 
 describe("DependencyGraph Engine", () => {
 	const tempFeatureDir = path.join(__dirname, ".tmp_graph");
@@ -38,9 +37,9 @@ Spec...
 		const graph = new DependencyGraph(tempFeatureDir);
 		await graph.build();
 
-		expect(graph.graph["WP01"]).toEqual([]);
-		expect(graph.graph["WP02"]).toEqual(["WP01"]);
-		expect(graph.graph["WP03"]).toEqual(["WP02"]);
+		expect(graph.graph.WP01).toEqual([]);
+		expect(graph.graph.WP02).toEqual(["WP01"]);
+		expect(graph.graph.WP03).toEqual(["WP02"]);
 	});
 
 	it("should perform Kahn topological sort perfectly", async () => {

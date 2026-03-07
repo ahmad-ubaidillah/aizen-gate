@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const { TaskCLI } = require("../scripts/task-cli");
 const { TaskSearch } = require("../scripts/task-search");
 

@@ -1,6 +1,6 @@
 const { KnowledgeGraph } = require("./kg-engine");
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const matter = require("gray-matter");
 

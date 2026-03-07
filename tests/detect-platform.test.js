@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const _path = require("node:path");
 const { detectPlatform } = require("../installer/src/detect-platform");
 
 describe("AI Platform Detector", () => {

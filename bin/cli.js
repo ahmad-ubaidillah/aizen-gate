@@ -33,8 +33,8 @@
 
 const { Command } = require("commander");
 const chalk = require("chalk");
-const { select, confirm, input } = require("@inquirer/prompts");
-const path = require("path");
+
+const path = require("node:path");
 const fs = require("fs-extra");
 const yaml = require("js-yaml");
 
@@ -44,9 +44,16 @@ const program = new Command();
 
 // Lifecycle Hook: Auto-start/resume on any interaction
 (async () => {
-	const { LifecycleManager } = require("../scripts/lifecycle-manager");
-	const lm = new LifecycleManager(process.cwd());
-	await lm.wake();
+	const aizenDir = path.join(process.cwd(), "aizen-gate");
+	if (fs.existsSync(aizenDir)) {
+		try {
+			const { LifecycleManager } = require("../scripts/lifecycle-manager");
+			const lm = new LifecycleManager(process.cwd());
+			await lm.wake();
+		} catch (_e) {
+			// Fail silently during wake if modules missing or system error
+		}
+	}
 })();
 
 program
@@ -184,7 +191,7 @@ program
 		new SkillWatcher(process.cwd()).start();
 
 		const { DashboardServer } = require("../dashboard/server");
-		const server = new DashboardServer(process.cwd(), parseInt(options.port));
+		const server = new DashboardServer(process.cwd(), parseInt(options.port, 10));
 		server.start();
 	});
 
@@ -460,7 +467,7 @@ program
 				`${chalk.bold("Output Tokens:")} ${report.output_tokens.toLocaleString()} (${((report.output_tokens / report.total_tokens) * 100).toFixed(1)}%)`,
 			);
 
-			console.log("\n" + chalk.bold("Phase Breakdown:"));
+			console.log(`\n${chalk.bold("Phase Breakdown:")}`);
 			Object.entries(report.phase_breakdown).forEach(([phase, tokens]) => {
 				console.log(`- ${chalk.cyan(phase.padEnd(12))}: ${tokens.toLocaleString()} tokens`);
 			});
@@ -563,10 +570,10 @@ program
 	.command("security-check")
 	.description("Run security audit to scan for potential secret leaks")
 	.action(async () => {
-		const { execSync } = require("child_process");
+		const { execSync } = require("node:child_process");
 		try {
 			execSync("npm run security-check", { stdio: "inherit", cwd: process.cwd() });
-		} catch (e) {
+		} catch (_e) {
 			process.exit(1);
 		}
 	});
@@ -673,7 +680,12 @@ skillCmd
 	});
 
 // Catch-all: Routing to command playbooks
-program.arguments("<unrecognized>").action(async (cmd) => {
+program.arguments("[unrecognized]").action(async (cmd) => {
+	if (!cmd) {
+		program.help();
+		return;
+	}
+
 	const builtIn = [
 		"install",
 		"start",
@@ -715,6 +727,7 @@ program.arguments("<unrecognized>").action(async (cmd) => {
 		console.log(chalk.gray(`Invoke: "Follow playbook at ${playbookPath}"`));
 	} else {
 		console.log(chalk.red(`Error: Unknown command "${cmd}".`));
+		console.log(chalk.yellow(`Try "npx aizen-gate install" to initialize a new workspace.`));
 		program.help();
 	}
 });

@@ -6,8 +6,8 @@
 const { runAutoLoop } = require("./auto-loop");
 const { DependencyGraph } = require("./dependency-graph");
 const { MergeEngine } = require("./merge-engine");
-const path = require("path");
-const fs = require("fs-extra");
+const path = require("node:path");
+const _fs = require("fs-extra");
 
 class OrchestratorAPI {
 	constructor(projectDir) {

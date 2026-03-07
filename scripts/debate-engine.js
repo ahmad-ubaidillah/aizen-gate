@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
-const path = require("path");
-const chalk = require("chalk");
+const path = require("node:path");
+const _chalk = require("chalk");
 
 /**
  * Aizen-Gate Model Debate Engine (Advanced Adversarial Edition)

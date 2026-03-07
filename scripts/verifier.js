@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
-const { select, confirm, input } = require("@inquirer/prompts");
+const { select, input } = require("@inquirer/prompts");
 const { WorkPackage } = require("./wp-model");
 
 /**

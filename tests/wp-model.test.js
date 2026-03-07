@@ -1,7 +1,7 @@
-import fs from "fs-extra";
-import path from "path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WorkPackage } from "../scripts/wp-model";
+const fs = require("fs-extra");
+const path = require("node:path");
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+const { WorkPackage } = require("../scripts/wp-model");
 
 describe("WorkPackage Model", () => {
 	const tempDir = path.join(__dirname, ".tmp_wp");

@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
-const { select, input, confirm } = require("@inquirer/prompts");
+const { select, input } = require("@inquirer/prompts");
 
 /**
  * Constitution: Interactive interview to set project DNA.
@@ -12,7 +12,7 @@ async function runConstitution(projectRoot) {
 	const constitutionPath = path.join(projectRoot, "aizen-gate", "shared", "constitution.md");
 
 	// Default values / existing if present
-	const current = {};
+	const _current = {};
 	if (fs.existsSync(constitutionPath)) {
 		console.log(chalk.yellow("[Aizen] Existing constitution found. Let's review/update it."));
 		// In a real scenario, we'd parse it back

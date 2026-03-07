@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const { detectPlatform } = require("./detect-platform");
 const { detectStack } = require("../../skill-creator/src/tech-detector");
 
@@ -75,7 +75,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 					// Remove template frontmatter/headers if present
 					content = content.replace(/^---[\s\S]*?---\n/g, "");
 					content = content.replace(/^# .* Template\n/g, "");
-					fs.writeFileSync(fullPath, content.trim() + "\n");
+					fs.writeFileSync(fullPath, `${content.trim()}\n`);
 				}
 			}
 		}

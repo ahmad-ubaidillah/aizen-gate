@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
-const { execSync } = require("child_process");
+const { execSync } = require("node:child_process");
 const { KnowledgeGraph } = require("./kg-engine");
 
 /**
@@ -12,7 +12,7 @@ async function runDoctor(projectRoot, options = {}) {
 	console.log(chalk.red.bold("\n--- ⛩️ [Aizen] Shield Health Check ---\n"));
 
 	const fixRequested = options.fix || false;
-	const issues = [];
+	const _issues = [];
 
 	const aizenDir = path.join(projectRoot, "aizen-gate");
 	const sharedDir = path.join(aizenDir, "shared");
@@ -107,7 +107,7 @@ async function runDoctor(projectRoot, options = {}) {
 				);
 			}
 		} catch (err) {
-			console.log(`${chalk.red("✘")} ${name}: ${chalk.red("Error: " + err.message)}`);
+			console.log(`${chalk.red("✘")} ${name}: ${chalk.red(`Error: ${err.message}`)}`);
 			healthy = false;
 		}
 	}

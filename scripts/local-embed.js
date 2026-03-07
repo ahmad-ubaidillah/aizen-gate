@@ -1,6 +1,6 @@
 const { pipeline } = require("@xenova/transformers");
-const path = require("path");
-const fs = require("fs-extra");
+const _path = require("node:path");
+const _fs = require("fs-extra");
 const chalk = require("chalk");
 
 /**

@@ -1,7 +1,7 @@
 # ⛩️ Aizen-Gate: The Premier AI-Orchestration & Specification Shield
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.0.0-EB5757?style=for-the-badge&logo=ai" alt="Version">
+  <img src="https://img.shields.io/npm/v/aizen-gate?style=for-the-badge&color=EB5757&logo=npm" alt="NPM Version">
   <img src="https://img.shields.io/badge/Status-Active%20Shield-27AE60?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Security-Hardened-2D9CDB?style=for-the-badge" alt="Security">
 </p>
@@ -136,14 +136,14 @@ Aizen-Gate detect and integrates into your favorite AI development tools:
 ## �️ Installation
 
 ```bash
-# 1. Install globally
+# 1. Install globally via NPM
 npm install -g aizen-gate
 
-# 2. Initialize in your project
+# 2. Initialize the Shield in your workspace
 aizen-gate install
 
-# 3. Start your first feature
-aizen-gate specify
+# 3. Alternative: Run via NPX without global install
+npx aizen-gate install
 ```
 
 ---

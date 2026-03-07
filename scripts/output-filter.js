@@ -1,4 +1,4 @@
-const chalk = require("chalk");
+const _chalk = require("chalk");
 
 /**
  * [RTK] Output Filter Engine
@@ -149,7 +149,7 @@ class OutputFilter {
 				}
 				return typeof obj;
 			};
-			return JSON.stringify(getSchema(data), null, 2) + "\n[RTK Schema-Only Extraction]";
+			return `${JSON.stringify(getSchema(data), null, 2)}\n[RTK Schema-Only Extraction]`;
 		} catch {
 			return text;
 		}

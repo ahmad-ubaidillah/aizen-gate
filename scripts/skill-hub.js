@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 
 /**
@@ -29,9 +29,9 @@ class SkillHub {
 			const index = await fs.readJson(this.indexPath);
 			const results = index.filter(
 				(s) =>
-					(s.name && s.name.toLowerCase().includes(query.toLowerCase())) ||
-					(s.description && s.description.toLowerCase().includes(query.toLowerCase())) ||
-					(s.id && s.id.toLowerCase().includes(query.toLowerCase())),
+					s.name?.toLowerCase().includes(query.toLowerCase()) ||
+					s.description?.toLowerCase().includes(query.toLowerCase()) ||
+					s.id?.toLowerCase().includes(query.toLowerCase()),
 			);
 
 			return results.slice(0, 10); // Return top 10 matches

@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const { MemoryBridge } = require("./memory-bridge");
 const { MemoryStore } = require("./memory-store");

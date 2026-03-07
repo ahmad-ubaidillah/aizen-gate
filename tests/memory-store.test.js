@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const { MemoryStore } = require("../scripts/memory-store");
 
 describe("MemoryStore - Suite", () => {
@@ -38,7 +38,7 @@ describe("MemoryStore - Suite", () => {
 		expect(fs.existsSync(store.memoryPath)).toBe(true);
 
 		// Check legacy file renamed
-		expect(fs.existsSync(legacyPath + ".migrated")).toBe(true);
+		expect(fs.existsSync(`${legacyPath}.migrated`)).toBe(true);
 
 		// Check fact is in DB
 		const res = store.db.prepare("SELECT * FROM aizen_facts WHERE id = ?").get("123");

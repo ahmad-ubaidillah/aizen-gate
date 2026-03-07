@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
-const path = require("path");
-const crypto = require("crypto");
+const path = require("node:path");
+const crypto = require("node:crypto");
 const chalk = require("chalk");
 
 /**
@@ -60,17 +60,17 @@ class CircuitBreaker {
 	 * Computes a hash of the current workspace state for a given WP.
 	 * Use this to detect if anything actually changed between attempts.
 	 */
-	async hashWorkspace(wpId) {
+	async hashWorkspace(_wpId) {
 		try {
 			// Simplified: hash the git diff or status
 			// In a real scenario, we might use 'git diff' output
-			const { execSync } = require("child_process");
+			const { execSync } = require("node:child_process");
 			const diff = execSync("git diff HEAD", { cwd: this.projectRoot, encoding: "utf8" });
 			return crypto
 				.createHash("md5")
 				.update(diff || "no-changes")
 				.digest("hex");
-		} catch (e) {
+		} catch (_e) {
 			return Date.now().toString(); // Fallback to timestamp if not a git repo
 		}
 	}
@@ -107,7 +107,7 @@ class CircuitBreaker {
 	 * Detects if the workspace files changed since last check.
 	 * Logic: compares git status or atime of files.
 	 */
-	async detectNoChanges(wpId, lastMtime) {
+	async detectNoChanges(_wpId, _lastMtime) {
 		// Implementation for later: check file system for modifications
 		// For now placeholder
 		return false;

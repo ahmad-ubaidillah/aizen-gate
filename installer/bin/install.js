@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
-const { installAizenGate } = require('../src/install');
-const path = require("path");
+const { installAizenGate } = require("../src/install");
+// removed path
 
 /**
- * Aizen-Gate CLI Entry Point (npx superagent init)
+ * Aizen-Gate CLI Entry Point (npx aizen-gate install)
  */
 async function main() {
 	const args = process.argv.slice(2);
 	const command = args[0] || "init";
 	const targetDir = args[1] || process.cwd();
 
-	console.log(`[SA] Running Aizen-Gate CLI: ${command}`);
+	console.log(`[AZ] Running Aizen-Gate CLI: ${command}`);
 
 	switch (command) {
 		case "init": {
 			const { success, platform, stack } = await installAizenGate(targetDir);
 			if (success) {
-				console.log(`[SA] Successfully initialized Aizen-Gate for ${platform}.`);
-				console.log(`[SA] Tech stack identified: ${stack.languages.join(", ")}`);
+				console.log(`[AZ] Successfully initialized Aizen-Gate for ${platform}.`);
+				console.log(`[AZ] Tech stack identified: ${stack.languages.join(", ")}`);
 			} else {
 				process.exit(1);
 			}
@@ -30,12 +30,12 @@ async function main() {
 			console.log("  help               Show this help message");
 			break;
 		default:
-			console.log(`[SA] Unknown command: ${command}`);
+			console.log(`[AZ] Unknown command: ${command}`);
 			process.exit(1);
 	}
 }
 
 main().catch((error) => {
-	console.error(`[SA] Unexpected error: ${error.message}`);
+	console.error(`[AZ] Unexpected error: ${error.message}`);
 	process.exit(1);
 });

@@ -1,5 +1,5 @@
-const { execSync } = require("child_process");
-const path = require("path");
+const { execSync } = require("node:child_process");
+const path = require("node:path");
 const fs = require("fs-extra");
 
 class WorktreeManager {
@@ -13,7 +13,7 @@ class WorktreeManager {
 		try {
 			execSync("git rev-parse --is-inside-work-tree", { stdio: "ignore", cwd: this.projectDir });
 			return true;
-		} catch (e) {
+		} catch (_e) {
 			return false;
 		}
 	}
@@ -60,7 +60,7 @@ class WorktreeManager {
 				try {
 					fs.ensureSymlinkSync(sharedConst, wtConst);
 					console.log(`[WorktreeManager] 📖 Linked Project Constitution to ${wpId}`);
-				} catch (e) {}
+				} catch (_e) {}
 			}
 
 			return worktreePath;
@@ -80,7 +80,7 @@ class WorktreeManager {
 			// porcelain output: "worktree /path/to/worktree" separated by empty lines
 			const wts = output.match(/worktree (.+)/g) || [];
 			return wts.map((wt) => wt.replace("worktree ", "").trim());
-		} catch (e) {
+		} catch (_e) {
 			return [];
 		}
 	}

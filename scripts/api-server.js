@@ -1,7 +1,7 @@
 const express = require("express");
 const { OrchestratorAPI } = require("./orchestrator-api");
 const chalk = require("chalk");
-const path = require("path");
+const path = require("node:path");
 
 const app = express();
 app.use(express.json());
@@ -13,16 +13,16 @@ const api = new OrchestratorAPI(projectRoot);
  * [AZ] Aizen-Gate Orchestrator API Server
  */
 
-app.get("/api/status", async (req, res) => {
+app.get("/api/status", async (_req, res) => {
 	const { TaskCLI } = require("./task-cli");
-	const cli = new TaskCLI(projectRoot);
+	const _cli = new TaskCLI(projectRoot);
 	// Simple state retrieval for dashboard
 	res.json(api._envelope({ status: "active", platform: process.platform }));
 });
 
-app.get("/api/tasks", async (req, res) => {
+app.get("/api/tasks", async (_req, res) => {
 	const { TaskCLI } = require("./task-cli");
-	const cli = new TaskCLI(projectRoot);
+	const _cli = new TaskCLI(projectRoot);
 	const tasksDir = path.join(projectRoot, "backlog", "tasks");
 	const files = require("fs-extra")
 		.readdirSync(tasksDir)
@@ -30,7 +30,7 @@ app.get("/api/tasks", async (req, res) => {
 	res.json(api._envelope(files));
 });
 
-app.post("/api/auto", async (req, res) => {
+app.post("/api/auto", async (_req, res) => {
 	console.log(chalk.red("[API] External trigger: auto-sprint"));
 	const result = await api.triggerAutoSprint();
 	res.status(result.status).json(result);

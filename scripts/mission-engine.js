@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 
 class MissionEngine {
@@ -70,7 +70,7 @@ class MissionEngine {
 			try {
 				const config = JSON.parse(fs.readFileSync(this.configFile, "utf-8"));
 				return config.mission || "software-dev";
-			} catch (e) {}
+			} catch (_e) {}
 		}
 		return "software-dev";
 	}
@@ -87,7 +87,7 @@ class MissionEngine {
 		if (fs.existsSync(this.configFile)) {
 			try {
 				config = JSON.parse(fs.readFileSync(this.configFile, "utf-8"));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 
 		config.mission = missionId;

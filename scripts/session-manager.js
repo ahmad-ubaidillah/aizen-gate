@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const matter = require("gray-matter");
 
@@ -11,7 +11,7 @@ async function pauseSession(projectRoot, reason = "User requested pause") {
 	const sharedDir = path.join(projectRoot, "aizen-gate", "shared");
 	const handoffPath = path.join(sharedDir, "handoff.md");
 	const statePath = path.join(sharedDir, "state.md");
-	const boardPath = path.join(sharedDir, "board.md");
+	const _boardPath = path.join(sharedDir, "board.md");
 
 	console.log(chalk.yellow(`\n[Aizen] Pausing session: ${reason}`));
 

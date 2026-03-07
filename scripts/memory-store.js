@@ -1,6 +1,6 @@
 const fs = require("fs-extra");
-const path = require("path");
-const crypto = require("crypto");
+const path = require("node:path");
+const crypto = require("node:crypto");
 const chalk = require("chalk");
 const Database = require("better-sqlite3");
 const { localEmbedding } = require("./local-embed");
@@ -114,7 +114,22 @@ class MemoryStore {
 
 		// Document Memory (DM): Architecture, Specs, etc.
 		if (/(spec|specification|architecture|blueprint|design document|planning artifact)/i.test(t)) {
-			return { primary: "document", decay: 0.0001 }; // Very slow decay
+			return { primary: "document", decay: 0.0001 };
+		}
+
+		// Emotional/Inspirational: Excitement, feelings, vision.
+		if (/(feel|excited|love|hate|happy|sad|frustrated|awesome)/i.test(t)) {
+			return { primary: "emotional", decay: 0.02 };
+		}
+
+		// Reflective: Realizations, logic jumps, insights.
+		if (/(realize|think|reflect|insight|understand|learned)/i.test(t)) {
+			return { primary: "reflective", decay: 0.01 };
+		}
+
+		// Procedural: Steps, how-to, instructions.
+		if (/(step|involves|process|how to|procedure|setup)/i.test(t)) {
+			return { primary: "procedural", decay: 0.005 };
 		}
 
 		// Semantic Memory (SM): Patterns, preferences, knowledge.
@@ -123,13 +138,15 @@ class MemoryStore {
 		}
 
 		// Episodic Memory (EM): Events, session history, decisions.
-		if (/(decided|completed|occurred|happened|session|meeting|sprint)/i.test(t)) {
+		if (
+			/(decided|completed|occurred|happened|session|meeting|sprint|yesterday|last week)/i.test(t)
+		) {
 			return { primary: "episodic", decay: 0.01 };
 		}
 
 		// Working Memory (WM): Immediate task context.
 		if (/(currently|now|working on|task|wp|input|instruction)/i.test(t)) {
-			return { primary: "working", decay: 0.05 }; // Rapid decay (short-term)
+			return { primary: "working", decay: 0.05 };
 		}
 
 		// Default to semantic (facts)
@@ -336,7 +353,7 @@ class MemoryStore {
 				if (r.id.length === 32 && r.sector !== "document") {
 					try {
 						reinforce.run(now, r.id);
-					} catch (e) {}
+					} catch (_e) {}
 				}
 			}
 		})();
@@ -415,7 +432,7 @@ class MemoryStore {
 
 	// Preserve backwards compat API
 	async save() {}
-	extract(text) {
+	extract(_text) {
 		return [];
 	}
 }

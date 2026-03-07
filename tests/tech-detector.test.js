@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const _path = require("node:path");
 const { detectStack } = require("../skill-creator/src/tech-detector");
 
 describe("Aizen-Gate Tech Detector", () => {

@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const { pauseSession, resumeSession } = require("./session-manager");
 
@@ -62,7 +62,7 @@ class LifecycleManager {
 	}
 
 	async isAppRunning() {
-		const { execSync } = require("child_process");
+		const { execSync } = require("node:child_process");
 		try {
 			// Common dev ports
 			const ports = [3000, 5173, 8000, 8080];
@@ -70,10 +70,10 @@ class LifecycleManager {
 				try {
 					const res = execSync(`lsof -i :${port}`, { stdio: "pipe" });
 					if (res.toString().length > 0) return true;
-				} catch (e) {}
+				} catch (_e) {}
 			}
 			return false;
-		} catch (e) {
+		} catch (_e) {
 			return false;
 		}
 	}

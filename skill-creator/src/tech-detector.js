@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 /**
  * Aizen-Gate Tech Detector
@@ -22,13 +22,13 @@ function detectStack(projectRoot) {
 
 		stack.languages.push("JavaScript/TypeScript");
 
-		if (deps["next"]) stack.frameworks.push("Next.js");
-		if (deps["react"]) stack.frameworks.push("React");
-		if (deps["express"]) stack.frameworks.push("Express");
-		if (deps["prisma"]) stack.databases.push("Prisma (ORM)");
-		if (deps["mongoose"]) stack.databases.push("MongoDB/Mongoose");
+		if (deps.next) stack.frameworks.push("Next.js");
+		if (deps.react) stack.frameworks.push("React");
+		if (deps.express) stack.frameworks.push("Express");
+		if (deps.prisma) stack.databases.push("Prisma (ORM)");
+		if (deps.mongoose) stack.databases.push("MongoDB/Mongoose");
 		if (deps["@stripe/stripe-js"]) stack.libraries.push("Stripe");
-		if (deps["tailwindcss"]) stack.tools.push("Tailwind CSS");
+		if (deps.tailwindcss) stack.tools.push("Tailwind CSS");
 	}
 
 	// 2. Detect from requirements.txt (Python)

@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const path = require("path");
+const path = require("node:path");
 const chalk = require("chalk");
 const { TaskCLI } = require("./task-cli");
 
@@ -9,7 +9,7 @@ const { TaskCLI } = require("./task-cli");
 async function scanTodos(projectRoot) {
 	console.log(chalk.red.bold("\n--- ⛩️ [Aizen] Codebase TODO Capture ---\n"));
 
-	const cli = new TaskCLI(projectRoot);
+	const _cli = new TaskCLI(projectRoot);
 	const extensions = [".js", ".ts", ".py", ".md", ".sh"];
 	const excludeDirs = ["node_modules", ".git", ".worktrees", "dist", "build"];
 
@@ -36,7 +36,7 @@ async function scanTodos(projectRoot) {
 						line.includes("# FIXME:")
 					) {
 						const type = line.includes("FIXME") ? "FIXME" : "TODO";
-						const text = line.split(type + ":")[1]?.trim() || "Missing description";
+						const text = line.split(`${type}:`)[1]?.trim() || "Missing description";
 						foundTodos.push({
 							file: path.relative(projectRoot, fullPath),
 							line: index + 1,

@@ -3,9 +3,30 @@
 	"version": "2.0.0",
 	"description": "The Ultimate AI-Orchestration & Specification Shield",
 	"main": "index.js",
+	"type": "commonjs",
 	"bin": {
 		"aizen-gate": "./bin/cli.js"
 	},
+	"files": [
+		"bin",
+		"scripts",
+		"adapters",
+		"agents",
+		"commands",
+		"completions",
+		"dashboard",
+		"docs",
+		"shared",
+		"skill-creator",
+		"skills",
+		"templates",
+		"installer",
+		"AIZEN_GATE.md",
+		"GEMINI.md",
+		"biome.json",
+		"module.yaml",
+		"profiles.yaml"
+	],
 	"scripts": {
 		"test": "vitest",
 		"test:run": "vitest run",
@@ -23,7 +44,10 @@
 		"agents",
 		"scrum",
 		"development",
-		"orchestrator"
+		"orchestrator",
+		"claude",
+		"cursor",
+		"gemini"
 	],
 	"author": "Aizen-Gate Team",
 	"license": "MIT",
