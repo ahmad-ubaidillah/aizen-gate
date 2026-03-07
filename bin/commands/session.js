@@ -1,5 +1,3 @@
-const chalk = require("chalk");
-
 function registerSession(program) {
 	// Pause
 	program

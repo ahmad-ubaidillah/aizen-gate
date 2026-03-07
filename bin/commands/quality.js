@@ -28,7 +28,7 @@ function registerQuality(program) {
 			try {
 				const output = execSync("./src/utils/security-check.sh", { stdio: "inherit" });
 				console.log(output);
-			} catch (e) {
+			} catch (_e) {
 				console.error(chalk.red("\n✖ Security check failed. Secrets detected."));
 			}
 		});
