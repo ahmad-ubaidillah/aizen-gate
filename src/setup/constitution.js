@@ -1,51 +1,82 @@
 const fs = require("fs-extra");
 const path = require("node:path");
 const chalk = require("chalk");
-const { select, input } = require("@inquirer/prompts");
+const { intro, outro, select, text, group, isCancel, cancel, note } = require("@clack/prompts");
 
 /**
  * Constitution: Interactive interview to set project DNA.
  */
 async function runConstitution(projectRoot) {
-	console.log(chalk.red.bold("\n--- ⛩️ [Aizen] Defining Project Constitution ---\n"));
+	intro(chalk.red.bold("⛩️  Aizen-Gate | Project Constitution"));
 
 	const constitutionPath = path.join(projectRoot, "aizen-gate", "shared", "constitution.md");
 
-	// Default values / existing if present
-	const _current = {};
 	if (fs.existsSync(constitutionPath)) {
-		console.log(chalk.yellow("[Aizen] Existing constitution found. Let's review/update it."));
-		// In a real scenario, we'd parse it back
+		note(
+			chalk.yellow("Existing constitution found. Let's update your project principles."),
+			"Review & Optimization"
+		);
 	}
 
-	const language = await input({ message: "Primary Language?", default: "TypeScript" });
-	const framework = await input({ message: "Primary Framework?", default: "Next.js" });
-	const qualityPriority = await select({
-		message: "Quality Priority?",
-		choices: [
-			{ name: "Stability (Test-driven, formal)", value: "high" },
-			{ name: "Velocity (Rapid iterations)", value: "medium" },
-			{ name: "Experimental (Proof-of-concept)", value: "low" },
-		],
-	});
-
-	const standards = await input({ message: "Linting/Coding Standard?", default: "Biome/ESLint" });
-	const testStack = await input({ message: "Testing Stack?", default: "Vitest" });
+	const results = await group(
+		{
+			language: () =>
+				text({
+					message: "Primary Language?",
+					placeholder: "TypeScript",
+					initialValue: "TypeScript",
+				}),
+			framework: () =>
+				text({
+					message: "Primary Framework?",
+					placeholder: "Next.js",
+					initialValue: "Next.js",
+				}),
+			qualityPriority: () =>
+				select({
+					message: "Quality Priority?",
+					options: [
+						{ label: "Stability (Test-driven, formal)", value: "high" },
+						{ label: "Velocity (Rapid iterations)", value: "medium" },
+						{ label: "Experimental (Proof-of-concept)", value: "low" },
+					],
+					initialValue: "high",
+				}),
+			standards: () =>
+				text({
+					message: "Linting/Coding Standard?",
+					placeholder: "Biome/ESLint",
+					initialValue: "Biome/ESLint",
+				}),
+			testStack: () =>
+				text({
+					message: "Testing Stack?",
+					placeholder: "Vitest",
+					initialValue: "Vitest",
+				}),
+		},
+		{
+			onCancel: () => {
+				cancel("Constitution definition aborted.");
+				process.exit(0);
+			},
+		}
+	);
 
 	const content = `
 # 🌀 Aizen-Gate Project Constitution
 *Generated: ${new Date().toISOString()}*
 
 ## 🏛️ Core Architectural DNA
-- **Language:** ${language}
-- **Framework:** ${framework}
-- **Quality Mode:** ${qualityPriority}
-- **Standards:** ${standards}
-- **Testing:** ${testStack}
+- **Language:** ${results.language}
+- **Framework:** ${results.framework}
+- **Quality Mode:** ${results.qualityPriority}
+- **Standards:** ${results.standards}
+- **Testing:** ${results.testStack}
 
 ## ⚓ Principles
-1. **Consistency:** All components must follow the established ${framework} patterns.
-2. **Quality:** Maintain high coverage with ${testStack}.
+1. **Consistency:** All components must follow the established ${results.framework} patterns.
+2. **Quality:** Maintain high coverage with ${results.testStack}.
 3. **Traceability:** Documentation and code must stay in sync.
 4. **Security:** No hardcoded secrets. Use .env placeholders.
 
@@ -57,7 +88,8 @@ async function runConstitution(projectRoot) {
 	await fs.ensureDir(path.dirname(constitutionPath));
 	await fs.writeFile(constitutionPath, content);
 
-	console.log(chalk.green(`\n✔ Project Constitution saved to ${constitutionPath}`));
+	outro(chalk.green(`✔ Project Constitution saved to ${chalk.dim(constitutionPath)}`));
 }
 
 module.exports = { runConstitution };
+

@@ -1,5 +1,7 @@
 const fs = require("fs-extra");
 const path = require("node:path");
+const { intro, outro, spinner, note, confirm, isCancel, cancel } = require("@clack/prompts");
+const chalk = require("chalk");
 const { detectPlatform } = require("./detect-platform");
 const { detectStack } = require("../../skill-creator/src/tech-detector");
 
@@ -8,19 +10,26 @@ const { detectStack } = require("../../skill-creator/src/tech-detector");
  * Handles file copying, environment setup, and Shield initialization.
  */
 async function installAizenGate(targetDir, selectedPlatform = null) {
+	intro(chalk.cyan.bold("⛩️  Aizen-Gate | Shield Installation"));
+
+	const s = spinner();
 	try {
 		const platform = selectedPlatform || detectPlatform();
 		const stack = detectStack(targetDir);
 
-		console.log(`[Aizen] Detected Platform: ${platform}`);
-		console.log(`[Aizen] Detected Tech Stack: ${stack.languages.join(", ")}`);
+		note(
+			`Detected Platform: ${chalk.yellow(platform)}\n` +
+			`Detected Tech Stack: ${chalk.yellow(stack.languages.join(", "))}`,
+			"Environment Discovery"
+		);
 
 		const aizenDir = path.join(targetDir, "aizen-gate");
 
 		// 1. Ensure target directory exists
 		if (!fs.existsSync(aizenDir)) {
-			console.log(`[Aizen] Initializing Aizen-Gate structure...`);
+			s.start("Initializing Aizen-Gate structure...");
 			fs.mkdirSync(aizenDir, { recursive: true });
+			s.stop("Aizen-Gate structure initialized.");
 		}
 
 		// 2. Copy framework files
@@ -38,6 +47,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 					"aizen-gate",
 					".worktrees",
 				];
+				if (src === sourceDir) return true;
 				if (skipList.includes(basename)) return false;
 
 				// Extra safety: don't copy the target directory into itself
@@ -47,11 +57,12 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 			},
 		};
 
-		if (!aizenDir.startsWith(sourceDir) || sourceDir.endsWith("node_modules/aizen-gate")) {
+		if (path.resolve(targetDir) !== path.resolve(sourceDir) || sourceDir.endsWith("node_modules/aizen-gate")) {
+			s.start("Copying Shield files...");
 			await fs.copy(sourceDir, aizenDir, options);
-			console.log(`[Aizen] Shield files copied to: ${aizenDir}`);
+			s.stop(`Shield files copied to: ${chalk.dim(aizenDir)}`);
 		} else {
-			console.log(`[Aizen] Running inside Aizen-Gate source. Updating structures only.`);
+			note("Running inside Aizen-Gate source. Updating structures only.", "Path Insight");
 		}
 
 		// 3. Initialize Shared State if not exists
@@ -65,10 +76,10 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 			{ path: "research.md", template: "research.md" },
 		];
 
+		s.start("Initializing state files...");
 		for (const file of initFiles) {
 			const fullPath = path.join(sharedDir, file.path);
 			if (!fs.existsSync(fullPath)) {
-				console.log(`[Aizen] Initializing ${file.path}...`);
 				const templatePath = path.join(sourceDir, "templates", file.template);
 				if (fs.existsSync(templatePath)) {
 					let content = fs.readFileSync(templatePath, "utf8");
@@ -79,18 +90,20 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 				}
 			}
 		}
+		s.stop("Shared state files ready.");
 
 		const memoryPath = path.join(sharedDir, "memory.md");
 		if (fs.existsSync(memoryPath)) {
-			console.log(`[Aizen] Customizing project memory...`);
+			s.start("Customizing project memory...");
 			let memoryContent = fs.readFileSync(memoryPath, "utf8");
 			const stackStr = stack.languages.concat(stack.frameworks).join(", ");
 			memoryContent = memoryContent.replace("{Detected/Selected Tech Stack}", stackStr);
 			fs.writeFileSync(memoryPath, memoryContent);
+			s.stop("Project memory customized.");
 		}
 
 		// 4. Platform-Specific Injection
-		console.log(`[Aizen] Injecting platform-specific Shield configurations for ${platform}...`);
+		s.start(`Injecting Shield configurations for ${platform}...`);
 
 		let slashCommandsText = "";
 		try {
@@ -102,7 +115,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 				}
 			}
 		} catch (e) {
-			console.error("[Aizen] Failed to parse slash commands:", e.message);
+			// Silent fail for slash commands
 		}
 
 		const instructionPrefix = `\n\n### ⛩️ [Aizen] Aizen-Gate Integration
@@ -113,6 +126,8 @@ Read the full manual at: \`${aizenDir}/AIZEN_GATE.md\`
 ${slashCommandsText}
 `;
 
+		const updatedFiles = [];
+
 		// 1. Claude Code -> CLAUDE.md
 		if (platform === "claude-code" || platform === "generic") {
 			const claudePath = path.join(targetDir, "CLAUDE.md");
@@ -121,7 +136,7 @@ ${slashCommandsText}
 				: "# Project Instructions\n";
 			if (!content.includes("Aizen-Gate Integration")) {
 				fs.writeFileSync(claudePath, content + instructionPrefix);
-				console.log(`[Aizen] Updated CLAUDE.md`);
+				updatedFiles.push("CLAUDE.md");
 			}
 		}
 
@@ -129,14 +144,14 @@ ${slashCommandsText}
 		if (platform === "cursor") {
 			const cursorPath = path.join(targetDir, ".cursorrules");
 			fs.appendFileSync(cursorPath, instructionPrefix);
-			console.log(`[Aizen] Updated .cursorrules`);
+			updatedFiles.push(".cursorrules");
 		}
 
 		// 3. Gemini CLI / Antigravity -> GEMINI.md
 		if (platform === "antigravity" || platform === "gemini") {
 			const geminiPath = path.join(targetDir, "GEMINI.md");
 			fs.appendFileSync(geminiPath, instructionPrefix);
-			console.log(`[Aizen] Updated GEMINI.md`);
+			updatedFiles.push("GEMINI.md");
 		}
 
 		// 4. GitHub Copilot -> .github/copilot-instructions.md
@@ -145,7 +160,7 @@ ${slashCommandsText}
 			if (!fs.existsSync(copilotDir)) fs.mkdirSync(copilotDir);
 			const copilotPath = path.join(copilotDir, "copilot-instructions.md");
 			fs.appendFileSync(copilotPath, instructionPrefix);
-			console.log(`[Aizen] Updated .github/copilot-instructions.md`);
+			updatedFiles.push(".github/copilot-instructions.md");
 		}
 
 		// 5. Windsurf / Codex -> .windsurf/rules/
@@ -154,7 +169,7 @@ ${slashCommandsText}
 			if (!fs.existsSync(windsurfDir)) fs.mkdirSync(windsurfDir, { recursive: true });
 			const windsurfPath = path.join(windsurfDir, "rules.md");
 			fs.appendFileSync(windsurfPath, instructionPrefix);
-			console.log(`[Aizen] Updated .windsurf/rules/rules.md`);
+			updatedFiles.push(".windsurf/rules/rules.md");
 		}
 
 		// 6. Kiro / Kilo / OpenCode -> .kiro/ / .agents/
@@ -163,7 +178,7 @@ ${slashCommandsText}
 			if (!fs.existsSync(kiroDir)) fs.mkdirSync(kiroDir);
 			const kiroPath = path.join(kiroDir, "config.md");
 			fs.appendFileSync(kiroPath, instructionPrefix);
-			console.log(`[Aizen] Updated .${platform}/config.md`);
+			updatedFiles.push(`.${platform}/config.md`);
 		}
 
 		// Always update AGENTS.md for universal visibility
@@ -173,18 +188,19 @@ ${slashCommandsText}
 			!fs.readFileSync(agentsPath, "utf8").includes("Shield Integration")
 		) {
 			fs.appendFileSync(agentsPath, instructionPrefix);
-			console.log(`[Aizen] Updated AGENTS.md`);
+			updatedFiles.push("AGENTS.md");
 		}
 
+		s.stop(`Injected instructions into ${updatedFiles.length} files.`);
+
 		// 5. Hardening (Security Hooks & Biome)
-		console.log(`[Aizen] Hardening workspace...`);
+		s.start("Hardening workspace...");
 
 		// Copy biome.json to root if not exists
 		const sourceBiome = path.join(sourceDir, "biome.json");
 		const targetBiome = path.join(targetDir, "biome.json");
 		if (fs.existsSync(sourceBiome) && !fs.existsSync(targetBiome)) {
 			fs.copySync(sourceBiome, targetBiome);
-			console.log(`[Aizen] ✔ Biome configuration initialized.`);
 		}
 
 		// Initialize Git Hooks if in a git repo
@@ -215,15 +231,39 @@ exit 0
 `;
 			fs.writeFileSync(preCommitPath, hookContent);
 			fs.chmodSync(preCommitPath, "755");
-			console.log(`[Aizen] ✔ Git pre-commit hooks installed.`);
+		}
+		s.stop("Workspace hardening complete.");
+
+		outro(chalk.green("✔ Shield installation complete!"));
+
+		const runConst = await confirm({
+			message: "Would you like to define your Project Constitution (Principles/DNA) now?",
+			initialValue: true,
+		});
+
+		if (isCancel(runConst)) {
+			cancel("Onboarding cancelled.");
+			return { success: true };
 		}
 
-		console.log(`[Aizen] Shield installation complete! Use "npx aizen-gate start" to begin. ⛩️`);
+		if (runConst) {
+			const { runConstitution } = require("../../src/setup/constitution");
+			await runConstitution(targetDir);
+		}
+
+		note(
+			`1. Run ${chalk.cyan("npx aizen-gate onboarding")} to learn the workflow.\n` +
+			`2. Run ${chalk.cyan("npx aizen-gate start")} to begin your first session.`,
+			"Next Steps"
+		);
+
 		return { success: true, platform, stack };
 	} catch (error) {
-		console.error(`[Aizen] Shield failed to deploy: ${error.message}`);
+		s.stop("Installation failed.");
+		cancel(`Shield failed to deploy: ${error.message}`);
 		return { success: false, error: error.message };
 	}
 }
 
 module.exports = { installAizenGate };
+
