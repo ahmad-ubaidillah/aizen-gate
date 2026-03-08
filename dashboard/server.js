@@ -22,7 +22,7 @@ class DashboardServer {
 		this.app.use(express.json());
 
 		// Security headers
-		this.app.use((req, res, next) => {
+		this.app.use((_req, res, next) => {
 			res.setHeader("X-Content-Type-Options", "nosniff");
 			res.setHeader("X-Frame-Options", "DENY");
 			res.setHeader("X-XSS-Protection", "1; mode=block");
@@ -114,7 +114,7 @@ class DashboardServer {
 					let fm;
 					try {
 						fm = yaml.load(match[1]);
-					} catch (yamlErr) {
+					} catch (_yamlErr) {
 						return res.status(400).json({ error: "Invalid YAML in task file" });
 					}
 					const oldStatus = fm.status;

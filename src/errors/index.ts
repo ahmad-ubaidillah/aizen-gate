@@ -1,9 +1,11 @@
-import { BaseError } from "./base-error";
-import { RuntimeError } from "./runtime-error";
-import { TimeoutError } from "./timeout-error";
-import { ValidationError } from "./validation-error";
+import { BaseError } from "./base-error.js";
+import { RuntimeError } from "./runtime-error.js";
+import { TimeoutError } from "./timeout-error.js";
+import { ValidationError } from "./validation-error.js";
 
-export type { BaseErrorOptions, ErrorMetadata } from "./base-error";
+// Re-export error classes
+export { BaseError, RuntimeError, TimeoutError, ValidationError };
+export type { BaseErrorOptions, ErrorMetadata } from "./base-error.js";
 
 /**
  * Error Codes

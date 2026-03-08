@@ -294,7 +294,7 @@ function getPlatformConfig(platform) {
 		},
 	};
 
-	return configs[platform] || configs["generic"];
+	return configs[platform] || configs.generic;
 }
 
 module.exports = {

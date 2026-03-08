@@ -1,9 +1,13 @@
-const fs = require("fs-extra");
-const path = require("node:path");
-const { intro, outro, spinner, note, confirm, isCancel, cancel } = require("@clack/prompts");
-const chalk = require("chalk");
-const { detectPlatform, getSupportedPlatforms, getPlatformConfig } = require("./detect-platform");
-const { detectStack } = require("../../skill-creator/src/tech-detector");
+import fs from "fs-extra";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { intro, outro, spinner, note, confirm, isCancel, cancel } from "@clack/prompts";
+import chalk from "chalk";
+import { detectPlatform, } from "./detect-platform.js";
+import { detectStack } from "../../skill-creator/src/tech-detector.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Aizen-Gate Core Installer (formerly az-install)
@@ -15,7 +19,7 @@ const { detectStack } = require("../../skill-creator/src/tech-detector");
  * - Bolt.new, Lovable, Devin, OpenDevin
  * - Continue, Augment, Codeium, Tabnine
  */
-async function installAizenGate(targetDir, selectedPlatform = null) {
+export async function _installAizenGate(targetDir, selectedPlatform = null) {
 	intro(chalk.cyan.bold("⛩️  Aizen-Gate | Shield Installation"));
 
 	const s = spinner();
@@ -138,7 +142,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 					slashCommandsText += `- \`/${key}\` -> ${val.description}\n  Prompt: ${val.prompt}\n`;
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			// Silent fail for slash commands
 		}
 
@@ -294,7 +298,7 @@ exit 0
 		}
 
 		if (runConst) {
-			const { runConstitution } = require("../../src/setup/constitution");
+			const { runConstitution } = await import("../../src/setup/constitution.js");
 			await runConstitution(targetDir);
 		}
 
@@ -311,5 +315,3 @@ exit 0
 		return { success: false, error: error.message };
 	}
 }
-
-module.exports = { installAizenGate };

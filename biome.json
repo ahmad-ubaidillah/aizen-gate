@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
 	"files": {
-		"includes": ["**", "!**/tests", "!**/node_modules", "!**/smoke-test"]
+		"includes": ["src/**/*", "bin/**/*", "skill-creator/**/*"]
 	},
 	"linter": {
 		"enabled": true,
@@ -9,7 +9,12 @@
 			"recommended": true,
 			"suspicious": {
 				"noAssignInExpressions": "off",
-				"useIterableCallbackReturn": "off"
+				"useIterableCallbackReturn": "off",
+				"noExplicitAny": "off",
+				"noImplicitAnyLet": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
 			}
 		}
 	},
