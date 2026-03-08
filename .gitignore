@@ -3,10 +3,6 @@ node_modules/
 installer/node_modules/
 skill-creator/node_modules/
 
-# Package lock files (use Yarn or pnpm if preferred)
-installer/package-lock.json
-skill-creator/package-lock.json
-
 # Environment variables
 .env
 .env.local
