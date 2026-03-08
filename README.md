@@ -90,7 +90,7 @@ Aizen-Gate coordinates a specialized squad. You can address them directly using 
 
 Aizen-Gate enforces a rigorous process to ensure zero-defect delivery:
 
-1.  **`specify`** — The `[PM]` interviews you to create a bullet-proof `spec.md`.
+1.  **`specify`** — The `[PM]` launches an interactive wizard to create a bullet-proof `spec.md`.
 2.  **`discuss`** — Resolve gray areas before code is written.
 3.  **`research`** — Parallel technical research via sub-agents into `research.md`.
 4.  **`plan`** — Architectural debate to finalize the blueprint.
@@ -102,12 +102,12 @@ _Orchestrated by the unified **MissionEngine** (v2.1)._
 
 ---
 
-## �️ CLI Commands Reference
+## 🖥️ CLI Commands Reference
 
 ### Core Workflow
 
 ```bash
-npx aizen-gate specify    # Start discovery interview
+npx aizen-gate specify    # Launch interactive discovery wizard
 npx aizen-gate research   # Parallel technical research
 npx aizen-gate plan       # Architectural planning & debate
 npx aizen-gate tasks      # Generate Work Packages (WPs)
@@ -151,7 +151,7 @@ Aizen-Gate detect and integrates into your favorite AI development tools:
 
 ---
 
-## �️ Installation
+## 📥 Installation
 
 ```bash
 # 1. Install globally via NPM

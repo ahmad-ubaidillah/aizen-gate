@@ -4,38 +4,85 @@ description: Maps agents and tasks to the most efficient LLM models.
 version: 1.0
 ---
 
-# 🤖 Agent Model Mapping
+# Agent Model Mapping
 
-| Agent | Task | High-End (Opus) | Standard (Sonnet) | Budget (Mini) |
-|-------|------|----------|----------|----------|
-| **[ARCH]** | Architecture, Complex Logic | ✅ | — | — |
-| **[PM]** | PRD, User Stories | ✅ | ✅ | — |
-| **[DEV]** | Implementation, TDD | — | ✅ | — |
-| **[DESIGN]** | UI/UX, CSS, Layouts | — | ✅ | — |
-| **[QA]** | Verification, Logic check | — | ✅ | — |
-| **[DOCS]** | README, Retrospective | — | — | ✅ |
-| **[ANALYST]** | Research, Scraping | — | ✅ | — |
-| **[QUICK]** | Small Fixes, CLI | — | — | ✅ |
+# Use proper YAML list format for agent-task-model mappings
+agent_mappings:
+  - agent: "[ARCH]"
+    task: "Architecture, Complex Logic"
+    high_end: "claude-3-opus"
+    standard: null
+    budget: null
+  - agent: "[PM]"
+    task: "PRD, User Stories"
+    high_end: "claude-3-opus"
+    standard: "claude-3-5-sonnet"
+    budget: null
+  - agent: "[DEV]"
+    task: "Implementation, TDD"
+    high_end: null
+    standard: "claude-3-5-sonnet"
+    budget: null
+  - agent: "[DESIGN]"
+    task: "UI/UX, CSS, Layouts"
+    high_end: null
+    standard: "claude-3-5-sonnet"
+    budget: null
+  - agent: "[QA]"
+    task: "Verification, Logic check"
+    high_end: null
+    standard: "claude-3-5-sonnet"
+    budget: null
+  - agent: "[DOCS]"
+    task: "README, Retrospective"
+    high_end: null
+    standard: null
+    budget: "claude-3-haiku"
+  - agent: "[ANALYST]"
+    task: "Research, Scraping"
+    high_end: null
+    standard: "claude-3-5-sonnet"
+    budget: null
+  - agent: "[QUICK]"
+    task: "Small Fixes, CLI"
+    high_end: null
+    standard: null
+    budget: "claude-3-haiku"
 
-# 🤖 Model Family Routing
+# Model Family Routing
 # Families catch different blind spots - use Sonnet for implementation, Opus for reasoning
 
 families:
-  reasoning: ["anthropic/claude-3-opus", "google/gemini-1.5-pro"]
-  implementation: ["anthropic/claude-3-5-sonnet", "openai/gpt-4o"]
-  verification: ["anthropic/claude-3-7-sonnet", "google/gemini-2.0-flash"]
-  budget: ["anthropic/claude-3-haiku", "openai/gpt-4o-mini"]
+  reasoning:
+    - "anthropic/claude-3-opus"
+    - "google/gemini-1.5-pro"
+  implementation:
+    - "anthropic/claude-3-5-sonnet"
+    - "openai/gpt-4o"
+  verification:
+    - "anthropic/claude-3-7-sonnet"
+    - "google/gemini-2.0-flash"
+  budget:
+    - "anthropic/claude-3-haiku"
+    - "openai/gpt-4o-mini"
 
-fallback_chain: ["implementation", "reasoning", "budget"]
+fallback_chain:
+  - implementation
+  - reasoning
+  - budget
 
-# ⚙️ Task Profiles
-# ...
-
-- **Research**: Use **Standard** for accuracy + speed.
-- **Planning**: Use **High-End** for maximum reasoning.
-- **Coding**: Use **Standard** for high coding benchmarks.
-- **Verification**: Use **Standard** or **High-End** for logic verification.
-- **Reporting**: Use **Budget** for low-cost token consumption.
+# Task Profiles
+task_profiles:
+  research:
+    recommendation: "Use Standard for accuracy + speed"
+  planning:
+    recommendation: "Use High-End for maximum reasoning"
+  coding:
+    recommendation: "Use Standard for high coding benchmarks"
+  verification:
+    recommendation: "Use Standard or High-End for logic verification"
+  reporting:
+    recommendation: "Use Budget for low-cost token consumption"
 
 ---
 

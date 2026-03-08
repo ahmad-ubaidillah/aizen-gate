@@ -1,15 +1,25 @@
-const fs = require("fs-extra");
-const path = require("node:path");
-const { intro, outro, spinner, note, confirm, isCancel, cancel } = require("@clack/prompts");
-const chalk = require("chalk");
-const { detectPlatform } = require("./detect-platform");
-const { detectStack } = require("../../skill-creator/src/tech-detector");
+import fs from "fs-extra";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { intro, outro, spinner, note, confirm, isCancel, cancel } from "@clack/prompts";
+import chalk from "chalk";
+import { detectPlatform, } from "./detect-platform.js";
+import { detectStack } from "../../skill-creator/src/tech-detector.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Aizen-Gate Core Installer (formerly az-install)
  * Handles file copying, environment setup, and Shield initialization.
+ *
+ * Supports 20+ AI IDEs/CLIs:
+ * - Claude Code, Cursor, Windsurf, Kiro, Kilo, OpenCode, Zed
+ * - Gemini CLI, GitHub Copilot, Cline
+ * - Bolt.new, Lovable, Devin, OpenDevin
+ * - Continue, Augment, Codeium, Tabnine
  */
-async function installAizenGate(targetDir, selectedPlatform = null) {
+export async function _installAizenGate(targetDir, selectedPlatform = null) {
 	intro(chalk.cyan.bold("⛩️  Aizen-Gate | Shield Installation"));
 
 	const s = spinner();
@@ -19,8 +29,8 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 
 		note(
 			`Detected Platform: ${chalk.yellow(platform)}\n` +
-			`Detected Tech Stack: ${chalk.yellow(stack.languages.join(", "))}`,
-			"Environment Discovery"
+				`Detected Tech Stack: ${chalk.yellow(stack.languages.join(", "))}`,
+			"Environment Discovery",
 		);
 
 		const aizenDir = path.join(targetDir, "aizen-gate");
@@ -57,10 +67,28 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 			},
 		};
 
-		if (path.resolve(targetDir) !== path.resolve(sourceDir) || sourceDir.endsWith("node_modules/aizen-gate")) {
-			s.start("Copying Shield files...");
-			await fs.copy(sourceDir, aizenDir, options);
-			s.stop(`Shield files copied to: ${chalk.dim(aizenDir)}`);
+		if (
+			path.resolve(targetDir) !== path.resolve(sourceDir) ||
+			sourceDir.endsWith("node_modules/aizen-gate")
+		) {
+			// Normalize paths for Windows compatibility (handle symlinks/junctions)
+			const normalizedSource = path.normalize(sourceDir);
+			const normalizedTarget = path.normalize(targetDir);
+
+			// Ensure we're not copying target into itself
+			if (
+				normalizedTarget.startsWith(normalizedSource) ||
+				normalizedSource.startsWith(normalizedTarget)
+			) {
+				note(
+					"Source and target paths overlap. Skipping copy to prevent recursion.",
+					"Path Warning",
+				);
+			} else {
+				s.start("Copying Shield files...");
+				await fs.copy(sourceDir, aizenDir, options);
+				s.stop(`Shield files copied to: ${chalk.dim(aizenDir)}`);
+			}
 		} else {
 			note("Running inside Aizen-Gate source. Updating structures only.", "Path Insight");
 		}
@@ -102,7 +130,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 			s.stop("Project memory customized.");
 		}
 
-		// 4. Platform-Specific Injection
+		// 4. Platform-Specific Injection - Supports 20+ AI IDEs/CLIs
 		s.start(`Injecting Shield configurations for ${platform}...`);
 
 		let slashCommandsText = "";
@@ -114,7 +142,7 @@ async function installAizenGate(targetDir, selectedPlatform = null) {
 					slashCommandsText += `- \`/${key}\` -> ${val.description}\n  Prompt: ${val.prompt}\n`;
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			// Silent fail for slash commands
 		}
 
@@ -128,57 +156,80 @@ ${slashCommandsText}
 
 		const updatedFiles = [];
 
-		// 1. Claude Code -> CLAUDE.md
-		if (platform === "claude-code" || platform === "generic") {
-			const claudePath = path.join(targetDir, "CLAUDE.md");
-			const content = fs.existsSync(claudePath)
-				? fs.readFileSync(claudePath, "utf8")
-				: "# Project Instructions\n";
-			if (!content.includes("Aizen-Gate Integration")) {
-				fs.writeFileSync(claudePath, content + instructionPrefix);
-				updatedFiles.push("CLAUDE.md");
+		// Platform injection mapping - handles all supported IDEs/CLIs
+		const platformInjections = [
+			// CLI Tools
+			{ platform: "claude-code", file: "CLAUDE.md", create: true },
+			{ platform: "antigravity", file: "GEMINI.md", create: true },
+
+			// IDEs
+			{ platform: "cursor", file: ".cursorrules", create: true },
+			{
+				platform: "windsurf",
+				file: ".windsurf/rules/rules.md",
+				create: true,
+				mkdir: ".windsurf/rules",
+			},
+			{ platform: "kiro", file: ".kiro/config.md", create: true, mkdir: ".kiro" },
+			{ platform: "kilo", file: ".kilo/config.md", create: true, mkdir: ".kilo" },
+			{ platform: "opencode", file: ".agents/config.md", create: true, mkdir: ".agents" },
+			{ platform: "zed", file: ".zed/settings.json", create: true, mkdir: ".zed" },
+
+			// VSCode Extensions
+			{
+				platform: "copilot",
+				file: ".github/copilot-instructions.md",
+				create: true,
+				mkdir: ".github",
+			},
+			{ platform: "cline", file: ".claude/settings.json", create: true, mkdir: ".claude" },
+			{ platform: "continue", file: "continue_config.json", create: true },
+
+			// Web-based AI Builders
+			{ platform: "bolt", file: ".bolt/config", create: true, mkdir: ".bolt" },
+			{ platform: "lovable", file: "lovable.config", create: true },
+
+			// AI Agents
+			{ platform: "devin", file: ".devin/config.md", create: true, mkdir: ".devin" },
+			{ platform: "opendevin", file: "opendevin.conf", create: true },
+
+			// Extensions
+			{ platform: "augment", file: ".augmentrc", create: true },
+			{ platform: "codeium", file: ".codeium/config.json", create: true, mkdir: ".codeium" },
+			{ platform: "tabnine", file: ".tabnine/config.json", create: true, mkdir: ".tabnine" },
+		];
+
+		// Inject into detected platform
+		for (const injection of platformInjections) {
+			if (
+				platform === injection.platform ||
+				(platform === "generic" && injection.platform === "claude-code")
+			) {
+				try {
+					const filePath = path.join(targetDir, injection.file);
+
+					// Create directory if needed
+					if (injection.mkdir) {
+						const dirPath = path.join(targetDir, injection.mkdir);
+						if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+					}
+
+					// Create file with instructions or append
+					if (injection.create && !fs.existsSync(filePath)) {
+						fs.writeFileSync(filePath, `# Aizen-Gate Integration\n${instructionPrefix}`);
+					} else if (fs.existsSync(filePath)) {
+						const existing = fs.readFileSync(filePath, "utf8");
+						if (!existing.includes("Aizen-Gate Integration")) {
+							fs.appendFileSync(filePath, instructionPrefix);
+						}
+					}
+					updatedFiles.push(injection.file);
+				} catch (err) {
+					console.log(
+						chalk.yellow(`Warning: Could not inject into ${injection.file}: ${err.message}`),
+					);
+				}
 			}
-		}
-
-		// 2. Cursor -> .cursorrules
-		if (platform === "cursor") {
-			const cursorPath = path.join(targetDir, ".cursorrules");
-			fs.appendFileSync(cursorPath, instructionPrefix);
-			updatedFiles.push(".cursorrules");
-		}
-
-		// 3. Gemini CLI / Antigravity -> GEMINI.md
-		if (platform === "antigravity" || platform === "gemini") {
-			const geminiPath = path.join(targetDir, "GEMINI.md");
-			fs.appendFileSync(geminiPath, instructionPrefix);
-			updatedFiles.push("GEMINI.md");
-		}
-
-		// 4. GitHub Copilot -> .github/copilot-instructions.md
-		if (platform === "copilot") {
-			const copilotDir = path.join(targetDir, ".github");
-			if (!fs.existsSync(copilotDir)) fs.mkdirSync(copilotDir);
-			const copilotPath = path.join(copilotDir, "copilot-instructions.md");
-			fs.appendFileSync(copilotPath, instructionPrefix);
-			updatedFiles.push(".github/copilot-instructions.md");
-		}
-
-		// 5. Windsurf / Codex -> .windsurf/rules/
-		if (platform === "windsurf") {
-			const windsurfDir = path.join(targetDir, ".windsurf", "rules");
-			if (!fs.existsSync(windsurfDir)) fs.mkdirSync(windsurfDir, { recursive: true });
-			const windsurfPath = path.join(windsurfDir, "rules.md");
-			fs.appendFileSync(windsurfPath, instructionPrefix);
-			updatedFiles.push(".windsurf/rules/rules.md");
-		}
-
-		// 6. Kiro / Kilo / OpenCode -> .kiro/ / .agents/
-		if (platform === "kiro" || platform === "kilo") {
-			const kiroDir = path.join(targetDir, `.${platform}`);
-			if (!fs.existsSync(kiroDir)) fs.mkdirSync(kiroDir);
-			const kiroPath = path.join(kiroDir, "config.md");
-			fs.appendFileSync(kiroPath, instructionPrefix);
-			updatedFiles.push(`.${platform}/config.md`);
 		}
 
 		// Always update AGENTS.md for universal visibility
@@ -247,14 +298,14 @@ exit 0
 		}
 
 		if (runConst) {
-			const { runConstitution } = require("../../src/setup/constitution");
+			const { runConstitution } = await import("../../src/setup/constitution.js");
 			await runConstitution(targetDir);
 		}
 
 		note(
 			`1. Run ${chalk.cyan("npx aizen-gate onboarding")} to learn the workflow.\n` +
-			`2. Run ${chalk.cyan("npx aizen-gate start")} to begin your first session.`,
-			"Next Steps"
+				`2. Run ${chalk.cyan("npx aizen-gate start")} to begin your first session.`,
+			"Next Steps",
 		);
 
 		return { success: true, platform, stack };
@@ -264,6 +315,3 @@ exit 0
 		return { success: false, error: error.message };
 	}
 }
-
-module.exports = { installAizenGate };
-
