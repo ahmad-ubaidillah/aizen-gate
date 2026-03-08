@@ -20,18 +20,6 @@ async function runConstitution(projectRoot) {
 
 	const results = await group(
 		{
-			language: () =>
-				text({
-					message: "Primary Language?",
-					placeholder: "TypeScript",
-					initialValue: "TypeScript",
-				}),
-			framework: () =>
-				text({
-					message: "Primary Framework?",
-					placeholder: "Next.js",
-					initialValue: "Next.js",
-				}),
 			qualityPriority: () =>
 				select({
 					message: "Quality Priority?",
@@ -41,18 +29,6 @@ async function runConstitution(projectRoot) {
 						{ label: "Experimental (Proof-of-concept)", value: "low" },
 					],
 					initialValue: "high",
-				}),
-			standards: () =>
-				text({
-					message: "Linting/Coding Standard?",
-					placeholder: "Biome/ESLint",
-					initialValue: "Biome/ESLint",
-				}),
-			testStack: () =>
-				text({
-					message: "Testing Stack?",
-					placeholder: "Vitest",
-					initialValue: "Vitest",
 				}),
 		},
 		{
@@ -68,15 +44,12 @@ async function runConstitution(projectRoot) {
 *Generated: ${new Date().toISOString()}*
 
 ## 🏛️ Core Architectural DNA
-- **Language:** ${results.language}
-- **Framework:** ${results.framework}
+- **Architecture:** Agnostic (Framework & Language independent)
 - **Quality Mode:** ${results.qualityPriority}
-- **Standards:** ${results.standards}
-- **Testing:** ${results.testStack}
 
 ## ⚓ Principles
-1. **Consistency:** All components must follow the established ${results.framework} patterns.
-2. **Quality:** Maintain high coverage with ${results.testStack}.
+1. **Consistency:** All components must follow the established architectural patterns of the workspace.
+2. **Quality:** Maintain high standards according to the "${results.qualityPriority}" priority mode.
 3. **Traceability:** Documentation and code must stay in sync.
 4. **Security:** No hardcoded secrets. Use .env placeholders.
 

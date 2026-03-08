@@ -5,9 +5,10 @@ function registerQuality(program) {
 	program
 		.command("doctor")
 		.description("Audit the workspace for protocol compliance and state health")
-		.action(async () => {
+		.option("-f, --fix", "Attempt to auto-repair detected issues")
+		.action(async (options) => {
 			const { runDoctor } = require("../../src/quality/doctor");
-			await runDoctor(process.cwd());
+			await runDoctor(process.cwd(), options);
 		});
 
 	// Benchmark

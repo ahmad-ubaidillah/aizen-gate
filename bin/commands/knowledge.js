@@ -45,14 +45,6 @@ function registerKnowledge(program) {
 			console.log("");
 		});
 
-	// Map
-	program
-		.command("map")
-		.description("Generate an architectural map of the project")
-		.action(async () => {
-			const { mapCodebase } = require("../../src/utils/mapper");
-			await mapCodebase(process.cwd());
-		});
 }
 
 module.exports = { registerKnowledge };

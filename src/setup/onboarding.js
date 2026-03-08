@@ -35,19 +35,22 @@ async function runOnboarding(projectRoot) {
 	switch (step) {
 		case "pipeline":
 			note(
-				`1. ${chalk.cyan("npx aizen-gate specify")}  -> Interview to define the feature.\n` +
+				`To run the full pipeline automatically:\n` +
+					`→ ${chalk.cyan("npx aizen-gate wizard")}\n\n` +
+					`Or run step-by-step:\n` +
+					`1. ${chalk.cyan("npx aizen-gate specify")}  -> Interview to define the feature.\n` +
 					`2. ${chalk.cyan("npx aizen-gate plan")}     -> Architect makes a blueprint.\n` +
 					`3. ${chalk.cyan("npx aizen-gate tasks")}    -> Break down into Work Packages.\n` +
-					`4. ${chalk.cyan("npx aizen-gate auto")}     -> Launch autonomous execution loop.\n\n` +
-					`Try running ${chalk.yellow("npx aizen-gate specify")} to begin!`,
+					`4. ${chalk.cyan("npx aizen-gate auto")}     -> Launch autonomous execution.\n\n` +
+					`Try running ${chalk.yellow("npx aizen-gate wizard")} to begin!`,
 				"The 7-Phase Strategic Pipeline",
 			);
 			break;
 
 		case "constitution":
 			note(
-				"The Constitution defines your project's DNA (Language, Frameworks, Quality Mode).\n" +
-					"Agents use this as a 'Shield' to refuse non-compliant code.\n\n" +
+				"The Constitution defines your project's DNA and Quality Mode.\n" +
+					"Aizen is language-agnostic and will adapt to your workspace.\n\n" +
 					`Run: ${chalk.yellow("npx aizen-gate constitution")}`,
 				"Project Governance",
 			);
