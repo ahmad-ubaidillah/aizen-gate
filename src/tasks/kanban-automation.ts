@@ -4,7 +4,6 @@ export class KanbanAutomation {
 	private cli: TaskCLI;
 
 	constructor(projectRoot: string) {
-		this.projectRoot = projectRoot;
 		this.cli = new TaskCLI(projectRoot);
 	}
 

@@ -37,7 +37,6 @@ export class MemoryStore {
 	private db: any;
 
 	constructor(projectRoot: string) {
-		this.projectRoot = projectRoot;
 		this.memoryPath = path.join(projectRoot, "aizen-gate", "shared", "memory.db");
 		this.legacyJsonPath = path.join(projectRoot, "aizen-gate", "shared", "memory-facts.json");
 		this.db = null;

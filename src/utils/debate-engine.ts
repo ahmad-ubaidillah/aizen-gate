@@ -15,7 +15,6 @@ export class DebateEngine {
 	private validation: any | null;
 
 	constructor(projectRoot: string, featureDir: string) {
-		this.projectRoot = projectRoot;
 		this.featureDir = featureDir;
 		this.debateId = `debate-${Date.now()}`;
 		this.historyPath = path.join(

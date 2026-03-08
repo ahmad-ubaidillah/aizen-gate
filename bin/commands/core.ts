@@ -20,8 +20,8 @@ export function registerCore(program: Command): void {
 		.description("Install Aizen-Gate into the current project workspace")
 		.option("-y, --yes", "Skip interactive prompts and use defaults")
 		.action(async (options: { yes?: boolean }) => {
-			const { installAizenGate } = await import("../../installer/src/install.js");
-			const { runOnboarding } = await import("../../src/setup/onboarding.js");
+			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
+			const { runOnboarding } = (await import("../../src/setup/onboarding.js")) as any;
 			await installAizenGate(process.cwd());
 			if (!options.yes) {
 				await runOnboarding(process.cwd());
@@ -35,15 +35,16 @@ export function registerCore(program: Command): void {
 		.option("--classic", "Use the classic onboarding instead")
 		.option("--comprehensive", "Use the new comprehensive setup with all 8 steps")
 		.action(async (options: { classic?: boolean; comprehensive?: boolean }) => {
+			const projectRoot = process.cwd(); // Declare projectRoot here
 			if (options.comprehensive) {
 				const { runOnboarding } = await import("../../src/setup/onboarding.js");
-				await runOnboarding({ comprehensive: true, projectRoot: process.cwd() });
+				await runOnboarding({ comprehensive: true, projectRoot });
 			} else if (options.classic) {
 				const { runOnboarding } = await import("../../src/setup/onboarding.js");
-				await runOnboarding(process.cwd());
+				await runOnboarding(projectRoot);
 			} else {
 				const { runEnhancedOnboarding } = await import("../../src/setup/onboarding.js");
-				await runEnhancedOnboarding(process.cwd());
+				await runEnhancedOnboarding(projectRoot);
 			}
 		});
 
@@ -52,8 +53,8 @@ export function registerCore(program: Command): void {
 		.command("start")
 		.description("Initialize a new Aizen session and grooming phase")
 		.action(async () => {
-			const { runPlaybook } = await import("../../src/utils/playbook-runner.js");
-			runPlaybook("start", process.cwd());
+			const { runPlaybook } = (await import("../../src/utils/playbook-runner.js")) as any;
+			await runPlaybook("start", process.cwd());
 		});
 
 	// 3. Status
@@ -61,7 +62,8 @@ export function registerCore(program: Command): void {
 		.command("status")
 		.description("Check the current status of the scrum board")
 		.action(async () => {
-			const boardPath = path.join(process.cwd(), "aizen-gate/shared/board.md");
+			const projectDir = process.cwd(); // Declare projectDir here
+			const boardPath = path.join(projectDir, "aizen-gate/shared/board.md");
 			if (fs.existsSync(boardPath)) {
 				const board = await fs.readFile(boardPath, "utf8");
 				note(board, chalk.cyan("⛩️  Sprint Board Status"));

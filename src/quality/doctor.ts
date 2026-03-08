@@ -133,8 +133,8 @@ export async function runDoctor(
 		if (fixRequested) {
 			console.log(chalk.yellow("\n[Aizen] Attempting Auto-Repair..."));
 			// installer might not be in src/, let's assume it's moved or check its location
-			const { installAizenGate } = await import("../../installer/src/install.js");
-			const result = await (installAizenGate as any)(projectRoot, "antigravity");
+			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
+			const result = await installAizenGate(projectRoot, "antigravity");
 			if (result.success) {
 				console.log(
 					chalk.green(

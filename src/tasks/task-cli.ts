@@ -4,15 +4,24 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 
 export class TaskCLI {
-	private tasksDir: string;
-	private boardPath: string;
+	public tasksDir: string;
+	public boardPath: string;
 	private configPath: string;
+	metadata: {
+		timestamp: string;
+		version: string;
+		engine: string;
+	};
 
 	constructor(projectRoot: string = process.cwd()) {
-		this.projectRoot = projectRoot;
 		this.tasksDir = path.join(projectRoot, "backlog", "tasks");
 		this.boardPath = path.join(projectRoot, "aizen-gate", "shared", "board.md");
 		this.configPath = path.join(projectRoot, "backlog", "config.yml");
+		this.metadata = {
+			timestamp: new Date().toISOString(),
+			version: "2.2.0",
+			engine: "aizen-gate",
+		};
 		fs.ensureDirSync(this.tasksDir);
 	}
 

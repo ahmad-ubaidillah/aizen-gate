@@ -176,7 +176,7 @@ export function circuitBreaker(options: CircuitBreakerOptions = {}) {
 		const originalMethod = descriptor.value;
 
 		descriptor.value = async function (this: unknown, ...args: unknown[]) {
-			return breaker.execute(() => originalMethod?.apply(this, args));
+			return breaker.execute(async () => originalMethod?.apply(this, args));
 		} as typeof descriptor.value;
 
 		// Attach breaker to method for inspection

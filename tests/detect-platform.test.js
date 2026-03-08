@@ -23,7 +23,7 @@ describe("AI Platform Detector", () => {
 	});
 
 	test("Detects Antigravity (Gemini) from home env", () => {
-		vi.stubEnv("CLAUDE_CODE_VERSION", "");
+		vi.spyOn(fs, "existsSync").mockReturnValue(false);
 		vi.stubEnv("GEMINI_HOME", "/root/.gemini");
 		expect(detectPlatform()).toBe("antigravity");
 	});

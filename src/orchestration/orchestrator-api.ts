@@ -5,6 +5,8 @@
  */
 
 import path from "node:path";
+import { ModelRouter } from "../ai/model-router.js";
+import { MemoryStore } from "../memory/memory-store.js";
 import { runAutoLoop } from "./auto-loop.js";
 import { DependencyGraph } from "./dependency-graph.js";
 import { MergeEngine } from "./merge-engine.js";
@@ -23,8 +25,8 @@ export interface APIEnvelope {
 export class OrchestratorAPI {
 	private projectDir: string;
 
-	constructor(projectDir: string) {
-		this.projectDir = projectDir;
+	constructor(projectRoot: string) {
+		this.projectDir = projectRoot;
 	}
 
 	/**
@@ -68,6 +70,9 @@ export class OrchestratorAPI {
 	async dispatchMerge(featureSlug: string, targetBranch: string = "main"): Promise<APIEnvelope> {
 		try {
 			const featureDir = path.join(this.projectDir, "aizen-gate", "specs", featureSlug);
+			// installer might not be in src/, let's assume it's moved or check its location
+			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
+			const _result = await (installAizenGate as any)(this.projectDir, "antigravity");
 			const graph = new DependencyGraph(featureDir);
 			await graph.build();
 			const sort = graph.topologicalSort();
@@ -94,7 +99,7 @@ export class OrchestratorAPI {
 	/**
 	 * Universal Envelope wrapping JSON outputs for predictability across consumers.
 	 */
-	private _envelope(data: any, status: number = 200, message: string = "OK"): APIEnvelope {
+	public formatResponse(data: any, status: number = 200, message: string = "OK"): APIEnvelope {
 		return {
 			metadata: {
 				timestamp: new Date().toISOString(),
@@ -105,5 +110,10 @@ export class OrchestratorAPI {
 			message: message,
 			data: data,
 		};
+	}
+
+	/** @deprecated Use formatResponse */
+	public _envelope(data: any, status: number = 200, message: string = "OK"): APIEnvelope {
+		return this.formatResponse(data, status, message);
 	}
 }

@@ -21,7 +21,6 @@ export class LivingDocs {
 	private docs: Record<string, string>;
 
 	constructor(projectRoot: string) {
-		this.projectRoot = projectRoot;
 		this.sharedDir = path.join(projectRoot, "aizen-gate", "shared");
 		this.docs = {
 			decisions: path.join(this.sharedDir, "decisions.md"),

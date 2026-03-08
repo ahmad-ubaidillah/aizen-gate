@@ -12,7 +12,6 @@ export class Migrator {
 
 	constructor(projectDir: string) {
 		this.projectDir = projectDir;
-		this.migrationsDir = path.join(__dirname, "../migrations");
 		this.versionFile = path.join(projectDir, "aizen-gate", "shared", ".version");
 	}
 

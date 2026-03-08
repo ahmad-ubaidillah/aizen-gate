@@ -29,7 +29,6 @@ export class ContextEngine {
 		this.budget = new TokenBudget(projectRoot, limits);
 		this.filter = new OutputFilter();
 		this.memory = new MemoryStore(projectRoot);
-		this.router = new ModelRouter(projectRoot);
 	}
 
 	/**

@@ -76,9 +76,8 @@ export interface KGAddNodeOptions {
 export class KnowledgeGraph {
 	private _memory: any = null;
 	private namespace = "aizen-kg";
-
-	constructor(projectRoot: string) {
-		this.projectRoot = projectRoot;
+	constructor(_projectRoot: string) {
+		// Initialization without saving to unused class field
 	}
 
 	/**

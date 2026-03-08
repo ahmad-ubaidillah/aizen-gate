@@ -16,7 +16,6 @@ export class MissionEngine {
 	private configFile: string;
 
 	constructor(projectDir: string) {
-		this.projectDir = projectDir;
 		this.missionsDir = path.join(projectDir, "aizen-gate/missions");
 		this.configFile = path.join(projectDir, "aizen-gate/shared/config.json");
 	}

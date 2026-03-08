@@ -13,7 +13,6 @@ export class SkillHub {
 	private destDir: string;
 
 	constructor(projectRoot: string) {
-		this.projectRoot = projectRoot;
 		// Source library located in the same parent directory as the superagent tool
 		this.sourceLib = path.join(projectRoot, "..", "antigravity-awesome-skills-main");
 		this.indexPath = path.join(this.sourceLib, "skills_index.json");

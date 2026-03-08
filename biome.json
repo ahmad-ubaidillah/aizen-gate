@@ -8,13 +8,13 @@
 		"rules": {
 			"recommended": true,
 			"suspicious": {
-				"noAssignInExpressions": "off",
-				"useIterableCallbackReturn": "off",
-				"noExplicitAny": "off",
-				"noImplicitAnyLet": "off"
+				"noAssignInExpressions": "warn",
+				"useIterableCallbackReturn": "warn",
+				"noExplicitAny": "warn",
+				"noImplicitAnyLet": "warn"
 			},
 			"style": {
-				"noNonNullAssertion": "off"
+				"noNonNullAssertion": "warn"
 			}
 		}
 	},
