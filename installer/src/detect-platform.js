@@ -1,5 +1,5 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
 
 /**
  * AI Platform/IDE Detector
@@ -26,7 +26,7 @@ const path = require("node:path");
  * - Tabnine (tabnine.com)
  */
 
-function detectPlatform() {
+export function detectPlatform() {
 	// Priority order: Check most specific indicators first
 
 	// 1. Claude Code (official Anthropic CLI)
@@ -187,7 +187,7 @@ function detectPlatform() {
 /**
  * Get all supported platforms
  */
-function getSupportedPlatforms() {
+export function getSupportedPlatforms() {
 	return [
 		{ id: "claude-code", name: "Claude Code", icon: "🤖", type: "cli" },
 		{ id: "cursor", name: "Cursor", icon: "💻", type: "ide" },
@@ -214,7 +214,7 @@ function getSupportedPlatforms() {
 /**
  * Get platform-specific file paths for injection
  */
-function getPlatformConfig(platform) {
+export function getPlatformConfig(platform) {
 	const configs = {
 		"claude-code": {
 			files: ["CLAUDE.md"],
@@ -296,9 +296,3 @@ function getPlatformConfig(platform) {
 
 	return configs[platform] || configs.generic;
 }
-
-module.exports = {
-	detectPlatform,
-	getSupportedPlatforms,
-	getPlatformConfig,
-};
