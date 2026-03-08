@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { intro, outro, spinner, note, confirm, isCancel, cancel } from "@clack/prompts";
 import chalk from "chalk";
-import { detectPlatform, } from "./detect-platform.js";
+import { detectPlatform } from "./detect-platform.js";
 import { detectStack } from "../../skill-creator/src/tech-detector.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
  * - Bolt.new, Lovable, Devin, OpenDevin
  * - Continue, Augment, Codeium, Tabnine
  */
-export async function _installAizenGate(targetDir, selectedPlatform = null) {
+export async function installAizenGate(targetDir, selectedPlatform = null) {
 	intro(chalk.cyan.bold("⛩️  Aizen-Gate | Shield Installation"));
 
 	const s = spinner();

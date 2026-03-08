@@ -52,3 +52,17 @@ This library tracks known issues, root causes, and verified fixes for the Aizen-
 - **Root Cause**: The `doctor.js` was attempting to read the `skills` directory without checking if it exists.
 - **Fix**: Added `fs.existsSync` check in `src/quality/doctor.js` to handle empty or uninitialized skill hubs gracefully.
 - **Status**: ✅ Fixed in v2.2.3
+
+---
+
+## 🚀 Installation & ESM Interop
+
+### [ERROR-501] ESM Import Missing Named Export (SyntaxError)
+
+- **Symptom**: Running `npx aizen-gate install` fails with `SyntaxError: The requested module './detect-platform.js' does not provide an export named 'detectPlatform'`.
+- **Root Cause**: Mixed module types. `install.js` was using ESM `import` statements, but `detect-platform.js` was using CommonJS `module.exports`. Additionally, `installer/package.json` was set to `commonjs`, preventing proper ESM name resolution during interop.
+- **Fix**:
+  1. Converted `installer/src/detect-platform.js` and `installer/bin/install.js` to ESM (`import`/`export`).
+  2. Updated `installer/package.json` to `"type": "module"`.
+  3. Renamed `_installAizenGate` to `installAizenGate` in `installer/src/install.js` to match caller expectations.
+- **Status**: ✅ Fixed in v2.2.4

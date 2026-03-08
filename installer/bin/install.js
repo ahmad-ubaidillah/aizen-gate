@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const { installAizenGate } = require("../src/install");
-// removed path
-
 /**
  * Aizen-Gate CLI Entry Point (npx aizen-gate install)
  */
+
+import { installAizenGate } from "../src/install.js";
+
 async function main() {
 	const args = process.argv.slice(2);
 	const command = args[0] || "init";
@@ -18,7 +18,9 @@ async function main() {
 			const { success, platform, stack } = await installAizenGate(targetDir);
 			if (success) {
 				console.log(`[AZ] Successfully initialized Aizen-Gate for ${platform}.`);
-				console.log(`[AZ] Tech stack identified: ${stack.languages.join(", ")}`);
+				if (stack) {
+					console.log(`[AZ] Tech stack identified: ${stack.languages.join(", ")}`);
+				}
 			} else {
 				process.exit(1);
 			}
