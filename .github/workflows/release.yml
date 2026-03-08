@@ -25,10 +25,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Run tests
         run: npm run test:run
 
-      - name: Build
+      - name: Lint and Format
         run: npm run check
 
       - name: Generate Changelog
@@ -68,7 +71,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run check
+        run: npm run build
 
       - name: Publish to NPM
         run: npm publish
