@@ -97,7 +97,12 @@ ${options.description || "Description goes here."}
 
 	async edit(id, options) {
 		const files = fs.readdirSync(this.tasksDir);
-		const targetFile = files.find((f) => f.toLowerCase().includes(id.toLowerCase()));
+		// Use exact ID matching with case-sensitivity to avoid matching wrong tasks
+		const targetFile = files.find((f) => {
+			// Extract ID from filename (e.g., "aizen-001 - title.md")
+			const match = f.match(/^(aizen-\d+)/i);
+			return match && match[1].toLowerCase() === id.toLowerCase();
+		});
 		if (!targetFile) return console.log(chalk.red(`Task ${id} not found.`));
 
 		const filePath = path.join(this.tasksDir, targetFile);

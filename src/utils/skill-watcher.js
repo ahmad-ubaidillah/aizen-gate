@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const chalk = require("chalk");
-const { autoGenerateSkills } = require("../skill-creator/index");
+const { autoGenerateSkills } = require("../../skill-creator/index");
 
 /**
  * [AZ] Skill Watcher

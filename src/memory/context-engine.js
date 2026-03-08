@@ -18,7 +18,8 @@ class ContextEngine {
 	constructor(projectRoot, limits = {}) {
 		this.projectRoot = projectRoot;
 		this.sharedDir = path.join(projectRoot, "aizen-gate/shared");
-		this.MAX_FILE_LINES = 150; // Threshold for context rot (from legacy ContextManager)
+		// Make threshold configurable with environment variable override
+		this.MAX_FILE_LINES = limits.maxFileLines || process.env.AZ_MAX_FILE_LINES || 150;
 		this.budget = new TokenBudget(projectRoot, limits);
 		this.filter = new OutputFilter();
 		this.memory = new MemoryStore(projectRoot);

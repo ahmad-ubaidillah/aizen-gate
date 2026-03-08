@@ -22,10 +22,16 @@ function registerCore(program) {
 	// 1.5. Onboarding
 	program
 		.command("onboarding")
-		.description("Launch the user guidance wizard")
-		.action(async () => {
-			const { runOnboarding } = require("../../src/setup/onboarding");
-			await runOnboarding(process.cwd());
+		.description("Launch the enhanced user guidance wizard")
+		.option("--classic", "Use the classic onboarding instead")
+		.action(async (options) => {
+			if (options.classic) {
+				const { runOnboarding } = require("../../src/setup/onboarding");
+				await runOnboarding(process.cwd());
+			} else {
+				const { runEnhancedOnboarding } = require("../../src/setup/onboarding");
+				await runEnhancedOnboarding(process.cwd());
+			}
 		});
 
 	// 2. Start (Session Init)
@@ -87,7 +93,11 @@ function registerCore(program) {
 				const normalizedKey = key.replace(".", "_");
 				config[normalizedKey] = value;
 				await fs.writeJson(configPath, config, { spaces: 2 });
-				console.log(chalk.green(`\n  ✔ Configuration updated: ${chalk.cyan(normalizedKey)} = ${chalk.yellow(value)}\n`));
+				console.log(
+					chalk.green(
+						`\n  ✔ Configuration updated: ${chalk.cyan(normalizedKey)} = ${chalk.yellow(value)}\n`,
+					),
+				);
 			}
 		});
 
@@ -102,4 +112,3 @@ function registerCore(program) {
 }
 
 module.exports = { registerCore };
-

@@ -306,6 +306,7 @@ class MemoryStore {
 
 	/**
 	 * Semantic + Keyword Retrieval with Composite Scoring
+	 * Uses pagination to prevent OOM on large databases
 	 */
 	async findRelevant(query, topK = 3) {
 		if (!query) return [];
@@ -313,12 +314,30 @@ class MemoryStore {
 		const queryVector = await localEmbedding.embed(query);
 		const queryTerms = query.toLowerCase().match(/\w+/g) || [];
 
-		// 1. Search Facts
-		const allFacts = this.db.prepare("SELECT * FROM aizen_facts").all();
+		// Use bounded queries to prevent OOM - fetch in batches
+		const BATCH_SIZE = 500;
+		const allFacts = [];
+		let offset = 0;
+		let batch = [];
+
+		do {
+			batch = this.db.prepare("SELECT * FROM aizen_facts LIMIT ? OFFSET ?").all(BATCH_SIZE, offset);
+			allFacts.push(...batch);
+			offset += BATCH_SIZE;
+		} while (batch.length === BATCH_SIZE && allFacts.length < 5000); // Cap at 5000 facts
+
 		const scoredFacts = this.scoreCollection(allFacts, queryVector, queryTerms);
 
-		// 2. Search Documents
-		const allDocs = this.db.prepare("SELECT * FROM aizen_documents").all();
+		// 2. Search Documents (also paginated)
+		const allDocs = [];
+		offset = 0;
+		do {
+			batch = this.db
+				.prepare("SELECT * FROM aizen_documents LIMIT ? OFFSET ?")
+				.all(BATCH_SIZE, offset);
+			allDocs.push(...batch);
+			offset += BATCH_SIZE;
+		} while (batch.length === BATCH_SIZE && allDocs.length < 1000);
 		const scoredDocs = this.scoreCollection(
 			allDocs.map((d) => ({ ...d, text: d.content.slice(0, 1000) })),
 			queryVector,
@@ -353,7 +372,9 @@ class MemoryStore {
 				if (r.id.length === 32 && r.sector !== "document") {
 					try {
 						reinforce.run(now, r.id);
-					} catch (_e) {}
+					} catch (_e) {
+						// Non-critical: reinforce may fail if row doesn't exist
+					}
 				}
 			}
 		})();

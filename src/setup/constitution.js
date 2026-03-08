@@ -14,7 +14,7 @@ async function runConstitution(projectRoot) {
 	if (fs.existsSync(constitutionPath)) {
 		note(
 			chalk.yellow("Existing constitution found. Let's update your project principles."),
-			"Review & Optimization"
+			"Review & Optimization",
 		);
 	}
 
@@ -60,7 +60,7 @@ async function runConstitution(projectRoot) {
 				cancel("Constitution definition aborted.");
 				process.exit(0);
 			},
-		}
+		},
 	);
 
 	const content = `
@@ -92,4 +92,3 @@ async function runConstitution(projectRoot) {
 }
 
 module.exports = { runConstitution };
-

@@ -1,29 +1,39 @@
-const { Memory } = require("openmemory-js/dist/core/memory");
+/**
+ * [AZ] Knowledge Graph Engine
+ *
+ * High-level wrapper for openmemory-js to handle structured project entities
+ * and their relationships.
+ *
+ * Note: Uses dynamic import to handle CommonJS/ESM compatibility with openmemory-js
+ */
+
 const path = require("node:path");
 const _fs = require("fs-extra");
 const chalk = require("chalk");
 
-// GLOBAL LOG SUPPRESSION for OpenMemory noise
-const originalLog = console.log;
-const originalWarn = console.warn;
-console.log = (...args) => {
-	const msg = args[0]?.toString() || "";
-	if (
-		msg.includes("[EMBED]") ||
-		msg.includes("[Vector]") ||
-		msg.includes("[decay-2.0]") ||
-		msg.includes("[DECAY]") ||
-		msg.includes("[PRUNE]") ||
-		msg.includes("[INIT]")
-	)
-		return;
-	originalLog(...args);
-};
-console.warn = (...args) => {
-	const msg = args[0]?.toString() || "";
-	if (msg.includes("[CONFIG]")) return;
-	originalWarn(...args);
-};
+// Lazy-load openmemory-js to handle potential ESM/CJS mismatch
+let _MemoryClass = null;
+async function getMemoryClass() {
+	if (_MemoryClass) return _MemoryClass;
+	try {
+		// Try the dist path first
+		const mod = await import("openmemory-js/dist/core/memory");
+		_MemoryClass = mod.Memory || mod.default?.Memory;
+	} catch (e1) {
+		try {
+			// Fallback to main package
+			const mod = await import("openmemory-js");
+			_MemoryClass = mod.Memory || mod.default?.Memory;
+		} catch (e2) {
+			console.error("[KG] Failed to load openmemory-js:", e2.message);
+			throw e2;
+		}
+	}
+	return _MemoryClass;
+}
+
+// [AZ] Memory logging is now managed per-instance or via environment flags.
+// Global console hijacking is disabled for better system transparency.
 
 // Ensure OpenMemory defaults are set to avoid noise and server conflicts
 process.env.OM_TIER = process.env.OM_TIER || "fast";
@@ -40,8 +50,18 @@ process.env.OM_DB_PATH =
 class KnowledgeGraph {
 	constructor(projectRoot) {
 		this.projectRoot = projectRoot;
-		this.memory = new Memory();
+		this._memory = null;
 		this.namespace = "aizen-kg";
+	}
+
+	/**
+	 * Get or initialize memory instance (lazy init)
+	 */
+	async _getMemory() {
+		if (this._memory) return this._memory;
+		const MemoryClass = await getMemoryClass();
+		this._memory = new MemoryClass();
+		return this._memory;
 	}
 
 	/**
@@ -52,13 +72,14 @@ class KnowledgeGraph {
 	 * @param {Object} metadata Additional attributes
 	 */
 	async addNode(id, type, content, metadata = {}) {
+		const memory = await this._getMemory();
 		const tags = [`lgm:node:${type.toLowerCase()}`, `lgm:id:${id}`];
 		if (metadata.tags) tags.push(...metadata.tags);
 
 		const validFrom = metadata.valid_from || new Date().toISOString();
 		const validTo = metadata.valid_to || "9999-12-31T23:59:59.999Z";
 
-		const mem = await this.memory.add(content, {
+		const mem = await memory.add(content, {
 			...metadata,
 			id,
 			type,
@@ -78,11 +99,12 @@ class KnowledgeGraph {
 	 * Uses waypoints in openmemory-js.
 	 */
 	async addEdge(sourceId, targetId, type, weight = 1.0, metadata = {}) {
+		const memory = await this._getMemory();
 		const _finalWeight = this._getEdgeWeight(type, weight);
 		const validFrom = metadata.valid_from || new Date().toISOString();
 		const validTo = metadata.valid_to || "9999-12-31T23:59:59.999Z";
 
-		await this.memory.add(`Relation: ${sourceId} ${type} ${targetId}`, {
+		await memory.add(`Relation: ${sourceId} ${type} ${targetId}`, {
 			source: sourceId,
 			target: targetId,
 			relation: type,
@@ -110,7 +132,8 @@ class KnowledgeGraph {
 	 * Queries the graph for relevant nodes with Point-in-Time filtering.
 	 */
 	async query(text, limit = 5, asOfDate = new Date().toISOString()) {
-		const rawResults = await this.memory.search(text, {
+		const memory = await this._getMemory();
+		const rawResults = await memory.search(text, {
 			namespace: this.namespace,
 			limit: limit * 2, // Fetch extra to account for temporal filtering
 		});
@@ -129,7 +152,8 @@ class KnowledgeGraph {
 	 * Explains relationships for a specific node.
 	 */
 	async getTrace(nodeId) {
-		const results = await this.memory.search(nodeId, {
+		const memory = await this._getMemory();
+		const results = await memory.search(nodeId, {
 			namespace: this.namespace,
 			limit: 20,
 		});

@@ -67,7 +67,9 @@ class MergeEngine {
 			try {
 				execSync(`git checkout ${targetBranch}`, { cwd: this.projectDir, stdio: "ignore" });
 				execSync(`git branch -D ${tempBranch}`, { cwd: this.projectDir, stdio: "ignore" });
-			} catch (_e) {}
+			} catch (_e) {
+				// Branch may not exist or already deleted
+			}
 		}
 
 		if (conflicts.length > 0) {

@@ -73,7 +73,9 @@ class MissionEngine {
 			try {
 				const config = JSON.parse(fs.readFileSync(this.configFile, "utf-8"));
 				return config.mission || "software-dev";
-			} catch (_e) {}
+			} catch (_e) {
+				console.log(`[Mission] Could not read config: ${_e.message}`);
+			}
 		}
 		return "software-dev";
 	}
@@ -104,7 +106,9 @@ class MissionEngine {
 		if (fs.existsSync(this.configFile)) {
 			try {
 				config = JSON.parse(fs.readFileSync(this.configFile, "utf-8"));
-			} catch (_e) {}
+			} catch (_e) {
+				console.log(`[Mission] Could not parse config: ${_e.message}`);
+			}
 		}
 
 		config.mission = missionId;

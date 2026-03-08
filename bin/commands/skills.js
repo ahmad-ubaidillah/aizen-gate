@@ -13,7 +13,7 @@ function registerSkills(program) {
 		.argument("<query>", "Keywords to search")
 		.action(async (query) => {
 			const { SkillHub } = require("../../src/utils/skill-hub");
-			const hub = new SkillHub();
+			const hub = new SkillHub(process.cwd());
 			const results = await hub.search(query);
 			console.log(chalk.cyan(`\n--- ⛩️ [Aizen] Skill Search Results: "${query}" ---\n`));
 			results.forEach((s) => {
@@ -28,7 +28,7 @@ function registerSkills(program) {
 		.argument("<id>", "Skill ID to install")
 		.action(async (id) => {
 			const { SkillHub } = require("../../src/utils/skill-hub");
-			const hub = new SkillHub();
+			const hub = new SkillHub(process.cwd());
 			try {
 				const res = await hub.install(id);
 				console.log(chalk.green(`\n✔ Installed skill "${res.name}" into ${res.path}`));

@@ -60,7 +60,10 @@ class WorktreeManager {
 				try {
 					fs.ensureSymlinkSync(sharedConst, wtConst);
 					console.log(`[WorktreeManager] 📖 Linked Project Constitution to ${wpId}`);
-				} catch (_e) {}
+				} catch (_e) {
+					// Non-critical: symlink may fail on some filesystems
+					console.log(`[WorktreeManager] ⚠ Could not link Constitution: ${_e.message}`);
+				}
 			}
 
 			return worktreePath;

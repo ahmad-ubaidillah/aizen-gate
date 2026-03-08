@@ -21,6 +21,38 @@ class DashboardServer {
 		this.app.use(express.static(path.join(__dirname, "public")));
 		this.app.use(express.json());
 
+		// Security headers
+		this.app.use((req, res, next) => {
+			res.setHeader("X-Content-Type-Options", "nosniff");
+			res.setHeader("X-Frame-Options", "DENY");
+			res.setHeader("X-XSS-Protection", "1; mode=block");
+			res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+			next();
+		});
+
+		// Simple rate limiting (100 requests per minute)
+		const rateLimit = new Map();
+		this.app.use((req, res, next) => {
+			const ip = req.ip || req.connection.remoteAddress;
+			const now = Date.now();
+			const windowMs = 60000;
+			const maxRequests = 100;
+
+			if (!rateLimit.has(ip)) {
+				rateLimit.set(ip, { count: 1, reset: now + windowMs });
+			} else {
+				const data = rateLimit.get(ip);
+				if (now > data.reset) {
+					rateLimit.set(ip, { count: 1, reset: now + windowMs });
+				} else if (data.count >= maxRequests) {
+					return res.status(429).json({ error: "Too many requests" });
+				} else {
+					data.count++;
+				}
+			}
+			next();
+		});
+
 		this.setupRoutes();
 		this.setupWebSockets();
 	}
@@ -79,16 +111,21 @@ class DashboardServer {
 				const match = content.match(/---\n([\s\S]*?)\n---/);
 
 				if (match) {
-					const fm = yaml.load(match[1]);
+					let fm;
+					try {
+						fm = yaml.load(match[1]);
+					} catch (yamlErr) {
+						return res.status(400).json({ error: "Invalid YAML in task file" });
+					}
 					const oldStatus = fm.status;
 					fm.status = status;
-					content = content.replace(match[0], `---\n${yaml.dump(fm)}---`);
+					// Use proper YAML serialization instead of string replacement
+					const newFm = yaml.dump(fm);
+					content = content.replace(match[0], `---\n${newFm}---`);
 					fs.writeFileSync(filePath, content);
 
 					res.json({ success: true, taskId, status });
 					this.broadcastUpdate(`Task ${taskId} moved from ${oldStatus} to ${status}`);
-
-					// Note: in a full implementation we'd also update board.md here.
 				}
 			} catch (e) {
 				res.status(500).json({ error: e.message });

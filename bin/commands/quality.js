@@ -5,9 +5,10 @@ function registerQuality(program) {
 	program
 		.command("doctor")
 		.description("Audit the workspace for protocol compliance and state health")
-		.action(async () => {
+		.option("-f, --fix", "Attempt to auto-repair detected issues")
+		.action(async (options) => {
 			const { runDoctor } = require("../../src/quality/doctor");
-			await runDoctor(process.cwd());
+			await runDoctor(process.cwd(), options);
 		});
 
 	// Benchmark
@@ -25,8 +26,11 @@ function registerQuality(program) {
 		.description("Run security audit to scan for potential secret leaks")
 		.action(() => {
 			const { execSync } = require("node:child_process");
+			const path = require("node:path");
+			// Use absolute path to security script
+			const scriptPath = path.resolve(__dirname, "../../src/utils/security-check.sh");
 			try {
-				const output = execSync("./src/utils/security-check.sh", { stdio: "inherit" });
+				const output = execSync(scriptPath, { stdio: "inherit" });
 				console.log(output);
 			} catch (_e) {
 				console.error(chalk.red("\n✖ Security check failed. Secrets detected."));

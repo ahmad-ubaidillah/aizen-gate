@@ -57,23 +57,6 @@ function registerTasks(program) {
 			const { analyzeAndDecompose } = require("../../src/utils/spec-decomposer");
 			await analyzeAndDecompose(process.cwd(), options);
 		});
-
-	// Specify & Plan (Redirected to Playbooks)
-	program
-		.command("specify")
-		.description("Conduct discovery interview to formalize a feature request")
-		.action(async () => {
-			const { runPlaybook } = require("../../src/utils/playbook-runner");
-			runPlaybook("specify", process.cwd());
-		});
-
-	program
-		.command("plan")
-		.description("Generate architecture plan and TDD strategy")
-		.action(async () => {
-			const { runPlaybook } = require("../../src/utils/playbook-runner");
-			runPlaybook("plan", process.cwd());
-		});
 }
 
 module.exports = { registerTasks };

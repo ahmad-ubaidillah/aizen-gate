@@ -30,15 +30,22 @@ function registerMemory(program) {
 			const budget = new TokenBudget(process.cwd());
 			const report = await budget.getReport();
 			console.log(chalk.cyan("\n--- ⛩️ [Aizen] Token Usage Report ---\n"));
-			console.log(`- **Monthly Budget:** $${report.budget_limit.toFixed(2)}`);
-			console.log(
-				`- **Spent (Estimated):** $${report.spent.toFixed(2)} (${report.tokens_total} tokens)`,
-			);
-			console.log(`- **Remaining:** $${(report.budget_limit - report.spent).toFixed(2)}`);
+
+			// Defensive logic: Ensure report values are numeric before toFixed
+			const limit = report.budget_limit || 0;
+			const spent = report.spent || 0;
+			const total = report.tokens_total || 0;
+			const updated = report.last_updated
+				? new Date(report.last_updated).toLocaleString()
+				: "Never";
+
+			console.log(`- **Monthly Budget:** $${limit.toFixed(2)}`);
+			console.log(`- **Spent (Estimated):** $${spent.toFixed(2)} (${total} tokens)`);
+			console.log(`- **Remaining:** $${(limit - spent).toFixed(2)}`);
 			console.log(
 				`\n${chalk.green.bold("✔ Projecting ~45% savings via RTK + Mem0 optimization.")}`,
 			);
-			console.log(chalk.gray(`Last Updated: ${new Date(report.last_updated).toLocaleString()}`));
+			console.log(chalk.gray(`Last Updated: ${updated}`));
 			console.log("");
 		});
 }

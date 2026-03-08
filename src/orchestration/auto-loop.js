@@ -118,18 +118,26 @@ async function runAutoLoop(projectRoot) {
 	}
 }
 
-// ⛩️ Signal Handlers for Session Persistence
-const { pauseSession } = require("../session/session-manager");
-process.on("SIGINT", async () => {
-	console.log(chalk.yellow("\n[Aizen] SIGINT received. Initiating auto-pause..."));
-	await pauseSession(process.cwd(), "Process SIGINT");
-	process.exit(0);
-});
+module.exports = { runAutoLoop, registerSignalHandlers };
 
-process.on("SIGTERM", async () => {
-	console.log(chalk.yellow("\n[Aizen] SIGTERM received. Initiating auto-pause..."));
-	await pauseSession(process.cwd(), "Process SIGTERM");
-	process.exit(0);
-});
+/**
+ * Register signal handlers for graceful shutdown
+ * Call this explicitly when starting the autonomous loop
+ */
+function registerSignalHandlers() {
+	const { pauseSession } = require("../session/session-manager");
 
-module.exports = { runAutoLoop };
+	process.on("SIGINT", async () => {
+		console.log(chalk.yellow("\n[Aizen] SIGINT received. Initiating auto-pause..."));
+		await pauseSession(process.cwd(), "Process SIGINT");
+		process.exit(0);
+	});
+
+	process.on("SIGTERM", async () => {
+		console.log(chalk.yellow("\n[Aizen] SIGTERM received. Initiating auto-pause..."));
+		await pauseSession(process.cwd(), "Process SIGTERM");
+		process.exit(0);
+	});
+
+	console.log(chalk.gray("[Aizen] Signal handlers registered for graceful shutdown"));
+}

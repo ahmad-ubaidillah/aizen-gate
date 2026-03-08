@@ -15,19 +15,33 @@ const { cancel } = require("@clack/prompts");
 const program = new Command();
 
 // Lifecycle Hook: Auto-start/resume on any interaction
-(async () => {
-	const projectRoot = process.cwd();
-	const configPath = path.join(projectRoot, "aizen-gate/shared/config.json");
-	if (fs.existsSync(configPath)) {
+// Properly handle async lifecycle with error logging
+const projectRoot = process.cwd();
+const configPath = path.join(projectRoot, "aizen-gate/shared/config.json");
+
+if (fs.existsSync(configPath)) {
+	// Use synchronous detection to avoid orphaned async operations
+	// The lifecycle will be resumed on first command execution
+	process.env.AIZEN_RESUME_ON_START = "true";
+
+	// Set up lazy initialization - resume only when needed
+	let lifecycleInitialized = false;
+	const initLifecycle = async () => {
+		if (lifecycleInitialized) return;
+		lifecycleInitialized = true;
+
 		try {
 			const { LifecycleManager } = require("../src/session/lifecycle-manager");
 			const lm = new LifecycleManager(projectRoot);
 			await lm.wake();
-		} catch (_e) {
-			// Fail silently during wake if modules missing or system error
+		} catch (err) {
+			console.error("[Aizen] Lifecycle initialization warning:", err.message);
 		}
-	}
-})();
+	};
+
+	// Export lifecycle init for commands that need it
+	module.exports = { initLifecycle };
+}
 
 program
 	.name("aizen-gate")
@@ -67,41 +81,7 @@ program.arguments("[unrecognized]").action(async (cmd) => {
 		return;
 	}
 
-	const builtIn = [
-		"install",
-		"start",
-		"status",
-		"doctor",
-		"map",
-		"docs",
-		"auto",
-		"dashboard",
-		"specify",
-		"research",
-		"plan",
-		"tasks",
-		"implement",
-		"review",
-		"verify",
-		"merge",
-		"ingest",
-		"compress",
-		"export",
-		"benchmark",
-		"pause",
-		"resume",
-		"tokens",
-		"kg",
-		"constitution",
-		"config",
-		"checklist",
-		"todos",
-		"analyze",
-		"clean",
-		"mcp",
-		"api",
-		"skill",
-	];
+	const builtIn = program.commands.map((cmd) => cmd.name());
 
 	if (builtIn.includes(cmd)) return;
 
@@ -118,4 +98,3 @@ program.arguments("[unrecognized]").action(async (cmd) => {
 });
 
 program.parse(process.argv);
-

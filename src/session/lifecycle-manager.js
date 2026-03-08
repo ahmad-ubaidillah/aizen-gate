@@ -68,9 +68,12 @@ class LifecycleManager {
 			const ports = [3000, 5173, 8000, 8080];
 			for (const port of ports) {
 				try {
-					const res = execSync(`lsof -i :${port}`, { stdio: "pipe" });
+					// Add timeout to prevent hanging
+					const res = execSync(`lsof -i :${port}`, { stdio: "pipe", timeout: 5000 });
 					if (res.toString().length > 0) return true;
-				} catch (_e) {}
+				} catch (_e) {
+					// Port not in use or lsof failed
+				}
 			}
 			return false;
 		} catch (_e) {

@@ -53,30 +53,41 @@ async function runDoctor(projectRoot, options = {}) {
 			name: "Graph Integrity: Orphan Controls",
 			check: async () => {
 				const kg = new KnowledgeGraph(projectRoot);
-				const allNodes = await kg.memory.search("", { limit: 1000 });
+				try {
+					// Use lazy memory initialization and provide a meaningful search query
+					const memory = await kg._getMemory();
+					const allNodes = await memory.search("*", { limit: 1000 });
 
-				const features = allNodes.filter((n) => n.meta?.type === "FEAT");
-				const tasks = allNodes.filter((n) => n.meta?.type === "TASK");
-				const implementsEdges = allNodes.filter((n) => n.meta?.relation === "IMPLEMENTS");
+					if (!allNodes || allNodes.length === 0) {
+						return "No nodes in knowledge graph (empty)";
+					}
 
-				const orphans = features.filter(
-					(f) => !implementsEdges.some((e) => e.meta?.target === f.id),
-				);
-				const unlinkedTasks = tasks.filter(
-					(t) => !implementsEdges.some((e) => e.meta?.source === t.id),
-				);
+					const features = allNodes.filter((n) => n.meta?.type === "FEAT");
+					const tasks = allNodes.filter((n) => n.meta?.type === "TASK");
+					const implementsEdges = allNodes.filter((n) => n.meta?.relation === "IMPLEMENTS");
 
-				const report = [];
-				if (orphans.length > 0) report.push(chalk.yellow(`${orphans.length} Orphan Features`));
-				if (unlinkedTasks.length > 0)
-					report.push(chalk.yellow(`${unlinkedTasks.length} Unlinked Tasks`));
+					const orphans = features.filter(
+						(f) => !implementsEdges.some((e) => e.meta?.target === f.id),
+					);
+					const unlinkedTasks = tasks.filter(
+						(t) => !implementsEdges.some((e) => e.meta?.source === t.id),
+					);
 
-				return report.length > 0 ? report.join(", ") : "Healthy";
+					const report = [];
+					if (orphans.length > 0) report.push(chalk.yellow(`${orphans.length} Orphan Features`));
+					if (unlinkedTasks.length > 0)
+						report.push(chalk.yellow(`${unlinkedTasks.length} Unlinked Tasks`));
+
+					return report.length > 0 ? report.join(", ") : "Healthy";
+				} catch (err) {
+					return `Check skipped: ${err.message}`;
+				}
 			},
 		},
 		{
 			name: "Capacity: Skill Hub Count",
 			check: () => {
+				if (!fs.existsSync(skillsDir)) return "0 categories active (Empty)";
 				const subdirs = fs
 					.readdirSync(skillsDir)
 					.filter((f) => fs.statSync(path.join(skillsDir, f)).isDirectory());

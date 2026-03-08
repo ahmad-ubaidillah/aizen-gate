@@ -6,7 +6,9 @@ function registerOrchestration(program) {
 		.command("auto")
 		.description("Launch the autonomous execution loop")
 		.action(async () => {
-			const { runAutoLoop } = require("../../src/orchestration/auto-loop");
+			const { runAutoLoop, registerSignalHandlers } = require("../../src/orchestration/auto-loop");
+			// Register signal handlers for graceful shutdown
+			registerSignalHandlers();
 			console.log(chalk.red("\n--- ⛩️ [Aizen] Launching autonomous orchestrator ---\n"));
 			await runAutoLoop(process.cwd());
 		});
@@ -44,6 +46,24 @@ function registerOrchestration(program) {
 		.action(async () => {
 			const { runPlaybook } = require("../../src/utils/playbook-runner");
 			runPlaybook("merge", process.cwd());
+		});
+
+	// Specify (Interactive Wizard)
+	program
+		.command("specify")
+		.description("Conduct discovery interview to formalize a feature request")
+		.action(async () => {
+			const { runDiscoveryWizard } = require("../../src/orchestration/discovery-wizard");
+			await runDiscoveryWizard(process.cwd());
+		});
+
+	// Plan
+	program
+		.command("plan")
+		.description("Generate architecture plan and TDD strategy")
+		.action(async () => {
+			const { runPlaybook } = require("../../src/utils/playbook-runner");
+			runPlaybook("plan", process.cwd());
 		});
 
 	// Research

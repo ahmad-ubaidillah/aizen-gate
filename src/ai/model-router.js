@@ -106,7 +106,14 @@ class ModelRouter {
 		};
 
 		const shortName = model.split("/").pop().toLowerCase();
-		const rate = Object.entries(rates).find(([k]) => shortName.includes(k))?.[1] || rates.sonnet;
+		// More precise model matching to avoid wrong rate selection
+		let rate = rates.sonnet; // Default
+		for (const [key, value] of Object.entries(rates)) {
+			if (shortName.includes(key)) {
+				rate = value;
+				break;
+			}
+		}
 
 		const cost = (tokensIn / 1000000) * rate.in + (tokensOut / 1000000) * rate.out;
 
