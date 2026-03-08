@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 const fs = require("node:fs");
 const _path = require("node:path");
-const { detectStack } = require("../skill-creator/src/tech-detector");
+const { detectStack } = require("../dist/skill-creator/src/tech-detector.js");
 
 describe("Aizen-Gate Tech Detector", () => {
 	test("Identifies Node.js project from package.json", () => {

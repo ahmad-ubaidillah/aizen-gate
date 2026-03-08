@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 const fs = require("fs-extra");
-const { compressContext } = require("../src/memory/compress");
+const { compressContext } = require("../dist/src/memory/compress.js");
 
 describe("Aizen-Gate Token Compressor", () => {
 	test("Moves done tasks from board.md to archive.md", async () => {

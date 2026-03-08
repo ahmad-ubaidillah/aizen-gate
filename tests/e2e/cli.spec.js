@@ -1,9 +1,9 @@
 /**
  * CLI E2E Tests
  */
-const { test, expect } = require('@playwright/test');
-const { exec } = require('child_process');
-const { promisify } = require('util');
+import { test, expect } from '@playwright/test';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 

@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const path = require("node:path");
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-const { DependencyGraph } = require("../src/orchestration/dependency-graph");
+const { DependencyGraph } = require("../dist/src/orchestration/dependency-graph.js");
 
 describe("DependencyGraph Engine", () => {
 	const tempFeatureDir = path.join(__dirname, ".tmp_graph");

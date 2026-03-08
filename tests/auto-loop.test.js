@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 const fs = require("fs-extra");
 const path = require("node:path");
-const { runAutoLoop } = require("../src/orchestration/auto-loop");
+const { runAutoLoop } = require('../dist/src/orchestration/auto-loop.js');
 
 describe("Aizen-Gate Auto Loop", () => {
 	test("Identifies next PENDING task and transitions to In Progress", async () => {
