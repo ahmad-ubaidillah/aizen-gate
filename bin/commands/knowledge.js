@@ -44,7 +44,6 @@ function registerKnowledge(program) {
 			});
 			console.log("");
 		});
-
 }
 
 module.exports = { registerKnowledge };

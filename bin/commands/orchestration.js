@@ -50,7 +50,9 @@ function registerOrchestration(program) {
 	// 6. Wizard
 	program
 		.command("wizard")
-		.description("Run the complete 4-step pipeline automatically (Specify -> Plan -> Tasks -> Auto)")
+		.description(
+			"Run the complete 4-step pipeline automatically (Specify -> Plan -> Tasks -> Auto)",
+		)
 		.action(async () => {
 			const { runPlaybook } = require("../../src/utils/playbook-runner");
 			const { runAutoLoop } = require("../../src/orchestration/auto-loop");
@@ -67,7 +69,9 @@ function registerOrchestration(program) {
 			runPlaybook("tasks", process.cwd());
 
 			console.log(chalk.red("\nStep 4/4: Auto (Autonomous Execution)"));
-			console.log(chalk.dim("The autonomous loop will now continually process the generated tasks.\n"));
+			console.log(
+				chalk.dim("The autonomous loop will now continually process the generated tasks.\n"),
+			);
 			await runAutoLoop(process.cwd());
 		});
 
@@ -105,7 +109,6 @@ function registerOrchestration(program) {
 			const { runPlaybook } = require("../../src/utils/playbook-runner");
 			runPlaybook("merge", process.cwd());
 		});
-
 
 	// Export
 	program
