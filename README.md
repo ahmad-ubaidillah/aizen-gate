@@ -6,163 +6,155 @@
   <img src="https://img.shields.io/badge/Security-Hardened-2D9CDB?style=for-the-badge" alt="Security">
 </p>
 
-**Aizen-Gate** is an elite SDLC (Software Development Life Cycle) framework that transforms standard AI interactions into a professional, multi-agent Scrum Team execution. Version 2.1 introduces a high-end **Modular Architecture (`src/`)**, consolidating core logic for maximum scalability, security, and performance.
+---
+
+## 🏛️ What is Aizen-Gate?
+
+**Aizen-Gate** is a high-tier AI-Orchestration framework (Elite AI-SDLC) that transforms standard AI interactions into a professional, multi-agent Software Development Life Cycle (SDLC) execution.
+
+It is not just a set of instructions; it is a **"Gate"** that ensures every line of code written by an AI follows high-quality standards, remains documented, and operates within a razor-sharp contextual memory.
+
+> [!IMPORTANT]
+> **Aizen-Gate** is more than a chatbot. It is an operating system for AI Agents, managing specifications, planning, and implementation in one seamless workflow.
 
 ---
 
-## 🏛️ New in v2.1: Modular Professional Architecture
+## 🎯 Why Aizen-Gate?
 
-To support large-scale AI orchestration, we've restructured the entire codebase into domain-specific modules:
+When developing applications with AI, we often face three major hurdles:
 
-- **`src/ai/`**: Intelligent token budget and output filtering.
-- **`src/memory/`**: 5-Tier SQL-backed persistent memory & context engineering.
-- **`src/orchestration/`**: Autonomous loop, dependency graphs, and worktree managers.
-- **`src/quality/`**: Shield diagnostics, benchmarking, and UAT verification.
-- **`src/missions/`**: Unified mission engines for flexible SDLC pipelines.
-- **`src/server/`**: Integrated MCP & Orchestrator API servers.
+1. **Context Rot:** AI begins to forget initial instructions or hallucinates as project complexity grows.
+2. **Standard Leakage:** AI-generated code lacks architectural consistency or aesthetic standards.
+3. **Task Fragmentation:** Managing complex features in parallel without breaking the main codebase is difficult.
 
----
-
-## 🌟 For Newcomers: What is Aizen-Gate?
-
-If you are new to tech, think of **Aizen-Gate** as your own **Personal Software Agency**.
-
-Instead of asking a single AI to "write some code" (which often leads to bugs and messy structure), Aizen-Gate brings in a specialized team:
-
-1.  **A Project Manager** to figure out exactly what you need.
-2.  **An Architect** to design the blueprint.
-3.  **A Developer** to write the code in a specialized workshop.
-4.  **A QA Inspector** to make sure everything works perfectly.
-
-Aizen-Gate handles the "boring" parts of professional development—management, testing, and organization—so you can focus on your vision.
+**Aizen-Gate** eliminates these gaps by providing a **"Shield"** that guarantees project integrity from start to finish.
 
 ---
 
-## 🧠 Elite Capabilities
+## 💻 Tech Stack & Architecture
 
-### 1. 🌀 Automatic AI Lifecycle Management
+Aizen-Gate is built on a modern foundation for maximum performance and security:
 
-Aizen is "set and forget." It manages its own energy and focus:
-
-- **Auto-Wake**: Resumes your exact session state the moment you run a command.
-- **Auto-Pause**: Freezes logic while you are manually testing to save your token budget.
-- **Idle-Shutdown**: Safely persists your work and shuts down after 30 mins of inactivity.
-
-### 2. 🧬 5-Tier Persistent Memory System
-
-Aizen never forgets a decision. It uses a SQL-backed hierarchical brain:
-
-1.  **Working Memory**: Immediate task context.
-2.  **Episodic Memory**: Decision history.
-3.  **Semantic Memory**: Technical patterns.
-4.  **Document Memory**: Specs & Plans.
-5.  **Long Summary Thread (LST)**: Sharp rolling recap.
-
-_Powered by the consolidated **ContextEngine** (v2.1)._
-
-### 3. 🛠️ Dynamic Skill System
-
-Aizen evolves with your project. It automatically scans your code to detect if you are using React, Python, Go, or Node.js and adjusts its "Intelligence" to match.
+- **Core Engine:** **100% TypeScript** with ESM modules for type safety and long-term maintainability.
+- **Persistent Memory:** **better-sqlite3** as the backend for storing technical facts and decisions.
+- **Semantic Intelligence:** **@xenova/transformers** for generating local embeddings (Zero API Costs!) to ensure accurate context retrieval.
+- **Real-time Monitoring:** **Express.js & WebSockets** powering the Live Pulse Dashboard.
+- **UI Aesthetics:** **Vanilla CSS** with a premium, responsive minimalist editorial style.
+- **Quality Assurance:** **Vitest** for unit testing and **Playwright** for End-to-End (E2E) validation.
 
 ---
 
-## 👥 Meet Your Squad (11 Expert Personas)
+## 🏗️ Core Components & Features
 
-Aizen-Gate coordinates a specialized squad. You can address them directly using their `[TAG]`:
+Aizen-Gate consolidates powerful tools into a unified ecosystem:
 
-| Tag      | Agent             | Role & Expertise                                    |
-| :------- | :---------------- | :-------------------------------------------------- |
-| `[PM]`   | Project Manager   | Discovery, user stories, and acceptance criteria.   |
-| `[ARCH]` | Lead Architect    | High-level design, model debate, and blueprints.    |
-| `[DEV]`  | Implementation    | Clean code, TDD, and isolated wave implementation.  |
-| `[QA]`   | Quality Gate      | Verification, security audits, and bug hunting.     |
-| `[DES]`  | UI/UX Designer    | Aesthetic excellence and layout responsiveness.     |
-| `[DB]`   | Database Engineer | Schema normalization and query optimization.        |
-| `[SEC]`  | Shield Architect  | Security hardening and vulnerability prevention.    |
-| `[AN]`   | Research Analyst  | Competitive analysis and technical deep-dives.      |
-| `[SM]`   | Scrum Master      | Backlog management and sprint velocity.             |
-| `[QF]`   | Quick Flow        | Rapid atomic fixes and "Quick Mode" implementation. |
-| `[SA]`   | System Architect  | Framework maintenance and archival logic.           |
+| Component            | Utility                                                                                                |
+| :------------------- | :----------------------------------------------------------------------------------------------------- |
+| **`specify` Wizard** | An interactive interview process that turns abstract ideas into bullet-proof `spec.md` files.          |
+| **5-Tier Memory**    | A SQL-backed brain (Working, Episodic, Semantic, Document, LST) ensuring the AI never forgets context. |
+| **Dependency Graph** | Automatically calculates the execution order of tasks to prevent conflicts between features.           |
+| **Autonomous Loop**  | Automatically executes implementations in isolated Git Worktrees per task.                             |
+| **Project Doctor**   | Automated diagnostics to detect and repair protocol damage in the workspace.                           |
+| **Shield Benchmark** | Audits code quality and architectural compliance against the project's "Constitution."                 |
 
 ---
 
-## 🚀 The 7-Phase Dominance Pipeline
+## 🚀 Installation Guide
 
-Aizen-Gate enforces a rigorous process to ensure zero-defect delivery:
+You can install Aizen-Gate globally or run it directly via NPX.
 
-1.  **`specify`** — The `[PM]` launches an interactive wizard to create a bullet-proof `spec.md`.
-2.  **`discuss`** — Resolve gray areas before code is written.
-3.  **`research`** — Parallel technical research via sub-agents into `research.md`.
-4.  **`plan`** — Architectural debate to finalize the blueprint.
-5.  **`tasks`** — Decomposition into Work Packages (WPs) with smart dependency mapping.
-6.  **`auto`** — Autonomous wave execution. Spawns parallel, isolated worktrees per WP.
-7.  **`review`** — `[QA]` code review with Athena quality gates before merging.
-
-_Orchestrated by the unified **MissionEngine** (v2.1)._
-
----
-
-## 🖥️ CLI Commands Reference
-
-### Core Workflow
+### 1. Global Installation
 
 ```bash
-npx aizen-gate specify    # Launch interactive discovery wizard
-npx aizen-gate research   # Parallel technical research
-npx aizen-gate plan       # Architectural planning & debate
-npx aizen-gate tasks      # Generate Work Packages (WPs)
-npx aizen-gate auto       # Trigger the autonomous implementation loop
+npm install -g aizen-gate
+```
+
+### 2. Initialize the Shield in Your Workspace
+
+Navigate to your project directory and run:
+
+```bash
+aizen-gate install
+```
+
+_This prepares the `aizen-gate/` folder structure, installs the `constitution.md`, and configures local persistent memory._
+
+---
+
+## 🛠️ Elite Workflow (How to Start)
+
+Follow the 7-phase dominance pipeline for zero-defect results:
+
+1. **Discovery:**
+
+   ```bash
+   npx aizen-gate specify
+   ```
+
+   _Launch the PM wizard to build the implementation spec._
+
+2. **Planning:**
+
+   ```bash
+   npx aizen-gate plan
+   ```
+
+   _The Lead Architect designs the architectural blueprint._
+
+3. **Tasking:**
+
+   ```bash
+   npx aizen-gate tasks
+   ```
+
+   _Decompose the plan into Work Packages (WPs) with clear dependencies._
+
+4. **Execution:**
+
+   ```bash
+   npx aizen-gate auto
+   ```
+
+   _Trigger the autonomous loop. AI agents start working in parallel isolated branches._
+
+5. **Monitoring:**
+   ```bash
+   npx aizen-gate dashboard
+   ```
+   _Visualize real-time pulse and progress in your browser (port 6420)._
+
+---
+
+## 🧪 CLI Commands Reference
+
+### Workflow & Orchestration
+
+```bash
+npx aizen-gate research   # Parallel technical deep-dives
 npx aizen-gate review     # Perform QA review on finished work
 npx aizen-gate merge      # Final branch merging and cleanup
+npx aizen-gate quick      # Fast-track a small feature or bug fix
 ```
 
-### Intelligence & Visibility
+### Intelligence & Diagnostics
 
 ```bash
-npx aizen-gate dashboard  # Launch the Live Pulse Dashboard (port 6420)
 npx aizen-gate status     # View Scrum Board & Memory state
 npx aizen-gate map        # Generate architectural codebase map
-npx aizen-gate doctor     # Run workspace protocol health check
 npx aizen-gate benchmark  # Performance/compliance audit
-npx aizen-gate tokens     # View token usage & efficiency report and savings report
-```
-
-### Quick Actions & Maintenance
-
-```bash
-npx aizen-gate quick      # Fast-track a small feature or bug fix
-npx aizen-gate archive    # Distill session knowledge into long-term memory
-npx aizen-gate pause      # Safely pause session (persists everything)
-npx aizen-gate resume     # Resume your last session instantly
-npx aizen-gate clean      # Archive finished tasks and optimize storage
+npx aizen-gate tokens     # View token usage & efficiency report
 ```
 
 ---
 
-## 📦 Universal Platform Support
+## 💎 How Aizen-Gate Empowers Development
 
-Aizen-Gate detect and integrates into your favorite AI development tools:
+Aizen-Gate shifts your workflow from **"Writing Code"** to **"Directing Vision"**:
 
-- **Claude Code** (`CLAUDE.md`)
-- **Cursor** (`.cursorrules`)
-- **Gemini CLI** (`GEMINI.md`)
-- **Windsurf** (`.windsurf/rules/`)
-- **GitHub Copilot** (`copilot-instructions.md`)
-
----
-
-## 📥 Installation
-
-```bash
-# 1. Install globally via NPM
-npm install -g aizen-gate
-
-# 2. Initialize the Shield in your workspace
-aizen-gate install
-
-# 3. Alternative: Run via NPX without global install
-npx aizen-gate install
-```
+- **Cost Efficiency:** Local embeddings and context distillation significantly cut down API token costs.
+- **Safe Isolation:** Every task is executed in a separate "Worktree." A failure in one feature never corrupts another.
+- **Elite Quality:** With Athena Quality Gates, every completed task is audited by a QA agent before merging is allowed.
+- **Scalability:** Manage massive projects with thousands of files while keeping the AI's understanding razor-sharp.
 
 ---
 
