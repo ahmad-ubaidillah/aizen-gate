@@ -1,7 +1,23 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import fs from "fs-extra";
+import { compressContext } from "../src/memory/compress.js";
 
-const fs = require("fs-extra");
-const { compressContext } = require("../dist/src/memory/compress.js");
+// Mock heavy dependencies
+vi.mock("../src/memory/memory-bridge.js", () => {
+	return {
+		MemoryBridge: class {
+			storeDecision = vi.fn().mockResolvedValue(true);
+		},
+	};
+});
+
+vi.mock("../src/memory/memory-store.js", () => {
+	return {
+		MemoryStore: class {
+			add = vi.fn().mockResolvedValue(true);
+		},
+	};
+});
 
 describe("Aizen-Gate Token Compressor", () => {
 	test("Moves done tasks from board.md to archive.md", async () => {
@@ -10,9 +26,9 @@ describe("Aizen-Gate Token Compressor", () => {
 		const mockArchive = `# Board History Archive`;
 
 		vi.spyOn(fs, "existsSync").mockReturnValue(true);
-		vi.spyOn(fs, "ensureDir").mockResolvedValue();
+		vi.spyOn(fs, "ensureDir").mockImplementation(() => Promise.resolve());
 
-		vi.spyOn(fs, "readFileSync").mockImplementation((p) => {
+		vi.spyOn(fs, "readFileSync").mockImplementation((p: any) => {
 			if (p.includes("board.md")) return mockBoard;
 			if (p.includes("board-history.md")) return mockArchive;
 			return "";
@@ -23,15 +39,13 @@ describe("Aizen-Gate Token Compressor", () => {
 		const result = await compressContext(mockRoot);
 
 		expect(result.success).toBe(true);
-		expect(writeSpy).toHaveBeenCalledTimes(2); // one for board, one for archive
+		expect(writeSpy).toHaveBeenCalledTimes(2);
 
-		// Ensure the written board does NOT contain T-000
-		const updatedBoardArgs = writeSpy.mock.calls.find((c) => c[0].includes("board.md"));
-		expect(updatedBoardArgs[1]).not.toContain("T-000");
+		const updatedBoardArgs = writeSpy.mock.calls.find((c: any) => c[0].includes("board.md"));
+		expect(updatedBoardArgs![1]).not.toContain("T-000");
 
-		// Ensure the written archive DOES contain T-000
-		const updatedArchiveArgs = writeSpy.mock.calls.find((c) => c[0].includes("board-history.md"));
-		expect(updatedArchiveArgs[1]).toContain("T-000");
+		const updatedArchiveArgs = writeSpy.mock.calls.find((c: any) => c[0].includes("board-history.md"));
+		expect(updatedArchiveArgs![1]).toContain("T-000");
 	});
 
 	afterEach(() => {

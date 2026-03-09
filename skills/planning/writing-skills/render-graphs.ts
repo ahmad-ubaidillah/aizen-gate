@@ -8,19 +8,21 @@
  *   ./render-graphs.js <skill-directory> --combine # Combine all into one diagram
  *
  * Extracts all ```dot blocks from SKILL.md and renders to SVG.
- * Useful for helping your human partner visualize the process flows.
- *
- * Requires: graphviz (dot) installed on system
  */
 
-const fs = require("node:fs");
-const path = require("node:path");
-const { execSync } = require("node:child_process");
+import fs from "node:fs";
+import path from "node:path";
+import { execSync } from "node:child_process";
 
-function extractDotBlocks(markdown) {
-	const blocks = [];
+interface DotBlock {
+	name: string;
+	content: string;
+}
+
+function extractDotBlocks(markdown: string): DotBlock[] {
+	const blocks: DotBlock[] = [];
 	const regex = /```dot\n([\s\S]*?)```/g;
-	let match;
+	let match: RegExpExecArray | null;
 
 	while ((match = regex.exec(markdown)) !== null) {
 		const content = match[1].trim();
@@ -35,7 +37,7 @@ function extractDotBlocks(markdown) {
 	return blocks;
 }
 
-function extractGraphBody(dotContent) {
+function extractGraphBody(dotContent: string): string {
 	// Extract just the body (nodes and edges) from a digraph
 	const match = dotContent.match(/digraph\s+\w+\s*\{([\s\S]*)\}/);
 	if (!match) return "";
@@ -48,7 +50,7 @@ function extractGraphBody(dotContent) {
 	return body.trim();
 }
 
-function combineGraphs(blocks, skillName) {
+function combineGraphs(blocks: DotBlock[], skillName: string): string {
 	const bodies = blocks.map((block, i) => {
 		const body = extractGraphBody(block.content);
 		// Wrap each subgraph in a cluster for visual grouping
@@ -70,21 +72,22 @@ ${bodies.join("\n\n")}
 }`;
 }
 
-function renderToSvg(dotContent) {
+function renderToSvg(dotContent: string): string | null {
 	try {
-		return execSync("dot -Tsvg", {
+		const output = execSync("dot -Tsvg", {
 			input: dotContent,
 			encoding: "utf-8",
 			maxBuffer: 10 * 1024 * 1024,
 		});
-	} catch (err) {
+		return output;
+	} catch (err: any) {
 		console.error("Error running dot:", err.message);
 		if (err.stderr) console.error(err.stderr.toString());
 		return null;
 	}
 }
 
-function main() {
+function main(): void {
 	const args = process.argv.slice(2);
 	const combine = args.includes("--combine");
 	const skillDirArg = args.find((a) => !a.startsWith("--"));
@@ -96,8 +99,7 @@ function main() {
 		console.error("  --combine    Combine all diagrams into one SVG");
 		console.error("");
 		console.error("Example:");
-		console.error("  ./render-graphs.js ../subagent-driven-development");
-		console.error("  ./render-graphs.js ../subagent-driven-development --combine");
+		console.error("  npx ts-node render-graphs.ts ../subagent-driven-development");
 		process.exit(1);
 	}
 

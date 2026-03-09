@@ -1,7 +1,11 @@
-const fs = require("fs-extra");
-const path = require("node:path");
+import fs from "fs-extra";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-const { WorkPackage } = require("../dist/src/tasks/wp-model.js");
+import { fileURLToPath } from "node:url";
+import { WorkPackage } from "../src/tasks/wp-model.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("WorkPackage Model", () => {
 	const tempDir = path.join(__dirname, ".tmp_wp");
@@ -15,7 +19,7 @@ describe("WorkPackage Model", () => {
 	});
 
 	it("should initialize with default values if empty", () => {
-		const wp = new WorkPackage({}, "", null);
+		const wp = new WorkPackage({}, "", "");
 		expect(wp.id).toBe("WP00");
 		expect(wp.lane).toBe("planned");
 		expect(wp.dependencies).toEqual([]);

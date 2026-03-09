@@ -4,29 +4,21 @@ import path from "node:path";
 /**
  * AI Platform/IDE Detector
  * Identifies which AI assistant platform the user is likely using.
- *
- * Supports:
- * - Claude Code (claude.ai/code)
- * - Cursor (cursor.sh)
- * - Windsurf (windsurf.ai)
- * - Kiro (kiro.ai)
- * - Kilo (kilo.dev)
- * - OpenCode (opencode.ai)
- * - Zed (zed.dev)
- * - GitHub Copilot (copilot.github.com)
- * - Gemini CLI / Antigravity (gemini.google.com)
- * - Cline (cline.dev) - VSCode extension
- * - Bolt.new (bolt.new)
- * - Lovable (lovable.dev)
- * - Devin (devin.ai)
- * - OpenDevin (opendevin.org)
- * - Continue (continue.dev) - VSCode/JetBrains extension
- * - Augment (augmentcode.com)
- * - Codeium (codeium.com)
- * - Tabnine (tabnine.com)
  */
 
-export function detectPlatform() {
+export interface PlatformInfo {
+	id: string;
+	name: string;
+	icon: string;
+	type: "cli" | "ide" | "extension" | "web" | "agent" | "other";
+}
+
+export interface PlatformConfig {
+	files: string[];
+	command: string;
+}
+
+export function detectPlatform(): string {
 	// Priority order: Check most specific indicators first
 
 	// 1. Claude Code (official Anthropic CLI)
@@ -187,7 +179,7 @@ export function detectPlatform() {
 /**
  * Get all supported platforms
  */
-export function getSupportedPlatforms() {
+export function getSupportedPlatforms(): PlatformInfo[] {
 	return [
 		{ id: "claude-code", name: "Claude Code", icon: "🤖", type: "cli" },
 		{ id: "cursor", name: "Cursor", icon: "💻", type: "ide" },
@@ -214,8 +206,8 @@ export function getSupportedPlatforms() {
 /**
  * Get platform-specific file paths for injection
  */
-export function getPlatformConfig(platform) {
-	const configs = {
+export function getPlatformConfig(platform: string): PlatformConfig {
+	const configs: Record<string, PlatformConfig> = {
 		"claude-code": {
 			files: ["CLAUDE.md"],
 			command: "npx aizen-gate",

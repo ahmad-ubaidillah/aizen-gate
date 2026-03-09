@@ -1,20 +1,46 @@
-const express = require("express");
-const http = require("node:http");
-const WebSocket = require("ws");
-const path = require("node:path");
-const fs = require("fs-extra");
-const yaml = require("js-yaml");
+import express, { type Request, type Response, type NextFunction } from "express";
+import http from "node:http";
+import WebSocket, { WebSocketServer } from "ws";
+import path from "node:path";
+import fs from "fs-extra";
+import yaml from "js-yaml";
+import { fileURLToPath } from "node:url";
 
-class DashboardServer {
-	constructor(projectDir = process.cwd(), port = 6420) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+interface Task {
+	id: string;
+	filename: string;
+	title: string;
+	status: string;
+	priority: string;
+	assignee: string;
+	labels: string[];
+}
+
+interface WebSocketClient extends WebSocket {
+	isAlive?: boolean;
+}
+
+export class DashboardServer {
+	private projectDir: string;
+	private port: number;
+	private app: express.Application;
+	private server: http.Server;
+	private wss: WebSocketServer;
+	private tasksDir: string;
+	// private boardPath: string; // Unused in current implementation
+	private watcher: fs.FSWatcher | null = null;
+
+	constructor(projectDir: string = process.cwd(), port: number = 6420) {
 		this.projectDir = projectDir;
 		this.port = port;
 		this.app = express();
 		this.server = http.createServer(this.app);
-		this.wss = new WebSocket.Server({ server: this.server });
+		this.wss = new WebSocketServer({ server: this.server });
 		this.tasksDir = path.join(this.projectDir, "backlog", "tasks");
-		this.boardPath = path.join(this.projectDir, "aizen-gate", "shared", "board.md");
-		this.watcher = null;
+		// this.boardPath = path.join(this.projectDir, "aizen-gate", "shared", "board.md");
 
 		fs.ensureDirSync(this.tasksDir);
 
@@ -22,7 +48,7 @@ class DashboardServer {
 		this.app.use(express.json());
 
 		// Security headers
-		this.app.use((_req, res, next) => {
+		this.app.use((_req: Request, res: Response, next: NextFunction) => {
 			res.setHeader("X-Content-Type-Options", "nosniff");
 			res.setHeader("X-Frame-Options", "DENY");
 			res.setHeader("X-XSS-Protection", "1; mode=block");
@@ -31,21 +57,22 @@ class DashboardServer {
 		});
 
 		// Simple rate limiting (100 requests per minute)
-		const rateLimit = new Map();
-		this.app.use((req, res, next) => {
-			const ip = req.ip || req.connection.remoteAddress;
+		const rateLimit = new Map<string, { count: number; reset: number }>();
+		this.app.use((req: Request, res: Response, next: NextFunction) => {
+			const ip = (req.ip || req.get("x-forwarded-for") || req.socket.remoteAddress || "unknown").toString();
 			const now = Date.now();
 			const windowMs = 60000;
 			const maxRequests = 100;
 
-			if (!rateLimit.has(ip)) {
+			const data = rateLimit.get(ip);
+			if (!data) {
 				rateLimit.set(ip, { count: 1, reset: now + windowMs });
 			} else {
-				const data = rateLimit.get(ip);
 				if (now > data.reset) {
 					rateLimit.set(ip, { count: 1, reset: now + windowMs });
 				} else if (data.count >= maxRequests) {
-					return res.status(429).json({ error: "Too many requests" });
+					res.status(429).json({ error: "Too many requests" });
+					return;
 				} else {
 					data.count++;
 				}
@@ -57,9 +84,10 @@ class DashboardServer {
 		this.setupWebSockets();
 	}
 
-	async loadAllTasks() {
+	async loadAllTasks(): Promise<Task[]> {
+		if (!fs.existsSync(this.tasksDir)) return [];
 		const files = fs.readdirSync(this.tasksDir).filter((f) => f.endsWith(".md"));
-		const tasks = [];
+		const tasks: Task[] = [];
 
 		for (const f of files) {
 			try {
@@ -68,7 +96,7 @@ class DashboardServer {
 				const titleMatch = content.match(/# (.*)/);
 
 				if (match) {
-					const fm = yaml.load(match[1]);
+					const fm = yaml.load(match[1]) as any;
 					tasks.push({
 						id: fm.id,
 						filename: f,
@@ -79,68 +107,73 @@ class DashboardServer {
 						labels: fm.labels || [],
 					});
 				}
-			} catch (e) {
-				console.error(`Failed to load task ${f}`, e);
+			} catch (e: any) {
+				console.error(`Failed to load task ${f}`, e.message);
 			}
 		}
 		return tasks;
 	}
 
-	setupRoutes() {
-		this.app.get("/api/tasks", async (_req, res) => {
+	private setupRoutes(): void {
+		this.app.get("/api/tasks", async (_req: Request, res: Response) => {
 			try {
 				const tasks = await this.loadAllTasks();
 				res.json(tasks);
-			} catch (e) {
+			} catch (e: any) {
 				res.status(500).json({ error: e.message });
 			}
 		});
 
-		this.app.post("/api/tasks/:taskId/move", async (req, res) => {
+		this.app.post("/api/tasks/:taskId/move", async (req: Request, res: Response) => {
 			const { status } = req.body;
 			const { taskId } = req.params;
 
 			try {
 				const files = fs.readdirSync(this.tasksDir);
-				const targetFile = files.find((f) => f.toLowerCase().includes(taskId.toLowerCase()));
+				const targetFile = files.find((f) => f.toLowerCase().includes((taskId as string).toLowerCase()));
 
-				if (!targetFile) return res.status(404).json({ error: "Task not found" });
+				if (!targetFile) {
+					res.status(404).json({ error: "Task not found" });
+					return;
+				}
 
 				const filePath = path.join(this.tasksDir, targetFile);
 				let content = fs.readFileSync(filePath, "utf8");
 				const match = content.match(/---\n([\s\S]*?)\n---/);
 
 				if (match) {
-					let fm;
+					let fm: any;
 					try {
 						fm = yaml.load(match[1]);
 					} catch (_yamlErr) {
-						return res.status(400).json({ error: "Invalid YAML in task file" });
+						res.status(400).json({ error: "Invalid YAML in task file" });
+						return;
 					}
 					const oldStatus = fm.status;
 					fm.status = status;
-					// Use proper YAML serialization instead of string replacement
 					const newFm = yaml.dump(fm);
 					content = content.replace(match[0], `---\n${newFm}---`);
 					fs.writeFileSync(filePath, content);
 
 					res.json({ success: true, taskId, status });
 					this.broadcastUpdate(`Task ${taskId} moved from ${oldStatus} to ${status}`);
+				} else {
+					res.status(400).json({ error: "No frontmatter found in task file" });
 				}
-			} catch (e) {
+			} catch (e: any) {
 				res.status(500).json({ error: e.message });
 			}
 		});
 	}
 
-	setupWebSockets() {
-		this.wss.on("connection", (ws) => {
+	private setupWebSockets(): void {
+		this.wss.on("connection", (ws: WebSocketClient) => {
 			ws.isAlive = true;
 			ws.on("pong", () => (ws.isAlive = true));
 
 			ws.on("message", (message) => {
 				try {
-					const data = JSON.parse(message);
+					const data = JSON.parse(message.toString());
 					if (data.type === "subscribe") {
 						this.watchTasks();
 						this.broadcastUpdate(`New client connected.`);
@@ -152,7 +185,8 @@ class DashboardServer {
 		});
 
 		const interval = setInterval(() => {
-			this.wss.clients.forEach(function each(ws) {
+			this.wss.clients.forEach((client) => {
+				const ws = client as WebSocketClient;
 				if (ws.isAlive === false) return ws.terminate();
 				ws.isAlive = false;
 				ws.ping();
@@ -161,10 +195,10 @@ class DashboardServer {
 		this.wss.on("close", () => clearInterval(interval));
 	}
 
-	watchTasks() {
+	private watchTasks(): void {
 		if (this.watcher) return;
 
-		let timeout = null;
+		let timeout: NodeJS.Timeout | null = null;
 		this.watcher = fs.watch(this.tasksDir, (_eventType, filename) => {
 			if (filename?.endsWith(".md")) {
 				if (timeout) clearTimeout(timeout);
@@ -175,11 +209,11 @@ class DashboardServer {
 		});
 	}
 
-	async broadcastUpdate(eventMessage = null) {
-		const payload = { type: "update", data: [], event: eventMessage };
+	async broadcastUpdate(eventMessage: string | null = null): Promise<void> {
+		const payload = { type: "update", data: [] as Task[], event: eventMessage };
 		try {
 			payload.data = await this.loadAllTasks();
-		} catch (e) {
+		} catch (e: any) {
 			console.error("[Dashboard] Failed to read tasks:", e.message);
 		}
 
@@ -190,11 +224,9 @@ class DashboardServer {
 		});
 	}
 
-	start() {
+	start(): void {
 		this.server.listen(this.port, () => {
 			console.log(`\n[SA] 🚀 Dashboard Server running at http://localhost:${this.port}`);
 		});
 	}
 }
-
-module.exports = { DashboardServer };

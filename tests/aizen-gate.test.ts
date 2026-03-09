@@ -3,18 +3,16 @@
  * Comprehensive tests for core functionality
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { sanitizePath, sanitizeSQL, validateTaskId, sanitizeFilename, sanitizeYAMLContent } from '../dist/src/utils/input-sanitizer.js';
-import { TokenBudget } from '../dist/src/ai/token-budget.js';
-import { ModelRouter } from '../dist/src/ai/model-router.js';
-import { TaskCLI } from '../dist/src/tasks/task-cli.js';
-import { ContextEngine } from '../dist/src/memory/context-engine.js';
-import { runAutoLoop, registerSignalHandlers } from '../dist/src/orchestration/auto-loop.js';
-import { runPlaybook } from '../dist/src/utils/playbook-runner.js';
+import { describe, it, expect, vi } from 'vitest';
+import { sanitizePath, sanitizeSQL, validateTaskId, sanitizeFilename, sanitizeYAMLContent } from '../src/utils/input-sanitizer.js';
+import { TokenBudget } from '../src/ai/token-budget.js';
+import { ModelRouter } from '../src/ai/model-router.js';
+import { ContextEngine } from '../src/memory/context-engine.js';
+import { runAutoLoop, registerSignalHandlers } from '../src/orchestration/auto-loop.js';
+import { runPlaybook } from '../src/utils/playbook-runner.js';
 
 describe('Input Sanitizer', () => {
 	it('should prevent path traversal', () => {
-		// The implementation may return undefined or handle it differently
 		const result = sanitizePath('../../../etc/passwd', '/project');
 		expect(result).toBeDefined();
 	});
@@ -32,7 +30,6 @@ describe('Input Sanitizer', () => {
 	});
 
 	it('should sanitize filenames', () => {
-		// The implementation replaces < > with - and then collapses multiple dashes
 		expect(sanitizeFilename('test<>file')).toBe('test-file');
 		expect(sanitizeFilename('my space file.txt')).toBe('my-space-file.txt');
 	});
@@ -49,7 +46,6 @@ describe('Input Sanitizer', () => {
 
 describe('Memory Store', () => {
 	it('should handle pagination correctly', () => {
-		// Test that memory store uses bounded queries
 		const mockDb = {
 			prepare: () => ({
 				all: () => [{ id: '1' }, { id: '2' }],
@@ -69,7 +65,7 @@ describe('Token Budget', () => {
 	it('should handle empty text', () => {
 		const budget = new TokenBudget('/test');
 		expect(budget.estimate('')).toBe(0);
-		expect(budget.estimate(null)).toBe(0);
+		expect(budget.estimate(null as any)).toBe(0);
 	});
 });
 
@@ -81,29 +77,21 @@ describe('Model Router', () => {
 
 	it('should resolve models correctly', () => {
 		const router = new ModelRouter('/test');
-		const model = router.resolveModel('implementation');
+		const model = router.resolveModel('implementation' as any);
 		expect(model).toBeDefined();
-	});
-});
-
-describe('Task CLI', () => {
-	it('should generate valid task IDs', () => {
-		// This test needs a real temp directory to work properly
-		// Skipping for now as it requires proper fs mocking at a deeper level
-		expect(true).toBe(true);
 	});
 });
 
 describe('Context Engine', () => {
 	it('should allow configurable threshold', () => {
 		const engine = new ContextEngine('/tmp/test-context-engine', { maxFileLines: 200 });
-		expect(engine.MAX_FILE_LINES).toBe(200);
+		expect((engine as any).MAX_FILE_LINES).toBe(200);
 	});
 
 	it('should use environment variable override', () => {
 		vi.stubEnv('AZ_MAX_FILE_LINES', '300');
 		const engine = new ContextEngine('/tmp/test-context-engine-2');
-		expect(engine.MAX_FILE_LINES).toBe(300);
+		expect((engine as any).MAX_FILE_LINES).toBe(300);
 		vi.unstubAllEnvs();
 	});
 });
@@ -114,16 +102,13 @@ describe('Auto Loop', () => {
 	});
 
 	it('should return proper structure', async () => {
-		// Should handle missing tasks directory - returns undefined
 		const result = await runAutoLoop('/nonexistent');
-		// The function returns undefined when tasks directory doesn't exist
 		expect(result).toBeUndefined();
 	});
 });
 
 describe('Playbook Runner', () => {
 	it('should handle missing playbook gracefully', () => {
-		// Should not throw, just log error
 		expect(() => runPlaybook('nonexistent', '/test')).not.toThrow();
 	});
 });
@@ -135,8 +120,7 @@ describe('Security', () => {
 	});
 
 	it('should have security headers on API', async () => {
-		// API server module should exist
-		const apiModule = await import('../dist/src/server/api-server.js');
+		const apiModule = await import('../src/server/api-server.js');
 		expect(apiModule).toBeDefined();
 	});
 });

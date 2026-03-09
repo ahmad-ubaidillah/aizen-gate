@@ -1,7 +1,11 @@
-const fs = require("fs-extra");
-const path = require("node:path");
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-const { DependencyGraph } = require("../dist/src/orchestration/dependency-graph.js");
+import fs from "fs-extra";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { DependencyGraph } from "../src/orchestration/dependency-graph.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("DependencyGraph Engine", () => {
 	const tempFeatureDir = path.join(__dirname, ".tmp_graph");
@@ -15,7 +19,7 @@ describe("DependencyGraph Engine", () => {
 		fs.removeSync(tempFeatureDir);
 	});
 
-	const createWP = (id, deps) => {
+	const createWP = (id: string, deps: string[]) => {
 		const filePath = path.join(tasksDir, `${id}.md`);
 		const content = `---
 id: ${id}
@@ -63,8 +67,8 @@ Spec...
 		await graph.build();
 
 		const cycles = graph.detectCycles();
-		expect(cycles).toBeTruthy();
-		expect(cycles.length).toBeGreaterThan(0);
+		expect(cycles).not.toBeNull();
+		expect(cycles!.length).toBeGreaterThan(0);
 
 		expect(() => graph.topologicalSort()).toThrow(/cycle/i);
 	});

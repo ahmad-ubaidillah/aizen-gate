@@ -1,7 +1,7 @@
 /**
  * Dashboard E2E Tests
  */
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard', () => {
   test('should load the dashboard homepage', async ({ page }) => {

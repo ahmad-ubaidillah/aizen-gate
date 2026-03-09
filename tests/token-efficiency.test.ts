@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-
-const { TokenBudget } = require("../dist/src/ai/token-budget.js");
-const { OutputFilter } = require("../dist/src/ai/output-filter.js");
+import { TokenBudget } from "../src/ai/token-budget.js";
+import { OutputFilter } from "../src/ai/output-filter.js";
 
 describe("Token Efficiency System", () => {
 	const budget = new TokenBudget(process.cwd());
@@ -42,7 +41,7 @@ Tests:       1 failed, 1 total
 
 	it("should enforce budget by truncating huge content", async () => {
 		const hugeContent = "A".repeat(20000);
-		const enforced = await budget.enforce("spec", hugeContent);
+		const enforced = await budget.enforce("spec" as any, hugeContent);
 		expect(enforced.length).toBeLessThan(hugeContent.length);
 		expect(enforced).toContain("[Aizen Token Budget Enforced:");
 	});

@@ -1,13 +1,16 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import fs from "fs-extra";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { TaskCLI } from "../src/tasks/task-cli.js";
+import { TaskSearch } from "../src/tasks/task-search.js";
 
-const fs = require("fs-extra");
-const path = require("node:path");
-const { TaskCLI } = require("../dist/src/tasks/task-cli.js");
-const { TaskSearch } = require("../dist/src/tasks/task-search.js");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("TaskCLI & TaskSearch - Suite", () => {
 	const testRoot = path.join(__dirname, "test-env-tasks");
-	let cli, search;
+	let cli: TaskCLI, search: TaskSearch;
 
 	beforeEach(() => {
 		// Setup temp env
@@ -31,14 +34,15 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 	it("Task 6 & 8: Create task with DoD defaults", async () => {
 		await cli.create("Setup Database", { priority: "high", assignee: "@codex" });
 
-		const files = fs.readdirSync(cli.tasksDir);
+		const tasksDir = (cli as any).tasksDir;
+		const files = fs.readdirSync(tasksDir);
 		expect(files.length).toBe(1);
 		expect(files[0]).toContain("aizen-001 - setup-database.md");
 
-		const content = fs.readFileSync(path.join(cli.tasksDir, files[0]), "utf8");
+		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
 		expect(content).toContain("status: Todo");
 		expect(content).toContain("priority: high");
-		expect(content).toContain("assignee: '@codex'"); // yaml formats it nicely
+		expect(content).toContain("assignee: '@codex'");
 		expect(content).toContain("## Definition of Done");
 		expect(content).toContain("- [ ] AC met");
 	});
@@ -46,9 +50,9 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 	it("Task 8: Create task skipping DoD defaults", async () => {
 		await cli.create("Quick Fix", { noDodDefaults: true });
 
-		const files = fs.readdirSync(cli.tasksDir);
-		// Since env is rebuilt each time, this is 1st task
-		const content = fs.readFileSync(path.join(cli.tasksDir, files[0]), "utf8");
+		const tasksDir = (cli as any).tasksDir;
+		const files = fs.readdirSync(tasksDir);
+		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
 		expect(content).not.toContain("## Definition of Done");
 	});
 
@@ -65,7 +69,7 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 
 		const results = await search.search("login authentication", {});
 		expect(results.length).toBeGreaterThan(0);
-		expect(results[0].title).toBe("build-login-api"); // Highest score
+		expect(results[0].title).toBe("build-login-api");
 
 		const filteredResults = await search.search("login", { priority: "medium" });
 		expect(filteredResults.length).toBe(1);
@@ -76,12 +80,14 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 		await cli.create("Deploy to Prod", {});
 		await cli.edit("aizen-001", { status: "Done", assignee: "@devops" });
 
-		const files = fs.readdirSync(cli.tasksDir);
-		const content = fs.readFileSync(path.join(cli.tasksDir, files[0]), "utf8");
+		const tasksDir = (cli as any).tasksDir;
+		const files = fs.readdirSync(tasksDir);
+		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
 		expect(content).toContain("status: Done");
 		expect(content).toContain("assignee: '@devops'");
 
-		const board = fs.readFileSync(cli.boardPath, "utf8");
+		const boardPath = (cli as any).boardPath;
+		const board = fs.readFileSync(boardPath, "utf8");
 		expect(board).toContain("| Deploy to Prod | @devops | Done |");
 	});
 });

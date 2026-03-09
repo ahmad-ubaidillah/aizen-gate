@@ -9,17 +9,30 @@ import { detectStack } from "../../skill-creator/src/tech-detector.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+interface InstallResult {
+	success: boolean;
+	platform?: string;
+	stack?: any;
+	error?: string;
+}
+
+interface InitFile {
+	path: string;
+	template: string;
+}
+
+interface PlatformInjection {
+	platform: string;
+	file: string;
+	create: boolean;
+	mkdir?: string;
+}
+
 /**
  * Aizen-Gate Core Installer (formerly az-install)
  * Handles file copying, environment setup, and Shield initialization.
- *
- * Supports 20+ AI IDEs/CLIs:
- * - Claude Code, Cursor, Windsurf, Kiro, Kilo, OpenCode, Zed
- * - Gemini CLI, GitHub Copilot, Cline
- * - Bolt.new, Lovable, Devin, OpenDevin
- * - Continue, Augment, Codeium, Tabnine
  */
-export async function installAizenGate(targetDir, selectedPlatform = null) {
+export async function installAizenGate(targetDir: string, selectedPlatform: string | null = null): Promise<InstallResult> {
 	intro(chalk.cyan.bold("⛩️  Aizen-Gate | Shield Installation"));
 
 	const s = spinner();
@@ -47,7 +60,7 @@ export async function installAizenGate(targetDir, selectedPlatform = null) {
 
 		// Skip installer and skill-creator files in the source-to-target copy
 		const options = {
-			filter: (src) => {
+			filter: (src: string) => {
 				const basename = path.basename(src);
 				const skipList = [
 					"installer",
@@ -97,7 +110,7 @@ export async function installAizenGate(targetDir, selectedPlatform = null) {
 		const sharedDir = path.join(aizenDir, "shared");
 		if (!fs.existsSync(sharedDir)) fs.mkdirSync(sharedDir, { recursive: true });
 
-		const initFiles = [
+		const initFiles: InitFile[] = [
 			{ path: "board.md", template: "board-template.md" },
 			{ path: "state.md", template: "state.md" },
 			{ path: "project.md", template: "project.md" },
@@ -139,7 +152,9 @@ export async function installAizenGate(targetDir, selectedPlatform = null) {
 			if (fs.existsSync(cmdsPath)) {
 				const cmds = JSON.parse(fs.readFileSync(cmdsPath, "utf8"));
 				for (const [key, val] of Object.entries(cmds)) {
-					slashCommandsText += `- \`/${key}\` -> ${val.description}\n  Prompt: ${val.prompt}\n`;
+					const description = (val as any).description || "";
+					const prompt = (val as any).prompt || "";
+					slashCommandsText += `- \`/${key}\` -> ${description}\n  Prompt: ${prompt}\n`;
 				}
 			}
 		} catch (_e) {
@@ -154,10 +169,10 @@ Read the full manual at: \`${aizenDir}/AIZEN_GATE.md\`
 ${slashCommandsText}
 `;
 
-		const updatedFiles = [];
+		const updatedFiles: string[] = [];
 
 		// Platform injection mapping - handles all supported IDEs/CLIs
-		const platformInjections = [
+		const platformInjections: PlatformInjection[] = [
 			// CLI Tools
 			{ platform: "claude-code", file: "CLAUDE.md", create: true },
 			{ platform: "antigravity", file: "GEMINI.md", create: true },
@@ -224,7 +239,7 @@ ${slashCommandsText}
 						}
 					}
 					updatedFiles.push(injection.file);
-				} catch (err) {
+				} catch (err: any) {
 					console.log(
 						chalk.yellow(`Warning: Could not inject into ${injection.file}: ${err.message}`),
 					);
@@ -298,7 +313,7 @@ exit 0
 		}
 
 		if (runConst) {
-			const { runConstitution } = await import("../../src/setup/constitution.js");
+			const { runConstitution } = await import("../../src/setup/constitution.js") as any;
 			await runConstitution(targetDir);
 		}
 
@@ -309,7 +324,7 @@ exit 0
 		);
 
 		return { success: true, platform, stack };
-	} catch (error) {
+	} catch (error: any) {
 		s.stop("Installation failed.");
 		cancel(`Shield failed to deploy: ${error.message}`);
 		return { success: false, error: error.message };

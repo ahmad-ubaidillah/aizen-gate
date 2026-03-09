@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
-const fs = require("node:fs");
-const _path = require("node:path");
-const { detectPlatform } = require("../installer/src/detect-platform");
+import fs from "node:fs";
+import { detectPlatform } from "../installer/src/detect-platform.js";
 
 describe("AI Platform Detector", () => {
 	beforeEach(() => {
@@ -18,7 +16,7 @@ describe("AI Platform Detector", () => {
 	});
 
 	test("Detects Cursor from filesystem", () => {
-		vi.spyOn(fs, "existsSync").mockImplementation((p) => p.includes(".cursor"));
+		vi.spyOn(fs, "existsSync").mockImplementation((p: any) => p.includes(".cursor"));
 		expect(detectPlatform()).toBe("cursor");
 	});
 

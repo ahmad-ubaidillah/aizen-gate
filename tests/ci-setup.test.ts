@@ -1,15 +1,14 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-
-const fs = require("fs-extra");
-const { setupCI } = require("../dist/src/setup/ci-setup.js");
+import fs from "fs-extra";
+import { setupCI } from "../src/setup/ci-setup.js";
 
 describe("Aizen-Gate CI/CD Orchestrator", () => {
 	test("Injects GitHub Actions config file", async () => {
 		const mockRoot = "/tmp/project";
 
 		vi.spyOn(fs, "existsSync").mockReturnValue(false);
-		const ensureSpy = vi.spyOn(fs, "ensureDir").mockResolvedValue();
-		const writeSpy = vi.spyOn(fs, "writeFile").mockResolvedValue();
+		const ensureSpy = vi.spyOn(fs, "ensureDir").mockImplementation(() => Promise.resolve());
+		const writeSpy = vi.spyOn(fs, "writeFile").mockImplementation(() => Promise.resolve() as any);
 
 		const result = await setupCI(mockRoot);
 

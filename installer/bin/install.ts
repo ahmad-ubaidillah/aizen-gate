@@ -15,11 +15,11 @@ async function main() {
 
 	switch (command) {
 		case "init": {
-			const { success, platform, stack } = await installAizenGate(targetDir);
-			if (success) {
-				console.log(`[AZ] Successfully initialized Aizen-Gate for ${platform}.`);
-				if (stack) {
-					console.log(`[AZ] Tech stack identified: ${stack.languages.join(", ")}`);
+			const result = await installAizenGate(targetDir);
+			if (result.success) {
+				console.log(`[AZ] Successfully initialized Aizen-Gate for ${result.platform}.`);
+				if (result.stack) {
+					console.log(`[AZ] Tech stack identified: ${result.stack.languages.join(", ")}`);
 				}
 			} else {
 				process.exit(1);
@@ -37,7 +37,7 @@ async function main() {
 	}
 }
 
-main().catch((error) => {
+main().catch((error: any) => {
 	console.error(`[AZ] Unexpected error: ${error.message}`);
 	process.exit(1);
 });

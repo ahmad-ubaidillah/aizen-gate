@@ -1,12 +1,24 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "fs-extra";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { MemoryStore } from "../src/memory/memory-store.js";
 
-const fs = require("fs-extra");
-const path = require("node:path");
-const { MemoryStore } = require("../dist/src/memory/memory-store.js");
+// Mock the heavy embedding logic
+vi.mock("../src/memory/local-embed.js", () => ({
+	localEmbedding: {
+		init: vi.fn().mockResolvedValue(undefined),
+		embed: vi.fn().mockImplementation((text: string) => Promise.resolve(new Array(384).fill(0.1))),
+		similarity: vi.fn().mockReturnValue(0.8)
+	}
+}));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("MemoryStore - Suite", () => {
 	const testRoot = path.join(__dirname, "test-env-mem");
-	let store;
+	let store: MemoryStore;
 
 	beforeEach(() => {
 		// Setup temp env
@@ -35,31 +47,31 @@ describe("MemoryStore - Suite", () => {
 		const legacyPath = path.join(testRoot, "aizen-gate", "shared", "memory-facts.json");
 
 		// Check SQLite file exists
-		expect(fs.existsSync(store.memoryPath)).toBe(true);
+		expect(fs.existsSync((store as any).memoryPath)).toBe(true);
 
 		// Check legacy file renamed
 		expect(fs.existsSync(`${legacyPath}.migrated`)).toBe(true);
 
 		// Check fact is in DB
-		const res = store.db.prepare("SELECT * FROM aizen_facts WHERE id = ?").get("123");
+		const res = (store as any).db.prepare("SELECT * FROM aizen_facts WHERE id = ?").get("123") as any;
 		expect(res.text).toBe("Legacy fact test");
 		expect(res.sector).toBe("semantic"); // Default sector
 	});
 
 	it("Task 2: Multi-Sector Classification", () => {
-		const r1 = store.classifySector("I feel really excited about this!");
+		const r1 = (store as any).classifySector("I feel really excited about this!");
 		expect(r1.primary).toBe("emotional");
 
-		const r2 = store.classifySector("I realize now how to proceed.");
+		const r2 = (store as any).classifySector("I realize now how to proceed.");
 		expect(r2.primary).toBe("reflective");
 
-		const r3 = store.classifySector("Step 1 involves setting up the DB.");
+		const r3 = (store as any).classifySector("Step 1 involves setting up the DB.");
 		expect(r3.primary).toBe("procedural");
 
-		const r4 = store.classifySector("Yesterday the build failed.");
+		const r4 = (store as any).classifySector("Yesterday the build failed.");
 		expect(r4.primary).toBe("episodic");
 
-		const r5 = store.classifySector("Jupiter has 79 moons.");
+		const r5 = (store as any).classifySector("Jupiter has 79 moons.");
 		expect(r5.primary).toBe("semantic");
 	});
 
@@ -68,7 +80,7 @@ describe("MemoryStore - Suite", () => {
 		const lambda = 0.015;
 		// Simulate 10 days ago
 		const tenDaysMs = 10 * 24 * 60 * 60 * 1000;
-		const decayed = store.calculateDecay(initialSalience, lambda, Date.now() - tenDaysMs);
+		const decayed = (store as any).calculateDecay(initialSalience, lambda, Date.now() - tenDaysMs);
 
 		// Salience should be roughly 1.0 * e^(-0.15) ~ 0.86
 		expect(decayed).toBeLessThan(1.0);
@@ -85,8 +97,8 @@ describe("MemoryStore - Suite", () => {
 
 		// Explainable Recall
 		expect(results[0].trace).toBeDefined();
-		expect(results[0].trace.sector).toBeDefined();
-		expect(typeof results[0].trace.similarity).toBe("number");
+		expect(results[0].trace!.sector).toBeDefined();
+		expect(typeof results[0].trace!.similarity).toBe("number");
 
 		// Check hit tracking incremented
 		expect(results[0].hits).toBeGreaterThan(0);
