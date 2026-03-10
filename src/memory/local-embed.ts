@@ -13,7 +13,7 @@ class LocalEmbedding {
 	private isInitializing: boolean;
 
 	constructor() {
-		this.modelName = "Xenova/all-MiniLM-L6-v2";
+		this.modelName = "Xenova/bge-micro-v2";
 		this.extractor = null;
 		this.isInitializing = false;
 	}

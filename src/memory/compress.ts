@@ -14,7 +14,8 @@ export async function compressContext(
 ): Promise<{ success: boolean; error?: string }> {
 	console.log(chalk.yellow.bold("\n--- [OPS] Compressing Tokens & Distilling Memory ---\n"));
 
-	const memory = new MemoryBridge(path.basename(projectRoot));
+	const spaceId = path.basename(projectRoot);
+	const memory = new MemoryBridge(projectRoot);
 	const semanticMemory = new MemoryStore(projectRoot);
 
 	const sharedDir = path.join(projectRoot, "aizen-gate", "shared");
@@ -69,10 +70,13 @@ export async function compressContext(
 						const taskDesc = taskParts[1];
 
 						// Bridge to SQLite-based Legacy Memory
-						await memory.storeDecision(`Completed Task: ${taskDesc}`, ["history", taskId]);
+						await memory.storeDecision(`Completed Task: ${taskDesc}`, `history_${taskId}`);
 
 						// [NEW] SIFTING into Mem0 Semantic Fact Store
-						await semanticMemory.add(`Task ${taskId} was completed: ${taskDesc}`, "board_archive");
+						await semanticMemory.storeMemory(
+							`agent://${spaceId}/archive/task_${taskId}`,
+							`Task ${taskId} was completed: ${taskDesc}`,
+						);
 					}
 				} else {
 					newLines.push(line);
@@ -102,9 +106,10 @@ export async function compressContext(
 				// Extract facts from the middle slice before discarding it
 				const middle = lines.slice(10, -20).join(" ");
 				if (middle.length > 100) {
-					await semanticMemory.add(
+					const timestamp = Date.now();
+					await semanticMemory.storeMemory(
+						`agent://${spaceId}/archive/state_snapshot_${timestamp}`,
 						`Historical state context: ${middle.slice(0, 200)}...`,
-						"state_compression",
 					);
 				}
 

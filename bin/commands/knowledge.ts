@@ -31,9 +31,8 @@ export function registerKnowledge(program: Command): void {
 			const results = await kg.query(query);
 			console.log(chalk.cyan("\n--- ⛩️ [Aizen] KG Query Results ---\n"));
 			results.forEach((r, i) => {
-				console.log(
-					chalk.yellow(`${i + 1}. [${r.type}] ${r.id} (Score: ${r.score?.toFixed(4) ?? "N/A"})`),
-				);
+				const statusIcon = r.status === "STABLE" ? "🛡️" : r.status === "BROKEN" ? "⚠️" : "🧪";
+				console.log(chalk.yellow(`${i + 1}. [${statusIcon}] ${r.uri}`));
 				console.log(chalk.gray(`   ${r.content.slice(0, 100)}...`));
 			});
 			console.log("");
@@ -41,17 +40,16 @@ export function registerKnowledge(program: Command): void {
 
 	kgCmd
 		.command("trace")
-		.argument("<id>", "Node ID to trace dependencies for")
-		.action(async (id: string) => {
+		.argument("<uri>", "OpenViking URI to trace details for")
+		.action(async (uri: string) => {
 			const { KnowledgeGraph } = await import("../../src/knowledge/kg-engine.js");
 			const kg = new KnowledgeGraph(process.cwd());
-			const trace = await kg.getTrace(id);
-			console.log(chalk.cyan(`\n--- ⛩️ [Aizen] KG Trace for: ${id} ---\n`));
-			trace.forEach((t, i) => {
-				console.log(
-					`${i + 1}. [${chalk.cyan(t.type)}] ${t.id} -- Score: ${t.score?.toFixed(4) ?? "N/A"}`,
-				);
-				console.log(chalk.white(`   ${t.content.slice(0, 120)}...`));
+			const results = await kg.query(uri, 1);
+			console.log(chalk.cyan(`\n--- ⛩️ [Aizen] KG Trace for: ${uri} ---\n`));
+			results.forEach((t, i) => {
+				const statusIcon = t.status === "STABLE" ? "🛡️" : t.status === "BROKEN" ? "⚠️" : "🧪";
+				console.log(`${i + 1}. [${statusIcon}] ${t.uri} -- Status: ${chalk.cyan(t.status)}`);
+				console.log(chalk.white(`   ${t.content.slice(0, 500)}...`));
 			});
 			console.log("");
 		});

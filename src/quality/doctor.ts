@@ -53,37 +53,25 @@ export async function runDoctor(
 			check: () => fs.existsSync(path.join(sharedDir, "project.md")),
 		},
 		{
-			name: "Graph Integrity: Orphan Controls",
+			name: "Graph Integrity: Neural Coverage",
 			check: async () => {
 				const kg = new KnowledgeGraph(projectRoot);
 				try {
-					// Use lazy memory initialization and provide a meaningful search query
-					const memory = await kg._getMemory();
-					const allNodes = await (memory as any).search("*", { limit: 1000 });
+					const allNodes = await kg.query("", 1000);
 
-					if (!allNodes || (allNodes as any).length === 0) {
-						return "No nodes in knowledge graph (empty)";
+					if (!allNodes || allNodes.length === 0) {
+						return "Graph empty (Baseline)";
 					}
 
-					const features = (allNodes as any[]).filter((n) => n.meta?.type === "FEAT");
-					const tasks = (allNodes as any[]).filter((n) => n.meta?.type === "TASK");
-					const implementsEdges = (allNodes as any[]).filter(
-						(n) => n.meta?.relation === "IMPLEMENTS",
-					);
-
-					const orphans = features.filter(
-						(f) => !implementsEdges.some((e) => e.meta?.target === f.id),
-					);
-					const unlinkedTasks = tasks.filter(
-						(t) => !implementsEdges.some((e) => e.meta?.source === t.id),
-					);
+					const broken = allNodes.filter((n) => n.status === "BROKEN");
+					const stable = allNodes.filter((n) => n.status === "STABLE");
 
 					const report: string[] = [];
-					if (orphans.length > 0) report.push(chalk.yellow(`${orphans.length} Orphan Features`));
-					if (unlinkedTasks.length > 0)
-						report.push(chalk.yellow(`${unlinkedTasks.length} Unlinked Tasks`));
+					report.push(`${allNodes.length} URIs`);
+					if (stable.length > 0) report.push(chalk.green(`${stable.length} Stable`));
+					if (broken.length > 0) report.push(chalk.red(`${broken.length} Neural Decay`));
 
-					return report.length > 0 ? report.join(", ") : "Healthy";
+					return report.join(", ");
 				} catch (err) {
 					return `Check skipped: ${(err as Error).message}`;
 				}

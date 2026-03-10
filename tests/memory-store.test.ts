@@ -13,6 +13,13 @@ vi.mock("../src/memory/local-embed.js", () => ({
 	}
 }));
 
+// Mock llama bridge to avoid GGUF downloads in tests
+vi.mock("../src/memory/llama-bridge.js", () => ({
+	createLlamaBridge: vi.fn().mockReturnValue({
+		distill: vi.fn().mockImplementation((text: string) => Promise.resolve(`TOON: ${text}`))
+	})
+}));
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -20,87 +27,74 @@ describe("MemoryStore - Suite", () => {
 	const testRoot = path.join(__dirname, "test-env-mem");
 	let store: MemoryStore;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		// Setup temp env
 		fs.ensureDirSync(path.join(testRoot, "aizen-gate", "shared"));
-
-		// Seed legacy JSON
-		const legacyPath = path.join(testRoot, "aizen-gate", "shared", "memory-facts.json");
-		fs.writeJsonSync(legacyPath, [
-			{
-				id: "123",
-				text: "Legacy fact test",
-				created_at: Date.now(),
-				updated_at: Date.now(),
-				hits: 0,
-			},
-		]);
-
-		store = new MemoryStore(testRoot); // triggers migration
+		if (store) {
+			// Clear DB table instead of deleting file to avoid locked handles
+			(store as any).db.prepare("DELETE FROM agent_memory").run();
+		} else {
+			store = new MemoryStore(testRoot);
+			await store.ready;
+		}
 	});
 
 	afterAll(() => {
+		if (store) {
+			(store as any).db.close();
+		}
 		fs.removeSync(testRoot);
 	});
 
-	it("Task 1: SQLite Backend & Auto-Migration", () => {
-		const legacyPath = path.join(testRoot, "aizen-gate", "shared", "memory-facts.json");
+	it("Phase 1-3: storeMemory and URI Parsing", async () => {
+		const uri = "agent://test-space/bot/intelligence";
+		const content = "The sun is a star.";
+		
+		const result = await store.storeMemory(uri, content);
+		expect(result).toBe("CREATED");
 
-		// Check SQLite file exists
-		expect(fs.existsSync((store as any).memoryPath)).toBe(true);
-
-		// Check legacy file renamed
-		expect(fs.existsSync(`${legacyPath}.migrated`)).toBe(true);
-
-		// Check fact is in DB
-		const res = (store as any).db.prepare("SELECT * FROM aizen_facts WHERE id = ?").get("123") as any;
-		expect(res.text).toBe("Legacy fact test");
-		expect(res.sector).toBe("semantic"); // Default sector
+		// Verify entry in DB
+		const res = (store as any).db.prepare("SELECT * FROM agent_memory WHERE viking_path = ?").get(uri) as any;
+		expect(res.space_id).toBe("test-space");
+		expect(res.agent_id).toBe("bot");
+		expect(res.content_raw).toBe(content);
+		expect(res.content_toon).toContain("TOON:");
 	});
 
-	it("Task 2: Multi-Sector Classification", () => {
-		const r1 = (store as any).classifySector("I feel really excited about this!");
-		expect(r1.primary).toBe("emotional");
-
-		const r2 = (store as any).classifySector("I realize now how to proceed.");
-		expect(r2.primary).toBe("reflective");
-
-		const r3 = (store as any).classifySector("Step 1 involves setting up the DB.");
-		expect(r3.primary).toBe("procedural");
-
-		const r4 = (store as any).classifySector("Yesterday the build failed.");
-		expect(r4.primary).toBe("episodic");
-
-		const r5 = (store as any).classifySector("Jupiter has 79 moons.");
-		expect(r5.primary).toBe("semantic");
+	it("Phase 4: Skill Fusion (Updates)", async () => {
+		const uri = "agent://test-space/bot/fusion";
+		await store.storeMemory(uri, "Initial state");
+		const result = await store.storeMemory(uri, "Updated state");
+		
+		expect(result).toBe("UPDATED");
+		
+		const res = (store as any).db.prepare("SELECT growth_version, source_count FROM agent_memory WHERE viking_path = ?").get(uri) as any;
+		expect(res.growth_version).toBe(2);
+		expect(res.source_count).toBe(2);
 	});
 
-	it("Task 3: Decay Engine Tracking", () => {
-		const initialSalience = 1.0;
-		const lambda = 0.015;
-		// Simulate 10 days ago
-		const tenDaysMs = 10 * 24 * 60 * 60 * 1000;
-		const decayed = (store as any).calculateDecay(initialSalience, lambda, Date.now() - tenDaysMs);
+	it("Phase 5: Immune System Response", async () => {
+		const uri = "agent://test-space/bot/immune";
+		await store.storeMemory(uri, "Critical logic");
+		
+		// Report 3 failures
+		store.reportSkillResult(uri, false, "Timeout");
+		store.reportSkillResult(uri, false, "Error 500");
+		store.reportSkillResult(uri, false, "Crash");
 
-		// Salience should be roughly 1.0 * e^(-0.15) ~ 0.86
-		expect(decayed).toBeLessThan(1.0);
-		expect(decayed).toBeGreaterThan(0.8);
+		const res = (store as any).db.prepare("SELECT status, success_rate FROM agent_memory WHERE viking_path = ?").get(uri) as any;
+		expect(res.status).toBe("BROKEN");
+		expect(res.success_rate).toBeLessThan(0.3);
 	});
 
-	it("Task 4 & 5: CRUD, Graph Expansion & Explainable Recall", async () => {
-		// Add two conceptually related facts
-		await store.add("How to setup docker properly.", "user");
-		await store.add("Docker procedure involves using docker-compose up.", "user");
-
-		const results = await store.findRelevant("procedure for docker");
+	it("Phase 6: Multi-Strategy Recall", async () => {
+		const spaceId = "test-space";
+		await store.storeMemory(`agent://${spaceId}/bot/fact1`, "Docker is great for scaling.");
+		await store.storeMemory(`agent://${spaceId}/bot/fact2`, "Kubernetes manages containers.");
+		
+		const results = await store.findRelevant("How to scale docker?", spaceId);
 		expect(results.length).toBeGreaterThan(0);
-
-		// Explainable Recall
-		expect(results[0].trace).toBeDefined();
-		expect(results[0].trace!.sector).toBeDefined();
-		expect(typeof results[0].trace!.similarity).toBe("number");
-
-		// Check hit tracking incremented
-		expect(results[0].hits).toBeGreaterThan(0);
+		expect(results[0].uri).toContain("fact1");
+		expect(results[0].score).toBeDefined();
 	});
 });

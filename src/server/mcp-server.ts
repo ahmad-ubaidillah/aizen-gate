@@ -186,9 +186,11 @@ async function getServer(): Promise<{
 			case "memory_add": {
 				const { text } = request.params.arguments as any;
 				try {
-					await memoryStore.add(text);
+					const spaceId = path.basename(process.cwd());
+					const uri = `agent://${spaceId}/mcp/fact_${Date.now()}`;
+					await memoryStore.storeMemory(uri, text);
 					return {
-						content: [{ type: "text", text: `Successfully added memory: "${text}"` }],
+						content: [{ type: "text", text: `Successfully added memory to URI: ${uri}` }],
 					};
 				} catch (e) {
 					return {
@@ -202,10 +204,11 @@ async function getServer(): Promise<{
 				const { query, limit } = request.params.arguments as any;
 				try {
 					const max = typeof limit === "number" ? limit : 5;
-					const results = await memoryStore.findRelevant(query, max);
+					const spaceId = path.basename(process.cwd());
+					const results = await memoryStore.findRelevant(query, spaceId, max);
 					let responseText = "Search Results:\n\n";
 					results.forEach((r, i) => {
-						responseText += `${i + 1}. [Similarity: ${r.trace.similarity?.toFixed(3) ?? "N/A"}] (${r.trace.sector}) ${r.text}\n`;
+						responseText += `${i + 1}. [${r.status}] ${r.uri}\n   ${r.text}\n\n`;
 					});
 					return {
 						content: [{ type: "text", text: responseText || "No relevant memories found." }],

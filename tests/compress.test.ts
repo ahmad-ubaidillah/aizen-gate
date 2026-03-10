@@ -14,7 +14,8 @@ vi.mock("../src/memory/memory-bridge.js", () => {
 vi.mock("../src/memory/memory-store.js", () => {
 	return {
 		MemoryStore: class {
-			add = vi.fn().mockResolvedValue(true);
+			storeMemory = vi.fn().mockResolvedValue("CREATED");
+			findRelevant = vi.fn().mockResolvedValue([]);
 		},
 	};
 });

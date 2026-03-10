@@ -19,10 +19,16 @@ export async function ingestDocument(projectRoot: string, targetPath: string): P
 		const chunks = content.split(/\n\s*\n/).filter((c) => c.trim().length > 20);
 
 		const store = new MemoryStore(projectRoot);
+		const spaceId = path.basename(projectRoot);
 
 		let ingested = 0;
-		for (const chunk of chunks) {
-			await store.add(`[Source: ${path.basename(targetPath)}] ${chunk.trim().slice(0, 1000)}`);
+		for (let i = 0; i < chunks.length; i++) {
+			const chunk = chunks[i];
+			const uri = `agent://${spaceId}/ingest/${path.basename(targetPath).replace(/[^a-zA-Z0-9]/g, "_")}_${i}`;
+			await store.storeMemory(
+				uri,
+				`[Source: ${path.basename(targetPath)}] ${chunk.trim().slice(0, 1000)}`,
+			);
 			ingested++;
 		}
 

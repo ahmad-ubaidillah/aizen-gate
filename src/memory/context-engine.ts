@@ -146,7 +146,8 @@ export class ContextEngine {
 	async formatXMLPrompt(wp: any, context: string) {
 		const sharpenedInstruction = await this.sharpenPrompt(wp.title);
 		const header = `<task wp_id="${wp.id}">\n<instruction>IMPORTANT: ${sharpenedInstruction}</instruction>`;
-		const semanticContext = await this.memory.getFormattedMemory(wp.title);
+		const spaceId = path.basename(this.projectRoot);
+		const semanticContext = await this.memory.getFormattedMemory(wp.title, spaceId);
 
 		return `
 ${header}

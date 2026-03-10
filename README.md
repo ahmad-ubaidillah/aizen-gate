@@ -36,11 +36,11 @@ When developing applications with AI, we often face three major hurdles:
 Aizen-Gate is built on a modern foundation for maximum performance and security:
 
 - **Core Engine:** **100% TypeScript** with ESM modules for type safety and long-term maintainability.
-- **Persistent Memory:** **better-sqlite3** as the backend for storing technical facts and decisions.
-- **Semantic Intelligence:** **@xenova/transformers** for generating local embeddings (Zero API Costs!) to ensure accurate context retrieval.
-- **Real-time Monitoring:** **Express.js & WebSockets** powering the Live Pulse Dashboard.
+- **Embedded Intelligence:** **node-llama-cpp** hosting `qwen2.5-0.5b` locally for zero-latency distillation and task planning (No Ollama required!).
+- **Unified Memory:** Synchronous **better-sqlite3** backend with the **12-Core Intelligence Tiering** (Working, Semantic, Episodic, Procedural, etc.).
+- **Logic Recall:** **@xenova/transformers** (BGE-Micro-V2) for ultra-lightweight semantic indexing.
+- **Addressing:** Built on the **OpenViking URI Protocol** (`agent://space/agent/topic`) for deterministic logic routing.
 - **UI Aesthetics:** **Vanilla CSS** with a premium, responsive minimalist editorial style.
-- **Quality Assurance:** **Vitest** for unit testing and **Playwright** for End-to-End (E2E) validation.
 
 ---
 
@@ -48,14 +48,14 @@ Aizen-Gate is built on a modern foundation for maximum performance and security:
 
 Aizen-Gate consolidates powerful tools into a unified ecosystem:
 
-| Component            | Utility                                                                                                |
-| :------------------- | :----------------------------------------------------------------------------------------------------- |
-| **`specify` Wizard** | An interactive interview process that turns abstract ideas into bullet-proof `spec.md` files.          |
-| **5-Tier Memory**    | A SQL-backed brain (Working, Episodic, Semantic, Document, LST) ensuring the AI never forgets context. |
-| **Dependency Graph** | Automatically calculates the execution order of tasks to prevent conflicts between features.           |
-| **Autonomous Loop**  | Automatically executes implementations in isolated Git Worktrees per task.                             |
-| **Project Doctor**   | Automated diagnostics to detect and repair protocol damage in the workspace.                           |
-| **Shield Benchmark** | Audits code quality and architectural compliance against the project's "Constitution."                 |
+| Component | Utility |
+| :--- | :--- |
+| **`specify` Wizard** | An interactive interview process that turns abstract ideas into bullet-proof `spec.md` files. |
+| **12-Core Fusion** | A neural-backed memory system that distills raw text into **TOON** logic nuggets for perfect recall. |
+| **Immune System** | Self-healing memory logic that automatically tags and deprioritizes "BROKEN" or failing reasoning paths. |
+| **Dependency Graph** | Automatically calculates the execution order of tasks to prevent conflicts between features. |
+| **Autonomous Loop** | Automatically executes implementations in isolated Git Worktrees per task. |
+| **Project Doctor** | Automated diagnostics to detect and repair protocol damage in the workspace. |
 
 ---
 
