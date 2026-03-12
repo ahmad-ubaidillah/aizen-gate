@@ -33,6 +33,7 @@ export const config = {
 /**
  * Get tracer instance
  */
+// biome-ignore lint/suspicious/noExplicitAny: otel trace instance
 export function getTracer(): any {
 	if (!trace) {
 		return null;
@@ -75,6 +76,7 @@ export async function withSpan<T>(
 		return fn(null);
 	}
 
+	// biome-ignore lint/suspicious/noExplicitAny: span callback
 	return tracer.startActiveSpan(name, { kind: options.kind }, async (span: any) => {
 		try {
 			// Add attributes
@@ -88,15 +90,16 @@ export async function withSpan<T>(
 			span.setStatus({ code: trace.SpanStatusCode.OK });
 
 			return result;
-		} catch (error: any) {
-			// biome-ignore lint/suspicious/noExplicitAny: error handling
+		} catch (error: unknown) {
+			// biome-ignore lint/suspicious/noExplicitAny: error extraction
+			const err = error as any;
 			// Set error status
 			span.setStatus({
 				code: trace.SpanStatusCode.ERROR,
-				message: error.message,
+				message: err.message,
 			});
 			span.setAttribute("error", true);
-			span.setAttribute("error.message", error.message);
+			span.setAttribute("error.message", err.message);
 
 			throw error;
 		} finally {

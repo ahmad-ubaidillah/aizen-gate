@@ -44,13 +44,16 @@ export class SkillWatcher {
 	async triggerUpdate(): Promise<void> {
 		try {
 			await autoGenerateSkills(this.projectRoot);
-		} catch (e: any) {
-			console.error(`[SkillWatcher] Update failed: ${e.message}`);
+		} catch (e: unknown) {
+			const err = e as Error;
+			console.error(`[SkillWatcher] Update failed: ${err.message}`);
 		}
 	}
 
 	stop(): void {
-		this.watchers.forEach((w) => w.close());
+		for (const w of this.watchers) {
+			w.close();
+		}
 		this.watchers = [];
 	}
 }
