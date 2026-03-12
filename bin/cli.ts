@@ -60,6 +60,7 @@ program
 
 import { registerCore } from "./commands/core.js";
 import { registerDocs } from "./commands/docs.js";
+import { registerKanban } from "./commands/kanban.js";
 import { registerKnowledge } from "./commands/knowledge.js";
 import { registerMemory } from "./commands/memory.js";
 import { registerOrchestration } from "./commands/orchestration.js";
@@ -68,7 +69,6 @@ import { registerServer } from "./commands/server.js";
 import { registerSession } from "./commands/session.js";
 import { registerSkills } from "./commands/skills.js";
 import { registerTasks } from "./commands/tasks.js";
-import { registerKanban } from "./commands/kanban.js";
 
 registerCore(program);
 registerDocs(program);

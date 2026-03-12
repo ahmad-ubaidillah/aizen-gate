@@ -1,8 +1,9 @@
 /**
  * Kanban CLI Commands
  */
-import type { Command } from "commander";
+
 import chalk from "chalk";
+import type { Command } from "commander";
 
 /**
  * Register kanban commands

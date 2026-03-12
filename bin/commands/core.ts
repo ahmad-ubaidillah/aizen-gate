@@ -14,7 +14,6 @@ import yaml from "js-yaml";
  * @param program - Commander program instance
  */
 export function registerCore(program: Command): void {
-
 	// 1.5. Onboarding
 	program
 		.command("onboarding")

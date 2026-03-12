@@ -119,7 +119,11 @@ export async function runDoctor(
 		console.log(chalk.green.bold("\n[Aizen] Shield operational! Protocol adherence 100%. ⛩️\n"));
 	} else {
 		if (fixRequested) {
-			console.log(chalk.yellow("\n[Aizen] Auto-Repair is currently unavailable. Please check the documentation."));
+			console.log(
+				chalk.yellow(
+					"\n[Aizen] Auto-Repair is currently unavailable. Please check the documentation.",
+				),
+			);
 		} else {
 			console.log(
 				chalk.red.bold(

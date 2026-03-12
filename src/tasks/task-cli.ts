@@ -132,7 +132,11 @@ ${yaml.dump(frontmatter)}---
 `;
 
 		// DoD Defaults Injection
-		const dods = config.definition_of_done || ["Code builds successfully", "Tests pass", "Manifest updated"];
+		const dods = config.definition_of_done || [
+			"Code builds successfully",
+			"Tests pass",
+			"Manifest updated",
+		];
 		dods.forEach((dod: string) => {
 			content += `- [ ] ${dod}\n`;
 		});
@@ -211,7 +215,7 @@ ${yaml.dump(frontmatter)}---
 					await fs.move(filePath, targetPath, { overwrite: true });
 					console.log(chalk.blue(`[Kanban] Moved task to kanban/${targetFolder}/`));
 					filePath = targetPath; // Update track for nested edits
-					
+
 					// Update manifest if moving to/from dev
 					if (targetFolder === "dev" || filePath.includes("/kanban/dev/")) {
 						await this.manifest.updateManifest();

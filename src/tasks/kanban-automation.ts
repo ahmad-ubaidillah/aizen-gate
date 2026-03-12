@@ -1,8 +1,8 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { findTaskFile } from "./task-utils.js";
-import { TaskCLI } from "./task-cli.js";
 import { ManifestGenerator } from "./manifest-generator.js";
+import { TaskCLI } from "./task-cli.js";
+import { findTaskFile } from "./task-utils.js";
 
 export class KanbanAutomation {
 	private projectRoot: string;
@@ -28,10 +28,10 @@ export class KanbanAutomation {
 		if (sourcePath === targetPath) return;
 
 		console.log(`[Kanban] Moving ${taskId} from ${path.dirname(sourcePath)} to ${targetFolder}`);
-		
+
 		await fs.ensureDir(path.join(this.projectRoot, targetFolder));
 		await fs.move(sourcePath, targetPath, { overwrite: true });
-		
+
 		// Update manifest if moving to/from dev
 		if (targetFolder === "dev" || sourcePath.includes("/dev/")) {
 			await this.manifest.updateManifest();
@@ -43,10 +43,14 @@ export class KanbanAutomation {
 
 	private getStatusFromFolder(folder: string): string {
 		switch (folder) {
-			case "dev": return "In Progress";
-			case "test": return "Review";
-			case "done": return "Done";
-			default: return "Todo";
+			case "dev":
+				return "In Progress";
+			case "test":
+				return "Review";
+			case "done":
+				return "Done";
+			default:
+				return "Todo";
 		}
 	}
 

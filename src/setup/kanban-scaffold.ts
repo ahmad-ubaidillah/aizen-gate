@@ -1,6 +1,6 @@
 import path from "node:path";
-import fs from "fs-extra";
 import chalk from "chalk";
+import fs from "fs-extra";
 
 export class KanbanScaffolder {
 	private projectRoot: string;
@@ -11,7 +11,7 @@ export class KanbanScaffolder {
 
 	async scaffold(): Promise<void> {
 		const dirs = ["backlog", "dev", "test", "done", "aizen-gate/shared"];
-		
+
 		console.log(chalk.cyan(`[Kanban] Initializing directory structure...`));
 		for (const dir of dirs) {
 			const absDir = path.join(this.projectRoot, dir);
@@ -24,7 +24,8 @@ export class KanbanScaffolder {
 		// Create PROJECT_CONSTITUTION.md if it doesn't exist
 		const constitutionPath = path.join(this.projectRoot, "PROJECT_CONSTITUTION.md");
 		if (!fs.existsSync(constitutionPath)) {
-			const content = `# 📜 PROJECT CONSTITUTION: ${path.basename(this.projectRoot)}\n\n` +
+			const content =
+				`# 📜 PROJECT CONSTITUTION: ${path.basename(this.projectRoot)}\n\n` +
 				`## AI-Agent Guidelines\n` +
 				`- Always check \`CURRENT_SPRINT.md\` before starting work.\n` +
 				`- Keep atomic commits mapped to Task IDs.\n` +
@@ -37,6 +38,8 @@ export class KanbanScaffolder {
 			console.log(chalk.gray(`  ✔ Created PROJECT_CONSTITUTION.md`));
 		}
 
-		console.log(chalk.green(`[Kanban] Scaffolding complete. Aizen-Gate is now aligned with Kanban-Agent.`));
+		console.log(
+			chalk.green(`[Kanban] Scaffolding complete. Aizen-Gate is now aligned with Kanban-Agent.`),
+		);
 	}
 }

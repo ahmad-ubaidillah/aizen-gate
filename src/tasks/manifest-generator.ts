@@ -1,7 +1,7 @@
 import path from "node:path";
+import chalk from "chalk";
 import fs from "fs-extra";
 import yaml from "js-yaml";
-import chalk from "chalk";
 
 export class ManifestGenerator {
 	private projectRoot: string;
@@ -17,7 +17,7 @@ export class ManifestGenerator {
 	async updateManifest(): Promise<void> {
 		if (!fs.existsSync(this.devDir)) return;
 
-		const files = fs.readdirSync(this.devDir).filter(f => f.endsWith(".md"));
+		const files = fs.readdirSync(this.devDir).filter((f) => f.endsWith(".md"));
 		if (files.length === 0) {
 			await fs.remove(this.manifestPath);
 			return;
@@ -34,7 +34,7 @@ export class ManifestGenerator {
 			const title = titleMatch ? titleMatch[1] : file;
 
 			manifest += `## 🛠️ ACTIVE TASK: ${title}\n`;
-			
+
 			if (fmMatch) {
 				const fm = yaml.load(fmMatch[1]) as any;
 				manifest += `- **ID**: \`${fm.id}\`\n`;
@@ -52,7 +52,7 @@ export class ManifestGenerator {
 			if (scopeMatch) {
 				manifest += `\n### 📝 Scope & Impact\n${scopeMatch[1].trim()}\n`;
 			}
-			
+
 			manifest += `\n---\n\n`;
 		}
 
