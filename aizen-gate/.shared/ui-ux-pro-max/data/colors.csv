@@ -1,0 +1,25 @@
+name,hex,rgb,usage
+primary-50,#eff6ff,"239,246,255",backgrounds
+primary-100,#dbeafe,"219,234,254",backgrounds
+primary-200,#bfdbfe,"189,219,254",backgrounds
+primary-300,#93c5fd,"147,197,253",backgrounds
+primary-400,#60a5fa,"96,165,250",primary actions
+primary-500,#3b82f6,"59,130,246",primary buttons
+primary-600,#2563eb,"37,99,235",hover states
+primary-700,#1d4ed8,"29,78,216",active states
+primary-800,#1e40af,"30,64,175",text
+primary-900,#1e3a8a,"30,58,138",headings
+gray-50,#f9fafb,"249,250,251",page backgrounds
+gray-100,#f3f4f6,"243,244,246",card backgrounds
+gray-200,#e5e7eb,"229,231,235",borders
+gray-300,#d1d5db,"209,213,219",disabled
+gray-400,#9ca3af,"156,163,175",placeholders
+gray-500,#6b7280,"107,114,128",secondary text
+gray-600,#4b5563,"75,85,99",body text
+gray-700,#374151,"55,65,81",headings
+gray-800,#1f2937,"31,41,55",dark text
+gray-900,#111827,"17,24,39",darkest
+success-500,#10b981,"16,185,129",success states
+warning-500,#f59e0b,"245,158,11",warning states
+error-500,#ef4444,"239,68,68",error states
+info-500,#06b6d4,"6,182,212",info states

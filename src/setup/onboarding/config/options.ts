@@ -11,33 +11,45 @@ export interface Option {
 }
 
 export const IDE_OPTIONS: Option[] = [
-	{ label: "🖥️ VSCode", value: "vscode", description: "Visual Studio Code" },
-	{ label: "💻 VSCode Insiders", value: "vscode-insiders", description: "VSCode Insiders" },
-	{ label: "🔵 Cursor", value: "cursor", description: "AI-first code editor" },
-	{ label: "🐙 GitHub Codespaces", value: "codespaces", description: "Cloud development" },
-	{ label: "💨 Windsurf", value: "windsurf", description: "Codeium's IDE" },
-	{ label: "⌨️ CLI (Terminal)", value: "cli", description: "Command line only" },
-	{ label: "🔄 Other", value: "other", description: "Custom setup" },
+	{ label: "🖥️ Claude Code", value: "claude-code", description: "Anthropic's CLI AI assistant" },
+	{ label: "💻 Cursor", value: "cursor", description: "AI-first code editor" },
+	{ label: "🤖 Auggie", value: "auggie", description: "Augmented coding assistant" },
+	{ label: "⚡ Cline", value: "cline", description: "Autonomous coding agent" },
+	{ label: "📝 CodeBuddy", value: "codebuddy", description: "Personal AI coding companion" },
+	{ label: "🔷 Codex", value: "codex", description: "OpenAI's CLI coding assistant" },
+	{ label: "💥 Crush", value: "crush", description: "AI-powered IDE" },
+	{ label: "🌟 Gemini CLI", value: "gemini-cli", description: "Google's multimodal CLI" },
+	{ label: "🟢 GitHub Copilot", value: "github-copilot", description: "Microsoft's AI pair programmer" },
+	{ label: "🚀 Google Antigravity", value: "google-antigravity", description: "Next-gen AI coding platform" },
+	{ label: "🔄 iFlow", value: "iflow", description: "Intelligent flow editor" },
+	{ label: "⚖️ Kilocode", value: "kilocode", description: "Lightweight AI coding assistant" },
+	{ label: "🗡️ Kiro", value: "kiro", description: "AI-first IDE" },
+	{ label: "📂 Opencode", value: "opencode", description: "Open source AI IDE" },
+	{ label: "🔐 QWEncoder", value: "qwencoder", description: "Secure AI encoder" },
+	{ label: "🐙 Roo Cline", value: "roo-cline", description: "AI-powered development environment" },
+	{ label: "🔧 Rovo Dev", value: "rovo-dev", description: "Atlassian's AI developer" },
+	{ label: "🚀 Trae", value: "trae", description: "AI-native IDE" },
+	{ label: "💨 Windsurf", value: "windsurf", description: "Codeium's AI flow editor" },
 ];
 
 export const DEV_TYPE_OPTIONS: Option[] = [
 	{
-		label: "⚡ Ideation & Exploration",
+		label: "⚡ Fast (Prototype)",
 		value: "fast",
-		description: "Quick iterations, rapid prototyping, minimal docs",
-		details: "Best for brainstorming • Fast feedback loops • Token-efficient",
+		description: "Short context, minimal quality gates, fast delivery",
+		details: "✅ Pros: Quick iterations, low overhead, fast feedback\n❌ Cons: Higher risk, less documentation, limited testing",
 	},
 	{
-		label: "🐢 MVP Builder",
+		label: "🐢 Medium (MVP)",
 		value: "medium",
-		description: "Balance between speed and quality",
-		details: "Standard documentation • Basic testing • Clear milestones",
+		description: "Balanced, standard quality gates",
+		details: "✅ Pros: Good balance of speed and quality\n❌ Cons: Medium overhead, standard documentation",
 	},
 	{
-		label: "🏗️ Enterprise Platform",
+		label: "🏗️ Slow (Enterprise)",
 		value: "slow",
-		description: "Full SDLC, comprehensive testing & documentation",
-		details: "Enterprise-grade • Full test coverage • Complete documentation",
+		description: "Complete context, strict gates, multi-layer review",
+		details: "✅ Pros: High quality, comprehensive docs, strict testing\n❌ Cons: Slower delivery, more overhead, complex reviews",
 	},
 ];
 
@@ -103,8 +115,6 @@ export const LANGUAGE_OPTIONS: Option[] = [
 	{ label: "🇯🇵 Japanese", value: "ja", description: "日本語" },
 	{ label: "🇰🇷 Korean", value: "ko", description: "한국어" },
 	{ label: "🇨🇳 Chinese", value: "zh", description: "中文" },
-	{ label: "🇵🇹 Portuguese", value: "pt", description: "Português" },
-	{ label: "🇷🇺 Russian", value: "ru", description: "Русский" },
 ];
 
 /**

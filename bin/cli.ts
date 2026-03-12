@@ -48,7 +48,36 @@ if (fs.existsSync(configPath)) {
 	lifecycleExporter = { initLifecycle };
 }
 
-export { lifecycleExporter };
+// --- Skill System: Auto-load skills from reference/skills & dependency watcher ---
+
+let skillExporter: { initSkills: () => Promise<void> } | null = null;
+
+const initSkills = async (): Promise<void> => {
+	try {
+		const { skillRegistry } = await import("../src/skills/index.js");
+		await skillRegistry.initialize(projectRoot);
+		console.log(chalk.cyan("[Skills] Loaded skills from reference/skills"));
+	} catch (err) {
+		console.error("[Skills] Initialization warning:", (err as Error).message);
+	}
+
+	// Start SkillWatcher to monitor dependency changes
+	try {
+		const { SkillWatcher } = await import("../src/utils/skill-watcher.js");
+		const watcher = new SkillWatcher(projectRoot);
+		watcher.start();
+		console.log(chalk.cyan("[SkillWatcher] Monitoring dependencies for auto-skill generation"));
+	} catch (err) {
+		console.error("[SkillWatcher] Warning:", (err as Error).message);
+	}
+};
+
+// Auto-init skills on startup (fire and forget)
+initSkills();
+
+skillExporter = { initSkills };
+
+export { lifecycleExporter, skillExporter };
 
 program
 	.name("aizen-gate")

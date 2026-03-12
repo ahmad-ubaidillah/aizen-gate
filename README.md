@@ -8,6 +8,61 @@
 
 ---
 
+## 🆕 Implemented Features (2026 Enhancement)
+
+All 6 phases of the Aizen-Gate Enhancement have been completed:
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Enhanced Onboarding** | 7-question wizard with project style selection (Fast/Medium/Slow) | ✅ DONE |
+| **PRD Conditional Flow** | Smart detection - load existing PRD or create new with PM+BA agents | ✅ DONE |
+| **Agent Tags System** | Clear identification with [PM], [DEV], [QA], [ARCH], [AZ] tags | ✅ DONE |
+| **Situation Detection** | Auto-detect intent (feature/bug/optimization/review/discussion) | ✅ DONE |
+| **AI Questions with Suggestions** | Multi-choice options with pros/cons and recommendations | ✅ DONE |
+| **Review Retry Loop** | 3-attempt retry with diff reports and rejection tracking | ✅ DONE |
+| **Fallback Correction** | User can correct misdetected intents with [F], [B], [O], [D] commands | ✅ DONE |
+| **Auto-Skill Trigger** | Keyword-based skill activation (security, database, testing, etc.) | ✅ DONE |
+| **Token Management** | Budget tracking and context summarization every 20 messages | ✅ DONE |
+
+### New CLI Commands
+
+```bash
+npx aizen-gate specify    # Discovery wizard with AI suggestions
+npx aizen-gate plan        # Architectural blueprint design
+npx aizen-gate tasks       # Work package decomposition
+npx aizen-gate auto        # Autonomous execution loop
+npx aizen-gate status      # View Scrum Board & Memory
+npx aizen-gate dashboard  # Real-time progress (port 6420)
+```
+
+### New Folder Structure
+
+```
+aizen-gate/
+├── agents/                    # All agents (unified - MD + YAML)
+│   ├── legacy/               # Legacy YAML agents
+│   ├── pm.agent.md
+│   ├── developer.agent.md
+│   └── ...
+├── skills-reference/         # 1200+ skills (Antigravity)
+│   └── skills/
+├── rules/                    # Rules system (11 files)
+├── prd/
+├── shared/
+│   └── memory.db            # SQLite database
+├── kanban/                   # Task board
+└── dashboard/                # Web dashboard
+```
+
+### Documentation
+
+For detailed documentation, see:
+- **[AIZEN.md](./AIZEN.md)** - Agent configuration and identity
+- **[ONBOARDING.md](./ONBOARDING.md)** - Setup guide for new users
+- **[AGENTS.md](./AGENTS.md)** - Agent system documentation
+
+---
+
 ## 🏛️ What is Aizen-Gate?
 
 **Aizen-Gate** is a high-tier AI-Orchestration framework (Elite AI-SDLC) that transforms standard AI interactions into a professional, multi-agent Software Development Life Cycle (SDLC) execution.

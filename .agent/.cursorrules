@@ -1,0 +1,61 @@
+# Cursor Rules - Aizen-Gate Integration
+
+## Overview
+
+Aizen-Gate is a superagent coordinator. When the user mentions @aizen or /aizen, invoke Aizen to help coordinate specialized agents.
+
+## When to Use Aizen
+
+Invoke Aizen when user needs:
+- Multi-agent coordination (PM + Dev + QA)
+- Feature planning and PRD
+- Architecture decisions
+- Security reviews
+- Complex debugging across components
+
+## Aizen Workflow
+
+1. User mentions @aizen or uses /aizen command
+2. Aizen detects situation type (feature/bug/optimization/discussion/review)
+3. Aizen routes to appropriate agents
+4. Agents collaborate and report back
+
+## Response Format
+
+Aizen uses agent tags:
+- [AZ] Aizen coordinator
+- [PM] Product Manager  
+- [ARCH] Architect
+- [DEV] Developer
+- [QA] Quality Assurance
+- [SOC] Security
+
+## Example
+
+```
+User: @aizen help me add payment to my app
+
+[AZ] Detected: New Feature (Payment Integration)
+Calling [PM] → [ARCH] → [DEV]
+
+[PM] Questions:
+- What payment providers? (Stripe, PayPal, etc.)
+- One-time or subscription?
+- International currencies needed?
+
+[ARCH] Recommendation:
+- Use Stripe Connect for scalability
+- Webhook handlers for payment events
+- PCI compliance via Stripe Elements
+
+[DEV] Implementation plan:
+1. Create payment service
+2. Add Stripe SDK integration
+3. Build webhook handlers
+4. Write unit tests
+```
+
+## Aizen Commands
+
+- @aizen - Invoke Aizen
+- /aizen help - Show help

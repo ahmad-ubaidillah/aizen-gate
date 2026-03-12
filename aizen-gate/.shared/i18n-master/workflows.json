@@ -1,0 +1,51 @@
+{
+  "translation_workflow": {
+    "step_1": {
+      "name": "Key Extraction",
+      "description": "Extract translatable strings from codebase",
+      "tools": ["i18next", "lingui", "FormatJS"],
+      "command": "npm run extract && npm run compile"
+    },
+    "step_2": {
+      "name": "Translation",
+      "description": "Send to translators or TMS",
+      "integrations": ["Crowdin", "Lokalise", "Phrase"],
+      "file_formats": ["JSON", "XLIFF", "PO"]
+    },
+    "step_3": {
+      "name": "Review",
+      "description": "Native speaker review",
+      "checklist": [
+        "Context accuracy",
+        "Cultural appropriateness",
+        "Grammar and spelling",
+        "Character limits"
+      ]
+    },
+    "step_4": {
+      "name": "Integration",
+      "description": "Merge translations into codebase",
+      "process": "Automated PR via CI/CD"
+    }
+  },
+  "supported_locales": [
+    { "code": "en", "name": "English", "direction": "ltr", "complete": true },
+    { "code": "es", "name": "Spanish", "direction": "ltr", "complete": true },
+    { "code": "fr", "name": "French", "direction": "ltr", "complete": true },
+    { "code": "de", "name": "German", "direction": "ltr", "complete": true },
+    { "code": "ja", "name": "Japanese", "direction": "ltr", "complete": true },
+    { "code": "zh", "name": "Chinese (Simplified)", "direction": "ltr", "complete": true },
+    { "code": "ar", "name": "Arabic", "direction": "rtl", "complete": false },
+    { "code": "he", "name": "Hebrew", "direction": "rtl", "complete": false }
+  ],
+  "fallback_strategy": {
+    "chain": ["en-US", "en", "en-001"],
+    "default": "en"
+  },
+  "performance": {
+    "lazy_load_locales": true,
+    "preload_locales": ["en"],
+    "cache_translations": true,
+    "max_cache_size": "10MB"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "brands": {
+    "tech": {
+      "name": "Tech Startup",
+      "colors": {
+        "primary": "#6366f1",
+        "primaryHover": "#4f46e5",
+        "secondary": "#ec4899",
+        "background": "#0f172a",
+        "surface": "#1e293b",
+        "text": "#f8fafc",
+        "textMuted": "#94a3b8"
+      },
+      "typography": {
+        "fontFamily": "Inter, sans-serif",
+        "fontMono": "JetBrains Mono, monospace"
+      },
+      "borderRadius": {
+        "button": "8px",
+        "card": "12px",
+        "input": "6px"
+      }
+    },
+    "corporate": {
+      "name": "Corporate",
+      "colors": {
+        "primary": "#2563eb",
+        "primaryHover": "#1d4ed8",
+        "secondary": "#64748b",
+        "background": "#ffffff",
+        "surface": "#f8fafc",
+        "text": "#1e293b",
+        "textMuted": "#64748b"
+      },
+      "typography": {
+        "fontFamily": "system-ui, sans-serif",
+        "fontMono": "Consolas, monospace"
+      },
+      "borderRadius": {
+        "button": "4px",
+        "card": "8px",
+        "input": "4px"
+      }
+    },
+    "creative": {
+      "name": "Creative Agency",
+      "colors": {
+        "primary": "#f59e0b",
+        "primaryHover": "#d97706",
+        "secondary": "#8b5cf6",
+        "background": "#fefefe",
+        "surface": "#fafafa",
+        "text": "#18181b",
+        "textMuted": "#71717a"
+      },
+      "typography": {
+        "fontFamily": "Poppins, sans-serif",
+        "fontMono": "Fira Code, monospace"
+      },
+      "borderRadius": {
+        "button": "9999px",
+        "card": "16px",
+        "input": "8px"
+      }
+    }
+  },
+  "themes": {
+    "dark": {
+      "background": "#0f172a",
+      "surface": "#1e293b",
+      "border": "#334155",
+      "text": "#f8fafc",
+      "textMuted": "#94a3b8"
+    },
+    "light": {
+      "background": "#ffffff",
+      "surface": "#f8fafc",
+      "border": "#e2e8f0",
+      "text": "#1e293b",
+      "textMuted": "#64748b"
+    }
+  }
+}

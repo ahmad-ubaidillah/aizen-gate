@@ -1,25 +1,16 @@
-# AIZEN-GATE SCRUM BOARD
+# Sprint Board
 
-> Single source of truth for task status.
+Last Updated: 2026-03-12T13:06:45.575Z
 
-## Current Sprint: {Sprint Name}
+## To Do
 
-Due: {Due Date}
+- [ ] **TASK-001**:  `should`
+- [ ] **TASK-002**:  `should`
+- [ ] **TASK-003**: _Requirement Title_ `must`
+- [ ] **TASK-004**: _Requirement Title_ `must`
 
-| ID        | Task            | Depends On | Agent | Status  | Expectation        |
-| :-------- | :-------------- | :--------- | :---- | :------ | :----------------- |
-| **T-001** | Initial Concept | None       | @[PM] | ⬜ Todo | Clear MVP defined. |
+## In Progress
+(No tasks)
 
----
-
-## Completed Tasks
-
-| ID  | Task | Completed By | Date | Review Result |
-| :-- | :--- | :----------- | :--- | :------------ |
-| --- | ---  | ---          | ---  | ---           |
-
-## Backlog
-
-- Core implementation
-- Testing phase
-- Documentation
+## Done
+(No tasks)

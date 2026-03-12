@@ -1,0 +1,39 @@
+name,category,usage,size_default
+home,navigation,Main navigation,24px
+menu,navigation,Mobile menu,24px
+search,navigation,Search input,20px
+user,account,User profile,20px
+cart,ecommerce,Shopping cart,20px
+heart,ecommerce,Wishlist,20px
+star,favorites,Ratings,16px
+check,actions,Success,16px
+close,actions,Close modal,16px
+plus,actions,Add item,16px
+minus,actions,Remove item,16px
+arrow-right,navigation,Next/Forward,16px
+arrow-left,navigation,Back/Previous,16px
+chevron-down,dropdown,Dropdown menu,16px
+chevron-up,dropdown,Collapse,16px
+filter,sorting,Filter menu,16px
+sort,sorting,Sort options,16px
+download,files,Download,20px
+upload,files,Upload,20px
+trash,actions,Delete,20px
+edit,actions,Edit,20px
+copy,actions,Copy,16px
+settings,account,Settings,20px
+bell,notifications,Notifications,20px
+mail,communication,Email,20px
+phone,communication,Phone,20px
+map-pin,location,Location,20px
+calendar,date,Date picker,20px
+clock,time,Time,20px
+alert-triangle,warnings,Warning,20px
+alert-circle,errors,Error,20px
+info,warnings,Info,20px
+check-circle,success,Success,20px
+loader,loading,Loading spinner,20px
+eye,actions,Show,20px
+eye-off,actions,Hide,20px
+lock,security,Locked,20px
+unlock,security,Unlocked,20px
