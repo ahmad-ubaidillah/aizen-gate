@@ -14,19 +14,6 @@ import yaml from "js-yaml";
  * @param program - Commander program instance
  */
 export function registerCore(program: Command): void {
-	// 1. Install
-	program
-		.command("install")
-		.description("Install Aizen-Gate into the current project workspace")
-		.option("-y, --yes", "Skip interactive prompts and use defaults")
-		.action(async (options: { yes?: boolean }) => {
-			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
-			const { runOnboarding } = (await import("../../src/setup/onboarding.js")) as any;
-			await installAizenGate(process.cwd());
-			if (!options.yes) {
-				await runOnboarding(process.cwd());
-			}
-		});
 
 	// 1.5. Onboarding
 	program

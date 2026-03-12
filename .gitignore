@@ -41,3 +41,7 @@ temp/
 
 # OS specific
 .DS_Store
+
+# Aizen Kanban Transient Data
+CURRENT_SPRINT.md
+kanban/**/archive/

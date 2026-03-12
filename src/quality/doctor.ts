@@ -119,19 +119,7 @@ export async function runDoctor(
 		console.log(chalk.green.bold("\n[Aizen] Shield operational! Protocol adherence 100%. ⛩️\n"));
 	} else {
 		if (fixRequested) {
-			console.log(chalk.yellow("\n[Aizen] Attempting Auto-Repair..."));
-			// installer might not be in src/, let's assume it's moved or check its location
-			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
-			const result = await installAizenGate(projectRoot, "antigravity");
-			if (result.success) {
-				console.log(
-					chalk.green(
-						'✔ Workspace successfully repaired. Run "npx aizen-gate doctor" again to verify.',
-					),
-				);
-			} else {
-				console.log(chalk.red(`✘ Repair failed: ${result.error}`));
-			}
+			console.log(chalk.yellow("\n[Aizen] Auto-Repair is currently unavailable. Please check the documentation."));
 		} else {
 			console.log(
 				chalk.red.bold(

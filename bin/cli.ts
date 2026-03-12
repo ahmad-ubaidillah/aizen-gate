@@ -68,10 +68,12 @@ import { registerServer } from "./commands/server.js";
 import { registerSession } from "./commands/session.js";
 import { registerSkills } from "./commands/skills.js";
 import { registerTasks } from "./commands/tasks.js";
+import { registerKanban } from "./commands/kanban.js";
 
 registerCore(program);
 registerDocs(program);
 registerTasks(program);
+registerKanban(program);
 registerOrchestration(program);
 registerQuality(program);
 registerKnowledge(program);

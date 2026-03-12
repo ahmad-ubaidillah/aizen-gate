@@ -91,41 +91,22 @@ Aizen Gate detects and installs into every major AI development environment:
 ```bash
 # Workflow
 npx aizen-gate specify    # Start discovery
-npx aizen-gate research   # Parallel research
 npx aizen-gate plan       # Architecture & Plan
 npx aizen-gate tasks      # Generate WPs
-npx aizen-gate auto       # Run autonomous loop (w/ Skill Watcher)
-npx aizen-gate implement  # Implement specific WP
+npx aizen-gate auto       # Run autonomous loop
+npx aizen-gate kanban init # Bootstrap Kanban environment
+npx aizen-gate kanban sync # Refresh AI manifest
+npx aizen-gate dashboard  # Launch visual Kanban
 npx aizen-gate review     # QA Review
-npx aizen-gate merge      # Merge to main (Auto-Kanban Update)
-
-# Lifecycle & Memory
-npx aizen-gate pause      # Manually pause session
-npx aizen-gate resume     # Manually resume session
-npx aizen-gate status     # Sprint Board summary
-npx aizen-gate tokens     # Token efficiency report
-
-# Skill Management
-npx aizen-gate skill add    # Create skill from doc links
-npx aizen-gate skill search # Search skill marketplace
-npx aizen-gate skill install # Install from awesome-skills
-
-# Visibility & Health
-npx aizen-gate dashboard  # Launch web UI
-npx aizen-gate map        # Architecture mapping
-npx aizen-gate doctor     # Workspace health check
-npx aizen-gate benchmark # Protocol audit
-npx aizen-gate clean     # [AZ] Archive finished tasks
+npx aizen-gate merge      # Merge to main
 ```
 
 ## 📜 Archival Intelligence
 
 The `clean` command is fully automated. It:
 
-1. Moves all "Done" tasks to `backlog/tasks/archive/<dd-mm-yyyy_HH-mm>`.
+1. Moves all "Done" tasks to `kanban/done/archive/<date>`.
 2. Updates task assignees to `[AZ] - Aizen Orchestrator`.
-3. Auto-checks all remaining implementation checklists.
-4. Updates `backlog/readme.md` with the latest archive timestamp.
 
 ---
 

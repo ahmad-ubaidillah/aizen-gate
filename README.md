@@ -51,11 +51,11 @@ Aizen-Gate consolidates powerful tools into a unified ecosystem:
 | Component | Utility |
 | :--- | :--- |
 | **`specify` Wizard** | An interactive interview process that turns abstract ideas into bullet-proof `spec.md` files. |
-| **12-Core Fusion** | A neural-backed memory system that distills raw text into **TOON** logic nuggets for perfect recall. |
-| **Immune System** | Self-healing memory logic that automatically tags and deprioritizes "BROKEN" or failing reasoning paths. |
-| **Dependency Graph** | Automatically calculates the execution order of tasks to prevent conflicts between features. |
-| **Autonomous Loop** | Automatically executes implementations in isolated Git Worktrees per task. |
-| **Project Doctor** | Automated diagnostics to detect and repair protocol damage in the workspace. |
+| **Kanban Agent** | Physical state mapping using `/kanban` directories (`backlog`, `dev`, `test`, `done`). |
+| **AI Context Bridge** | Auto-generated `CURRENT_SPRINT.md` that keeps AI agents aligned with active tasks. |
+| **12-Core Fusion** | A neural-backed memory system that distills raw text into logic nuggets. |
+| **Immune System** | Self-healing memory logic that deprioritizes "BROKEN" reasoning paths. |
+| **Autonomous Loop** | Executes implementations in isolated Git Worktrees per task. |
 
 ---
 
@@ -140,8 +140,8 @@ npx aizen-gate quick      # Fast-track a small feature or bug fix
 
 ```bash
 npx aizen-gate status     # View Scrum Board & Memory state
-npx aizen-gate map        # Generate architectural codebase map
-npx aizen-gate benchmark  # Performance/compliance audit
+npx aizen-gate kanban init # Bootstrap Kanban environment
+npx aizen-gate kanban sync # Refresh AI context manifest
 npx aizen-gate tokens     # View token usage & efficiency report
 ```
 

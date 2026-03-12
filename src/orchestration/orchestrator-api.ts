@@ -70,9 +70,6 @@ export class OrchestratorAPI {
 	async dispatchMerge(featureSlug: string, targetBranch: string = "main"): Promise<APIEnvelope> {
 		try {
 			const featureDir = path.join(this.projectDir, "aizen-gate", "specs", featureSlug);
-			// installer might not be in src/, let's assume it's moved or check its location
-			const { installAizenGate } = (await import("../../installer/src/install.js")) as any;
-			const _result = await (installAizenGate as any)(this.projectDir, "antigravity");
 			const graph = new DependencyGraph(featureDir);
 			await graph.build();
 			const sort = graph.topologicalSort();

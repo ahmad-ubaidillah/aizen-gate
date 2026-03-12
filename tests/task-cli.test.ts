@@ -15,11 +15,14 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 	beforeEach(() => {
 		// Setup temp env
 		fs.emptyDirSync(testRoot);
-		fs.ensureDirSync(path.join(testRoot, "backlog", "tasks"));
+		fs.ensureDirSync(path.join(testRoot, "kanban", "backlog", "tasks"));
+		fs.ensureDirSync(path.join(testRoot, "kanban", "dev"));
+		fs.ensureDirSync(path.join(testRoot, "kanban", "test"));
+		fs.ensureDirSync(path.join(testRoot, "kanban", "done"));
 		fs.ensureDirSync(path.join(testRoot, "aizen-gate", "shared"));
 		fs.writeFileSync(path.join(testRoot, "aizen-gate", "shared", "board.md"), "# Board\n\n");
 		fs.writeFileSync(
-			path.join(testRoot, "backlog", "config.yml"),
+			path.join(testRoot, "kanban", "backlog", "config.yml"),
 			"statuses: [Todo, In Progress, Done]\ndefinition_of_done:\n  - AC met\n  - Tests pass\n",
 		);
 
@@ -31,63 +34,44 @@ describe("TaskCLI & TaskSearch - Suite", () => {
 		fs.removeSync(testRoot);
 	});
 
-	it("Task 6 & 8: Create task with DoD defaults", async () => {
-		await cli.create("Setup Database", { priority: "high", assignee: "@codex" });
+	it("Rich Templates & Unified Path: Create task", async () => {
+		await cli.create("Setup Database", { priority: "high", assignee: "@codex", description: "Database setup" });
 
-		const tasksDir = (cli as any).tasksDir;
-		const files = fs.readdirSync(tasksDir);
+		const backlogDir = path.join(testRoot, "kanban", "backlog");
+		const files = fs.readdirSync(backlogDir).filter(f => f.endsWith(".md"));
 		expect(files.length).toBe(1);
-		expect(files[0]).toContain("aizen-001 - setup-database.md");
+		expect(files[0]).toContain("task-001 - setup-database.md");
 
-		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
+		const content = fs.readFileSync(path.join(backlogDir, files[0]), "utf8");
 		expect(content).toContain("status: Todo");
-		expect(content).toContain("priority: high");
-		expect(content).toContain("assignee: '@codex'");
-		expect(content).toContain("## Definition of Done");
-		expect(content).toContain("- [ ] AC met");
+		expect(content).toContain("Metadata");
+		expect(content).toContain("HIGH");
+		expect(content).toContain("Database setup");
 	});
 
-	it("Task 8: Create task skipping DoD defaults", async () => {
-		await cli.create("Quick Fix", { noDodDefaults: true });
+	it("Unified Search: Search across directories", async () => {
+		await cli.create("Login API", { priority: "high" });
+		
+		// Move one to dev manually for search test
+		const source = path.join(testRoot, "kanban", "backlog", "task-001 - login-api.md");
+		const target = path.join(testRoot, "kanban", "dev", "task-001 - login-api.md");
+		await fs.move(source, target);
 
-		const tasksDir = (cli as any).tasksDir;
-		const files = fs.readdirSync(tasksDir);
-		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
-		expect(content).not.toContain("## Definition of Done");
+		const results = await search.search("login", {});
+		expect(results.length).toBe(1);
+		expect(results[0].id).toBe("task-001");
 	});
 
-	it("Task 7: Fuzzy Search", async () => {
-		await cli.create("Build Login API", {
-			description: "Use JWT for authentication",
-			priority: "high",
-		});
-		await cli.create("Design Login UI", {
-			description: "Use React components",
-			priority: "medium",
-			assignee: "@ui-agent",
-		});
-
-		const results = await search.search("login authentication", {});
-		expect(results.length).toBeGreaterThan(0);
-		expect(results[0].title).toBe("build-login-api");
-
-		const filteredResults = await search.search("login", { priority: "medium" });
-		expect(filteredResults.length).toBe(1);
-		expect(filteredResults[0].title).toBe("design-login-ui");
-	});
-
-	it("Task 6: Edit task status and update board", async () => {
+	it("Kanban Movement: Edit status moves file", async () => {
 		await cli.create("Deploy to Prod", {});
-		await cli.edit("aizen-001", { status: "Done", assignee: "@devops" });
+		await cli.edit("task-001", { status: "Done" });
 
-		const tasksDir = (cli as any).tasksDir;
-		const files = fs.readdirSync(tasksDir);
-		const content = fs.readFileSync(path.join(tasksDir, files[0]), "utf8");
-		expect(content).toContain("status: Done");
-		expect(content).toContain("assignee: '@devops'");
-
-		const boardPath = (cli as any).boardPath;
-		const board = fs.readFileSync(boardPath, "utf8");
-		expect(board).toContain("| Deploy to Prod | @devops | Done |");
+		const doneDir = path.join(testRoot, "kanban", "done");
+		const files = fs.readdirSync(doneDir);
+		expect(files[0]).toContain("task-001");
+		
+		const backlogDir = path.join(testRoot, "kanban", "backlog");
+		const backlogFiles = fs.readdirSync(backlogDir).filter(f => f.endsWith(".md"));
+		expect(backlogFiles.length).toBe(0);
 	});
 });

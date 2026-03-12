@@ -30,6 +30,7 @@ export class DashboardServer {
 	private server: http.Server;
 	private wss: WebSocketServer;
 	private tasksDir: string;
+	private kanbanDirs: string[];
 	// private boardPath: string; // Unused in current implementation
 	private watcher: fs.FSWatcher | null = null;
 
@@ -39,8 +40,8 @@ export class DashboardServer {
 		this.app = express();
 		this.server = http.createServer(this.app);
 		this.wss = new WebSocketServer({ server: this.server });
-		this.tasksDir = path.join(this.projectDir, "backlog", "tasks");
-		// this.boardPath = path.join(this.projectDir, "aizen-gate", "shared", "board.md");
+		this.tasksDir = path.join(this.projectDir, "kanban", "backlog", "tasks"); // Legacy
+		this.kanbanDirs = ["kanban/backlog", "kanban/dev", "kanban/test", "kanban/done"];
 
 		fs.ensureDirSync(this.tasksDir);
 
@@ -85,33 +86,45 @@ export class DashboardServer {
 	}
 
 	async loadAllTasks(): Promise<Task[]> {
-		if (!fs.existsSync(this.tasksDir)) return [];
-		const files = fs.readdirSync(this.tasksDir).filter((f) => f.endsWith(".md"));
 		const tasks: Task[] = [];
+		const allDirs = [...this.kanbanDirs, "kanban/backlog/tasks"];
 
-		for (const f of files) {
-			try {
-				const content = fs.readFileSync(path.join(this.tasksDir, f), "utf8");
-				const match = content.match(/---\n([\s\S]*?)\n---/);
-				const titleMatch = content.match(/# (.*)/);
+		for (const dirName of allDirs) {
+			const absDir = path.join(this.projectDir, dirName);
+			if (!fs.existsSync(absDir)) continue;
 
-				if (match) {
-					const fm = yaml.load(match[1]) as any;
-					tasks.push({
-						id: fm.id,
-						filename: f,
-						title: titleMatch ? titleMatch[1] : fm.id,
-						status: fm.status || "Todo",
-						priority: fm.priority || "medium",
-						assignee: fm.assignee || "@none",
-						labels: fm.labels || [],
-					});
+			const files = fs.readdirSync(absDir).filter((f) => f.endsWith(".md"));
+			for (const f of files) {
+				try {
+					const content = fs.readFileSync(path.join(absDir, f), "utf8");
+					const match = content.match(/---\n([\s\S]*?)\n---/);
+					const titleMatch = content.match(/# (.*)/);
+
+					if (match) {
+						const fm = yaml.load(match[1]) as any;
+						tasks.push({
+							id: fm.id,
+							filename: f,
+							title: titleMatch ? titleMatch[1] : fm.id,
+							status: fm.status || this.getStatusFromDir(dirName),
+							priority: fm.priority || "medium",
+							assignee: fm.assignee || "@none",
+							labels: fm.labels || [],
+						});
+					}
+				} catch (e: any) {
+					console.error(`Failed to load task ${f} from ${dirName}`, e.message);
 				}
-			} catch (e: any) {
-				console.error(`Failed to load task ${f}`, e.message);
 			}
 		}
 		return tasks;
+	}
+
+	private getStatusFromDir(dir: string): string {
+		if (dir.includes("dev")) return "In Progress";
+		if (dir.includes("test")) return "Review";
+		if (dir.includes("done")) return "Done";
+		return "Todo";
 	}
 
 	private setupRoutes(): void {
@@ -129,16 +142,36 @@ export class DashboardServer {
 			const { taskId } = req.params;
 
 			try {
-				const files = fs.readdirSync(this.tasksDir);
-				const targetFile = files.find((f) => f.toLowerCase().includes((taskId as string).toLowerCase()));
+				// Find task in any dir
+				let sourcePath: string | null = null;
+				const allDirs = [...this.kanbanDirs, "kanban/backlog/tasks"];
+				for (const dir of allDirs) {
+					const absDir = path.join(this.projectDir, dir);
+					if (!fs.existsSync(absDir)) continue;
+					const files = fs.readdirSync(absDir);
+					const fileName = files.find((f) => f.toLowerCase().includes((taskId as string).toLowerCase()));
+					if (fileName) {
+						sourcePath = path.join(absDir, fileName);
+						break;
+					}
+				}
 
-				if (!targetFile) {
+				if (!sourcePath) {
 					res.status(404).json({ error: "Task not found" });
 					return;
 				}
 
-				const filePath = path.join(this.tasksDir, targetFile);
-				let content = fs.readFileSync(filePath, "utf8");
+				const targetDir = this.getDirFromStatus(status);
+				const targetPath = path.join(this.projectDir, "kanban", targetDir, path.basename(sourcePath));
+
+				// Physical Move
+				if (sourcePath !== targetPath) {
+					await fs.ensureDir(path.dirname(targetPath));
+					await fs.move(sourcePath, targetPath, { overwrite: true });
+				}
+
+				// Update content status too
+				let content = fs.readFileSync(targetPath, "utf8");
 				const match = content.match(/---\n([\s\S]*?)\n---/);
 
 				if (match) {
@@ -153,7 +186,7 @@ export class DashboardServer {
 					fm.status = status;
 					const newFm = yaml.dump(fm);
 					content = content.replace(match[0], `---\n${newFm}---`);
-					fs.writeFileSync(filePath, content);
+					fs.writeFileSync(targetPath, content);
 
 					res.json({ success: true, taskId, status });
 					this.broadcastUpdate(`Task ${taskId} moved from ${oldStatus} to ${status}`);
@@ -199,14 +232,30 @@ export class DashboardServer {
 		if (this.watcher) return;
 
 		let timeout: NodeJS.Timeout | null = null;
-		this.watcher = fs.watch(this.tasksDir, (_eventType, filename) => {
-			if (filename?.endsWith(".md")) {
-				if (timeout) clearTimeout(timeout);
-				timeout = setTimeout(() => {
-					this.broadcastUpdate(`File change detected: ${filename}`);
-				}, 150);
-			}
-		});
+		const allDirs = [...this.kanbanDirs, "kanban/backlog/tasks"];
+		
+		for (const dir of allDirs) {
+			const absDir = path.join(this.projectDir, dir);
+			if (!fs.existsSync(absDir)) continue;
+			
+			fs.watch(absDir, (_eventType, filename) => {
+				if (filename?.endsWith(".md")) {
+					if (timeout) clearTimeout(timeout);
+					timeout = setTimeout(() => {
+						this.broadcastUpdate(`File change detected in ${dir}: ${filename}`);
+					}, 150);
+				}
+			});
+		}
+	}
+
+	private getDirFromStatus(status: string): string {
+		switch (status.toLowerCase()) {
+			case "in progress": return "dev";
+			case "review": return "test";
+			case "done": return "done";
+			default: return "backlog";
+		}
 	}
 
 	async broadcastUpdate(eventMessage: string | null = null): Promise<void> {
