@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug Workspace
+        run: ls -R
+
       - name: Build
         run: npm run build
 
