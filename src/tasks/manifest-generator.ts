@@ -6,6 +6,7 @@ import yaml from "js-yaml";
 export class ManifestGenerator {
 	private manifestPath: string;
 	private devDir: string;
+	private projectRoot: string;
 
 	constructor(projectRoot: string) {
 		this.projectRoot = projectRoot;

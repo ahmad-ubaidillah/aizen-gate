@@ -31,6 +31,7 @@
 		"profiles.yaml"
 	],
 	"scripts": {
+		"dev": "npm run build && npm run az-start",
 		"build": "tsc",
 		"postinstall": "node -e \"console.log('\\n✅ Aizen-Gate installed!\\n\\n📖 Quick start: npx aizen-gate help\\n📚 Full guide: See ONBOARDING.md\\n\\n🚀 Ready to use with your IDE!\\n')\"",
 		"build:watch": "tsc --watch",
