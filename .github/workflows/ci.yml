@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Run Biome CI
-        run: npx @biomejs/biome ci ./src ./bin ./dashboard ./aizen-gate ./commands ./shared ./templates ./tests --error-on-warnings
+        run: npx @biomejs/biome ci ./src ./bin ./dashboard ./aizen-gate ./commands ./shared ./templates ./tests --error-on-warnings --max-diagnostics=1000
 
   test:
     name: Unit Tests
@@ -51,7 +51,7 @@ jobs:
         run: npm run build
 
       - name: Run unit tests
-        run: npm run test:run
+        run: npm run test:run -- --reporter=verbose
 
   security:
     name: Security Audit
