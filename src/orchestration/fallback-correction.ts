@@ -3,7 +3,7 @@
  * Phase 3.3: Allows users to correct Aizen's intent detection
  */
 
-import { Intent, IntentType, UrgencyLevel, AGENT_ROUTING, DEFAULT_URGENCY } from "./situation-detector";
+import { AGENT_ROUTING, DEFAULT_URGENCY, type Intent, type IntentType } from "./situation-detector";
 
 /**
  * Mapping of correction codes to intent types
@@ -132,14 +132,14 @@ export function getSupportedCorrections(): string[] {
 
 /**
  * Example usage:
- * 
+ *
  * ```typescript
- * import { 
- *   generateCorrectionPrompt, 
- *   parseCorrection, 
- *   handleCorrection 
+ * import {
+ *   generateCorrectionPrompt,
+ *   parseCorrection,
+ *   handleCorrection
  * } from './fallback-correction';
- * 
+ *
  * // Example 1: Generate correction prompt
  * const detectedIntent = {
  *   type: 'bug',
@@ -147,7 +147,7 @@ export function getSupportedCorrections(): string[] {
  *   agents_needed: ['developer', 'qa'],
  *   confidence: 0.85
  * };
- * 
+ *
  * const prompt = generateCorrectionPrompt(detectedIntent);
  * console.log(prompt.promptText);
  * // Output:
@@ -160,12 +160,12 @@ export function getSupportedCorrections(): string[] {
  * // - [D] = Discussion
  * // - [R] = Review
  * // - [H] = Help
- * 
+ *
  * // Example 2: Parse user correction
  * const userCorrection = 'F';
  * const parsed = parseCorrection(userCorrection);
  * console.log(parsed); // 'feature'
- * 
+ *
  * // Example 3: Handle correction and get corrected intent
  * const correctedIntent = handleCorrection(detectedIntent, 'F');
  * console.log(correctedIntent);
@@ -176,12 +176,12 @@ export function getSupportedCorrections(): string[] {
  * //   agents_needed: ['pm', 'architect', 'developer'],
  * //   confidence: 1.0
  * // }
- * 
+ *
  * // Example 4: Case-insensitive parsing
  * console.log(parseCorrection('f'));  // 'feature'
  * console.log(parseCorrection('F'));  // 'feature'
  * console.log(parseCorrection('bug')); // null (not a valid single-letter code)
- * 
+ *
  * // Example 5: Validate correction codes
  * console.log(isValidCorrection('F')); // true
  * console.log(isValidCorrection('X')); // false

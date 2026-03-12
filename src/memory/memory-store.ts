@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import path from "node:path";
 import Database from "better-sqlite3";
 import chalk from "chalk";

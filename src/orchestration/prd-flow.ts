@@ -1,7 +1,7 @@
 import path from "node:path";
-import fs from "fs-extra";
 import chalk from "chalk";
-import { resolveAgentPath, getAgentContent } from "../agents/agent-resolver.js";
+import fs from "fs-extra";
+import { resolveAgentPath } from "../agents/agent-resolver.js";
 
 /**
  * [AZ] PRD Flow Orchestration
@@ -111,7 +111,8 @@ export async function runOptionA(
 	if (!prdContent) {
 		return {
 			success: false,
-			message: "No existing PRD found. Please create a PRD first or use Option B for brainstorming.",
+			message:
+				"No existing PRD found. Please create a PRD first or use Option B for brainstorming.",
 			option: "option-a",
 		};
 	}
@@ -170,10 +171,7 @@ export async function runOptionA(
  * @param userRequest - The user's request/idea
  * @returns PRDFlowResult
  */
-export async function runOptionB(
-	projectRoot: string,
-	userRequest: string,
-): Promise<PRDFlowResult> {
+export async function runOptionB(projectRoot: string, userRequest: string): Promise<PRDFlowResult> {
 	console.log(chalk.cyan("\n⛩️  PRD Flow | Option B: Brainstorming"));
 
 	// Step 1: Invoke PM + BA for brainstorming
@@ -411,8 +409,14 @@ async function createPRDFromBrainstorm(
 	);
 
 	// Update metadata
-	prdContent = prdContent.replace("**Status:** Draft", "**Status:** Draft (Created from brainstorming)");
-	prdContent = prdContent.replace("**Last Updated:**", `**Last Updated:** ${new Date().toISOString().split("T")[0]}`);
+	prdContent = prdContent.replace(
+		"**Status:** Draft",
+		"**Status:** Draft (Created from brainstorming)",
+	);
+	prdContent = prdContent.replace(
+		"**Last Updated:**",
+		`**Last Updated:** ${new Date().toISOString().split("T")[0]}`,
+	);
 
 	return prdContent;
 }
@@ -464,7 +468,7 @@ function extractTasksFromPRD(prdContent: string): SprintTask[] {
 	let taskId = 1;
 
 	// Extract user stories
-	const userStoryRegex =/\|\s*US\d+\s*\|([^|]+)\|([^|]+)\|([^|]+)\|/g;
+	const userStoryRegex = /\|\s*US\d+\s*\|([^|]+)\|([^|]+)\|([^|]+)\|/g;
 	let match;
 	while ((match = userStoryRegex.exec(prdContent)) !== null) {
 		tasks.push({
@@ -553,10 +557,7 @@ Last Updated: ${new Date().toISOString()}
  * @param userMessage - User's message/request
  * @returns PRDFlowResult
  */
-export async function runPRDFlow(
-	projectRoot: string,
-	userMessage: string,
-): Promise<PRDFlowResult> {
+export async function runPRDFlow(projectRoot: string, userMessage: string): Promise<PRDFlowResult> {
 	const hasPRD = await checkPRDExists(projectRoot);
 	const prdContent = await loadPRD(projectRoot);
 
@@ -568,7 +569,13 @@ export async function runPRDFlow(
 	const isOptionA = optionATriggers.some((trigger) => lowerMessage.includes(trigger));
 
 	// Option B triggers: "help me build", "create a", "i want to build", "new project"
-	const optionBTriggers = ["help me build", "create a", "i want to build", "new project", "help me create"];
+	const optionBTriggers = [
+		"help me build",
+		"create a",
+		"i want to build",
+		"new project",
+		"help me create",
+	];
 	const isOptionB = optionBTriggers.some((trigger) => lowerMessage.includes(trigger));
 
 	if (hasPRD && prdContent && (isOptionA || (!isOptionB && hasPRD))) {
@@ -594,7 +601,8 @@ export async function runPRDFlow(
 	// Default: ask user for clarification
 	return {
 		success: false,
-		message: "I can help you in two ways:\n1. **Check my PRD** - Review existing PRD with PM + BA agents\n2. **Help me build X** - Brainstorm and create a new PRD\n\nWhich would you prefer?",
+		message:
+			"I can help you in two ways:\n1. **Check my PRD** - Review existing PRD with PM + BA agents\n2. **Help me build X** - Brainstorm and create a new PRD\n\nWhich would you prefer?",
 		option: hasPRD ? "option-a" : "option-b",
 	};
 }

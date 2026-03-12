@@ -1,11 +1,10 @@
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
 import { cancel, confirm, intro, isCancel, note, outro, select, text } from "@clack/prompts";
 import chalk from "chalk";
 import fs from "fs-extra";
-import { checkAIZENTrigger, triggerAIZENForSpecify } from "./steps/agent-handoff.js";
 import { DEV_TYPE_OPTIONS, IDE_OPTIONS, LANGUAGE_OPTIONS } from "./config/options.js";
-import { showTaskCreationProgress } from "./steps/confirm-flow.js";
+import { checkAIZENTrigger, triggerAIZENForSpecify } from "./steps/agent-handoff.js";
 import { handlePRDFlow, validatePRDReady } from "./steps/prd-flow.js";
 
 /**
@@ -64,7 +63,10 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	}
 
 	const selectedChatLang = LANGUAGE_OPTIONS.find((l: any) => l.value === chatLanguage);
-	note(`${chalk.cyan("🗣️ Chat language:")} ${chalk.green(selectedChatLang?.label || "English")}`, "Language");
+	note(
+		`${chalk.cyan("🗣️ Chat language:")} ${chalk.green(selectedChatLang?.label || "English")}`,
+		"Language",
+	);
 
 	// ========== QUESTION 3: Output Language ==========
 	const outputLanguageOptions = [
@@ -86,7 +88,10 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	// Resolve "same" to actual language
 	const resolvedOutputLang = outputLanguage === "same" ? chatLanguage : outputLanguage;
 	const selectedOutputLang = LANGUAGE_OPTIONS.find((l: any) => l.value === resolvedOutputLang);
-	note(`${chalk.cyan("📄 Output language:")} ${chalk.green(selectedOutputLang?.label || "English")}`, "Language");
+	note(
+		`${chalk.cyan("📄 Output language:")} ${chalk.green(selectedOutputLang?.label || "English")}`,
+		"Language",
+	);
 
 	// ========== QUESTION 4: Output Path ==========
 	const defaultOutputPath = path.join(projectRoot, "aizen-gate", "output");
@@ -183,7 +188,11 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	const hasPRD = await select({
 		message: "Do you already have a PRD?",
 		options: [
-			{ label: "✅ Yes, load from prd/prd.md", value: "yes", description: "Load existing PRD document" },
+			{
+				label: "✅ Yes, load from prd/prd.md",
+				value: "yes",
+				description: "Load existing PRD document",
+			},
 			{ label: "❌ No, create new", value: "no", description: "Start with a template" },
 		] as any,
 		initialValue: "no",
@@ -195,7 +204,10 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	}
 
 	const hasPRDValue = hasPRD === "yes";
-	note(`${chalk.cyan("📋 PRD status:")} ${hasPRDValue ? chalk.green("Yes, I have a PRD") : chalk.yellow("No, create new")}`, "PRD");
+	note(
+		`${chalk.cyan("📋 PRD status:")} ${hasPRDValue ? chalk.green("Yes, I have a PRD") : chalk.yellow("No, create new")}`,
+		"PRD",
+	);
 
 	// ========== Handle PRD Flow ==========
 	let prdData: any = {
@@ -218,7 +230,10 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 			note(chalk.green("✅ PRD found!"), "PRD Ready");
 		} else {
 			note(
-				chalk.yellow("⚠️ PRD not found at: ") + prdPath + "\n" + chalk.gray("Please create it or choose 'No' to create new."),
+				chalk.yellow("⚠️ PRD not found at: ") +
+					prdPath +
+					"\n" +
+					chalk.gray("Please create it or choose 'No' to create new."),
 				"PRD Not Found",
 			);
 		}
@@ -299,7 +314,7 @@ export async function saveOnboardingConfig(projectRoot: string, data: any): Prom
 	const legacyConfigPath = path.join(projectRoot, "aizen-gate", "onboarding-config.json");
 
 	// Check for legacy config file and migrate
-	if (await fs.pathExists(legacyConfigPath) && !(await fs.pathExists(configPath))) {
+	if ((await fs.pathExists(legacyConfigPath)) && !(await fs.pathExists(configPath))) {
 		try {
 			const legacyData = await fs.readJson(legacyConfigPath);
 			await fs.writeJson(configPath, legacyData, { spaces: 2 });

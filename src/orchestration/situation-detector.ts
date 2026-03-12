@@ -195,10 +195,6 @@ const SPECIALIZED_ROUTING: { pattern: RegExp; agents: string[] }[] = [
  * Handles intent classification and agent routing
  */
 export class SituationDetector extends EventEmitter {
-	constructor() {
-		super();
-	}
-
 	/**
 	 * Detect the intent from user input
 	 * @param input - User input string

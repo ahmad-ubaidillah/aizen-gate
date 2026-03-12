@@ -1,7 +1,6 @@
 import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
-import { ModelRouter } from "../ai/model-router.js";
 import { OutputFilter } from "../ai/output-filter.js";
 import { TokenBudget } from "../ai/token-budget.js";
 import { MemoryStore } from "./memory-store.js";

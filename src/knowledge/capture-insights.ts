@@ -4,7 +4,7 @@
  * Analyzes the Graph and current state to populate Living Docs.
  */
 import chalk from "chalk";
-import { type KGNode, KnowledgeGraph } from "./kg-engine.js";
+import { KnowledgeGraph } from "./kg-engine.js";
 import { LivingDocs } from "./living-docs.js";
 
 interface FileComplexity {

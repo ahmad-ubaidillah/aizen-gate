@@ -4,7 +4,6 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 
 export class ManifestGenerator {
-	private projectRoot: string;
 	private manifestPath: string;
 	private devDir: string;
 

@@ -3,7 +3,9 @@
  * Distributed tracing
  */
 
+// biome-ignore lint/suspicious/noExplicitAny: otel api
 let _api: any = null;
+// biome-ignore lint/suspicious/noExplicitAny: otel trace
 let trace: any = null;
 
 const isEnabled = process.env.OTEL_ENABLED === "true" || process.env.NODE_ENV === "production";
@@ -42,6 +44,7 @@ export function getTracer(): any {
 /**
  * Create a span for an operation
  */
+// biome-ignore lint/suspicious/noExplicitAny: OpenTelemetry span options can be complex
 export function createSpan(name: string, options: any = {}): any {
 	const tracer = getTracer();
 	if (!tracer) {
@@ -62,7 +65,9 @@ export function createSpan(name: string, options: any = {}): any {
  */
 export async function withSpan<T>(
 	name: string,
+	// biome-ignore lint/suspicious/noExplicitAny: span mapping
 	fn: (span: any) => Promise<T>,
+	// biome-ignore lint/suspicious/noExplicitAny: span options
 	options: any = {},
 ): Promise<T> {
 	const tracer = getTracer();
@@ -84,6 +89,7 @@ export async function withSpan<T>(
 
 			return result;
 		} catch (error: any) {
+			// biome-ignore lint/suspicious/noExplicitAny: error handling
 			// Set error status
 			span.setStatus({
 				code: trace.SpanStatusCode.ERROR,
@@ -105,6 +111,7 @@ export async function withSpan<T>(
 export async function traceFunction<T>(
 	name: string,
 	fn: () => Promise<T>,
+	// biome-ignore lint/suspicious/noExplicitAny: span attributes
 	attrs: any = {},
 ): Promise<T> {
 	return withSpan(
@@ -119,6 +126,7 @@ export async function traceFunction<T>(
 /**
  * Add span event
  */
+// biome-ignore lint/suspicious/noExplicitAny: span and attributes
 export function addSpanEvent(span: any, name: string, attrs: any = {}): void {
 	if (span) {
 		span.addEvent(name, attrs);

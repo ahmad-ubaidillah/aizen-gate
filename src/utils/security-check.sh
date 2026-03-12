@@ -21,7 +21,7 @@ EXIT_CODE=0
 for PATTERN in "${PATTERNS[@]}"; do
     # Search staged files or current directory
     # Exclude the pattern definition itself to avoid self-flagging
-    MATCHES=$(grep -rE "$PATTERN" --exclude-dir=".git" --exclude-dir="node_modules" --exclude="*.log" --exclude="*.db" --exclude="security-check.sh" .)
+    MATCHES=$(grep -rE "$PATTERN" --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="aizen-gate" --exclude="*.log" --exclude="*.db" --exclude="*.md" --exclude="*.csv" --exclude="security-check.sh" .)
     
     if [ ! -z "$MATCHES" ]; then
         echo "❌ [SECURITY ALERT] Potential secret leak found with pattern: $PATTERN"

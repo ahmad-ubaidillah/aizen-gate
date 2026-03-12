@@ -8,10 +8,9 @@
  */
 
 import path from "node:path";
-import fs from "fs-extra";
 import chalk from "chalk";
+import fs from "fs-extra";
 import matter from "gray-matter";
-import yaml from "js-yaml";
 
 /* ============================================================================
  * Types
@@ -20,14 +19,7 @@ import yaml from "js-yaml";
 /**
  * Kanban column names
  */
-export type KanbanColumn =
-	| "designer"
-	| "dev"
-	| "backend"
-	| "qa"
-	| "soc"
-	| "done"
-	| "archive";
+export type KanbanColumn = "designer" | "dev" | "backend" | "qa" | "soc" | "done" | "archive";
 
 /**
  * Task data interface
@@ -129,7 +121,7 @@ class TaskEventEmitter {
 		if (!this.listeners.has(event)) {
 			this.listeners.set(event, []);
 		}
-		this.listeners.get(event)!.push(callback);
+		this.listeners.get(event)?.push(callback);
 	}
 
 	off(event: string, callback: EventCallback): void {
@@ -192,10 +184,7 @@ export class TaskFlow {
 		for (const dir of this.getAllKanbanDirs()) {
 			if (!fs.existsSync(dir)) continue;
 			const files = fs.readdirSync(dir);
-			const match = files.find(
-				(f) =>
-					f.toLowerCase().includes(normalizedId) && f.endsWith(".md"),
-			);
+			const match = files.find((f) => f.toLowerCase().includes(normalizedId) && f.endsWith(".md"));
 			if (match) {
 				return path.join(dir, match);
 			}
@@ -260,18 +249,16 @@ export class TaskFlow {
 	/**
 	 * Move task from one column to another
 	 */
-	async moveTask(
-		taskId: string,
-		fromColumn: string,
-		toColumn: string,
-	): Promise<boolean> {
+	async moveTask(taskId: string, fromColumn: string, toColumn: string): Promise<boolean> {
 		const from = fromColumn as KanbanColumn;
 		const to = toColumn as KanbanColumn;
 
 		// Validate columns
 		if (!COLUMN_ORDER.includes(from) || !COLUMN_ORDER.includes(to)) {
 			console.error(
-				chalk.red(`[TaskFlow] Invalid column: ${!COLUMN_ORDER.includes(from) ? fromColumn : toColumn}`),
+				chalk.red(
+					`[TaskFlow] Invalid column: ${!COLUMN_ORDER.includes(from) ? fromColumn : toColumn}`,
+				),
 			);
 			return false;
 		}
@@ -282,7 +269,7 @@ export class TaskFlow {
 			return false;
 		}
 
-		const sourceDir = path.join(this.projectRoot, COLUMN_TO_FOLDER[from]);
+		const _sourceDir = path.join(this.projectRoot, COLUMN_TO_FOLDER[from]);
 		const targetDir = path.join(this.projectRoot, COLUMN_TO_FOLDER[to]);
 		const fileName = path.basename(sourcePath);
 		const targetPath = path.join(targetDir, fileName);
@@ -293,9 +280,7 @@ export class TaskFlow {
 			return true;
 		}
 
-		console.log(
-			chalk.cyan(`[TaskFlow] Moving ${taskId} from ${fromColumn} to ${toColumn}`),
-		);
+		console.log(chalk.cyan(`[TaskFlow] Moving ${taskId} from ${fromColumn} to ${toColumn}`));
 
 		// Ensure target directory exists
 		await fs.ensureDir(targetDir);
@@ -432,11 +417,7 @@ export class TaskFlow {
 		const currentColumn = taskData.column || this.inferColumnFromTask(taskData);
 
 		// Move to archive
-		const moved = await this.moveTask(
-			taskId,
-			currentColumn || "done",
-			"archive",
-		);
+		const moved = await this.moveTask(taskId, currentColumn || "done", "archive");
 
 		if (!moved) return false;
 
@@ -465,9 +446,7 @@ export class TaskFlow {
 			taskData: { ...taskData, lesson_learned: lessonLearned },
 		});
 
-		console.log(
-			chalk.green(`[TaskFlow] Task ${taskId} archived with lesson learned`),
-		);
+		console.log(chalk.green(`[TaskFlow] Task ${taskId} archived with lesson learned`));
 		return true;
 	}
 
@@ -609,10 +588,7 @@ ${keyTakeaways.map((item) => `- ${item}`).join("\n")}
 		if (fs.existsSync(historyFile)) {
 			await fs.appendFile(historyFile, entry);
 		} else {
-			await fs.writeFile(
-				historyFile,
-				`# Lesson Learned History\n\n${entry}`,
-			);
+			await fs.writeFile(historyFile, `# Lesson Learned History\n\n${entry}`);
 		}
 	}
 

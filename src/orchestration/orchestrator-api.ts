@@ -5,8 +5,6 @@
  */
 
 import path from "node:path";
-import { ModelRouter } from "../ai/model-router.js";
-import { MemoryStore } from "../memory/memory-store.js";
 import { runAutoLoop } from "./auto-loop.js";
 import { DependencyGraph } from "./dependency-graph.js";
 import { MergeEngine } from "./merge-engine.js";

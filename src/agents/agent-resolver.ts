@@ -3,8 +3,8 @@
  * Supports both .md (Antigravity) and .yaml (legacy) agent formats
  */
 
-import fs from "fs-extra";
 import path from "node:path";
+import fs from "fs-extra";
 
 /**
  * Resolve agent file path by name
@@ -13,7 +13,10 @@ import path from "node:path";
  * @param agentName - Agent name (e.g., "pm", "developer", "debugger")
  * @returns Full path to agent file or null if not found
  */
-export async function resolveAgentPath(projectRoot: string, agentName: string): Promise<string | null> {
+export async function resolveAgentPath(
+	projectRoot: string,
+	agentName: string,
+): Promise<string | null> {
 	const agentsDir = path.join(projectRoot, "agents");
 
 	// First check for .md (Antigravity format)
@@ -53,10 +56,7 @@ export async function listAvailableAgents(projectRoot: string): Promise<string[]
 			if (file === "legacy" || file === ".gitkeep") continue;
 
 			// Extract agent name
-			const name = file
-				.replace(".md", "")
-				.replace(".agent.yaml", "")
-				.replace(".yaml", "");
+			const name = file.replace(".md", "").replace(".agent.yaml", "").replace(".yaml", "");
 
 			agents.add(name);
 		}
@@ -105,7 +105,9 @@ async function loadYamlAgent(agentPath: string): Promise<AgentMetadata | null> {
 			name: data.agent?.metadata?.name || path.basename(agentPath, ".yaml"),
 			title: data.agent?.metadata?.title || "",
 			description: data.agent?.metadata?.capabilities || "",
-			capabilities: (data.agent?.metadata?.capabilities || "").split(", ").map((s: string) => s.trim()),
+			capabilities: (data.agent?.metadata?.capabilities || "")
+				.split(", ")
+				.map((s: string) => s.trim()),
 			format: "yaml",
 			path: agentPath,
 		};

@@ -8,7 +8,6 @@ export class TaskCLI {
 	public tasksDir: string;
 	public boardPath: string;
 	private configPath: string;
-	private metadata: { timestamp: string; version: string; engine: string };
 	private projectRoot: string;
 	private manifest: ManifestGenerator;
 

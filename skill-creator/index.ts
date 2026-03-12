@@ -3,7 +3,7 @@ import path from "node:path";
 import { mapCodebase } from "./src/map-codebase.js";
 import { scrapeUrl } from "./src/scraper.js";
 import { generateSkillPrompt } from "./src/skill-generator.js";
-import { detectStack, detectAgentsFromStack } from "./src/tech-detector.js";
+import { detectAgentsFromStack, detectStack } from "./src/tech-detector.js";
 
 /**
  * Aizen-Gate Skill Creator Entry Point (v2.0)

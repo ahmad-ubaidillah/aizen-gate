@@ -23,11 +23,7 @@ export interface TriggerResult {
 /**
  * Types of triggers that can be detected
  */
-export type TriggerType =
-	| "aizen_reference"
-	| "keyword"
-	| "file_reference"
-	| "domain_specific";
+export type TriggerType = "aizen_reference" | "keyword" | "file_reference" | "domain_specific";
 
 /**
  * Project type for dynamic context loading
@@ -134,7 +130,15 @@ export const KEYWORD_TRIGGERS: Record<string, string> = {
 /**
  * Action keywords that trigger Aizen
  */
-export const ACTION_KEYWORDS = ["build", "fix", "optimize", "design", "create", "implement", "refactor"];
+export const ACTION_KEYWORDS = [
+	"build",
+	"fix",
+	"optimize",
+	"design",
+	"create",
+	"implement",
+	"refactor",
+];
 
 /**
  * File references that trigger standards
@@ -162,7 +166,8 @@ export class Superagent {
 	 */
 	constructor(config: SuperagentConfig) {
 		this.projectRoot = config.projectRoot;
-		this.memoryDbPath = config.memoryDbPath || path.join(this.projectRoot, "aizen-gate", "shared", "memory.db");
+		this.memoryDbPath =
+			config.memoryDbPath || path.join(this.projectRoot, "aizen-gate", "shared", "memory.db");
 		this.sharedModulesPath =
 			config.sharedModulesPath || path.join(this.projectRoot, "aizen-gate", ".shared");
 		this.enableDynamicLoading = config.enableDynamicLoading ?? true;
@@ -420,7 +425,11 @@ export class Superagent {
 					pkg.dependencies || {},
 				).join(" ")}`.toLowerCase();
 
-				if (searchableText.includes("react") || searchableText.includes("vue") || searchableText.includes("angular")) {
+				if (
+					searchableText.includes("react") ||
+					searchableText.includes("vue") ||
+					searchableText.includes("angular")
+				) {
 					projectType = "web";
 				} else if (searchableText.includes("express") || searchableText.includes("fastify")) {
 					projectType = "api";
@@ -429,7 +438,11 @@ export class Superagent {
 				}
 
 				// Detect domain
-				if (searchableText.includes("fintech") || searchableText.includes("payment") || searchableText.includes("bank")) {
+				if (
+					searchableText.includes("fintech") ||
+					searchableText.includes("payment") ||
+					searchableText.includes("bank")
+				) {
 					domain = "fintech";
 				} else if (searchableText.includes("health") || searchableText.includes("medical")) {
 					domain = "healthcare";
@@ -447,7 +460,11 @@ export class Superagent {
 			projectType = "web";
 		} else if (lowerMessage.includes("api") || lowerMessage.includes("backend")) {
 			projectType = "api";
-		} else if (lowerMessage.includes("mobile") || lowerMessage.includes("ios") || lowerMessage.includes("android")) {
+		} else if (
+			lowerMessage.includes("mobile") ||
+			lowerMessage.includes("ios") ||
+			lowerMessage.includes("android")
+		) {
 			projectType = "mobile";
 		}
 

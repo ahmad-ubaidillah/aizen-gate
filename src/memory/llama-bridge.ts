@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import fs from "fs-extra";
-import { getLlama, LlamaChatSession, LlamaContext, type LlamaModel } from "node-llama-cpp";
+import { getLlama, LlamaChatSession, type LlamaModel } from "node-llama-cpp";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,8 +17,6 @@ class LlamaBridge {
 	private model: LlamaModel | null = null;
 	private modelPath: string;
 	private modelName = "qwen2.5-0.5b-instruct-q4_k_m.gguf";
-	private baseUrl =
-		"https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf";
 
 	constructor(projectRoot: string) {
 		this.modelPath = path.join(projectRoot, "aizen-gate", "models", this.modelName);

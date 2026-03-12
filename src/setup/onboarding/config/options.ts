@@ -19,8 +19,16 @@ export const IDE_OPTIONS: Option[] = [
 	{ label: "🔷 Codex", value: "codex", description: "OpenAI's CLI coding assistant" },
 	{ label: "💥 Crush", value: "crush", description: "AI-powered IDE" },
 	{ label: "🌟 Gemini CLI", value: "gemini-cli", description: "Google's multimodal CLI" },
-	{ label: "🟢 GitHub Copilot", value: "github-copilot", description: "Microsoft's AI pair programmer" },
-	{ label: "🚀 Google Antigravity", value: "google-antigravity", description: "Next-gen AI coding platform" },
+	{
+		label: "🟢 GitHub Copilot",
+		value: "github-copilot",
+		description: "Microsoft's AI pair programmer",
+	},
+	{
+		label: "🚀 Google Antigravity",
+		value: "google-antigravity",
+		description: "Next-gen AI coding platform",
+	},
 	{ label: "🔄 iFlow", value: "iflow", description: "Intelligent flow editor" },
 	{ label: "⚖️ Kilocode", value: "kilocode", description: "Lightweight AI coding assistant" },
 	{ label: "🗡️ Kiro", value: "kiro", description: "AI-first IDE" },
@@ -37,19 +45,22 @@ export const DEV_TYPE_OPTIONS: Option[] = [
 		label: "⚡ Fast (Prototype)",
 		value: "fast",
 		description: "Short context, minimal quality gates, fast delivery",
-		details: "✅ Pros: Quick iterations, low overhead, fast feedback\n❌ Cons: Higher risk, less documentation, limited testing",
+		details:
+			"✅ Pros: Quick iterations, low overhead, fast feedback\n❌ Cons: Higher risk, less documentation, limited testing",
 	},
 	{
 		label: "🐢 Medium (MVP)",
 		value: "medium",
 		description: "Balanced, standard quality gates",
-		details: "✅ Pros: Good balance of speed and quality\n❌ Cons: Medium overhead, standard documentation",
+		details:
+			"✅ Pros: Good balance of speed and quality\n❌ Cons: Medium overhead, standard documentation",
 	},
 	{
 		label: "🏗️ Slow (Enterprise)",
 		value: "slow",
 		description: "Complete context, strict gates, multi-layer review",
-		details: "✅ Pros: High quality, comprehensive docs, strict testing\n❌ Cons: Slower delivery, more overhead, complex reviews",
+		details:
+			"✅ Pros: High quality, comprehensive docs, strict testing\n❌ Cons: Slower delivery, more overhead, complex reviews",
 	},
 ];
 

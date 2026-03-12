@@ -88,9 +88,7 @@ export class RetryLoop {
 		if (existing) {
 			// Resume existing review
 			if (existing.state === ReviewState.SUCCESS) {
-				console.log(
-					chalk.green(`[RetryLoop] Task ${taskId} already completed successfully`),
-				);
+				console.log(chalk.green(`[RetryLoop] Task ${taskId} already completed successfully`));
 				return existing.state;
 			}
 
@@ -144,9 +142,7 @@ export class RetryLoop {
 		const record = this.reviews.get(taskId);
 
 		if (!record) {
-			console.log(
-				chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`),
-			);
+			console.log(chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`));
 			return;
 		}
 
@@ -191,9 +187,7 @@ export class RetryLoop {
 		const record = this.reviews.get(taskId);
 
 		if (!record) {
-			console.log(
-				chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`),
-			);
+			console.log(chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`));
 			return;
 		}
 
@@ -255,9 +249,7 @@ export class RetryLoop {
 		const record = this.reviews.get(taskId);
 
 		if (!record) {
-			console.log(
-				chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`),
-			);
+			console.log(chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`));
 			return;
 		}
 
@@ -284,9 +276,7 @@ export class RetryLoop {
 		const record = this.reviews.get(taskId);
 
 		if (!record) {
-			console.log(
-				chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`),
-			);
+			console.log(chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`));
 			return null;
 		}
 
@@ -349,9 +339,7 @@ export class RetryLoop {
 		const record = this.reviews.get(taskId);
 
 		if (!record) {
-			console.log(
-				chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`),
-			);
+			console.log(chalk.red(`[RetryLoop] Error: No review record found for task ${taskId}`));
 			return null;
 		}
 
@@ -374,9 +362,7 @@ export class RetryLoop {
 			recommendation = `Task aborted after ${record.currentAttempt} attempts. Manual intervention required.`;
 		} else {
 			recommendation = `Task has ${record.failures.length} failure(s). ${
-				this.canRetry(taskId)
-					? "Retry available."
-					: "No retries remaining - consider aborting."
+				this.canRetry(taskId) ? "Retry available." : "No retries remaining - consider aborting."
 			}`;
 		}
 
@@ -435,15 +421,15 @@ export class RetryLoop {
 	 */
 	private extractFixedIssues(reason: string): string[] {
 		// Match various formats: "fixed: X, Y, Z" or "fixed: X; Y; Z" or "fixed - X, Y"
-		const fixedMatch = reason.match(/(?:fixed|fixes|resolved)[:\-]?\s*(.+)/i);
-		if (fixedMatch && fixedMatch[1]) {
+		const fixedMatch = reason.match(/(?:fixed|fixes|resolved)[:-]?\s*(.+)/i);
+		if (fixedMatch?.[1]) {
 			// Split by comma, semicolon, or " and " while preserving complex items
 			const items = fixedMatch[1]
 				.split(/[,;]|\s+and\s+/i)
 				.map((s) => s.trim())
 				.filter(Boolean)
 				// Clean up any leading dashes, bullets, or numbers
-				.map((s) => s.replace(/^[\-\d.)\u2022\u2023\u25E6\u2043\u2219]+\s*/, ""));
+				.map((s) => s.replace(/^[-\d.)\u2022\u2023\u25E6\u2043\u2219]+\s*/, ""));
 			return items;
 		}
 		return [];

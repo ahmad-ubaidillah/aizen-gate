@@ -4,9 +4,9 @@
  * Supports both code-based and file-based (markdown) skills
  */
 
+import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
-import path from "node:path";
 import grayMatter from "gray-matter";
 
 /**
@@ -67,8 +67,24 @@ export class SkillRegistry {
 			{
 				id: "database-master",
 				name: "Database Master",
-				keywords: ["database", "schema", "migration", "sql", "db", "postgres", "mysql", "mongodb", "nosql", "query", "index", "table", "relationship", "orm"],
-				description: "Expert in database design, schema management, migrations, and query optimization",
+				keywords: [
+					"database",
+					"schema",
+					"migration",
+					"sql",
+					"db",
+					"postgres",
+					"mysql",
+					"mongodb",
+					"nosql",
+					"query",
+					"index",
+					"table",
+					"relationship",
+					"orm",
+				],
+				description:
+					"Expert in database design, schema management, migrations, and query optimization",
 				agent_required: ["database-engineer"],
 				category: "backend",
 				priority: 10,
@@ -76,8 +92,25 @@ export class SkillRegistry {
 			{
 				id: "security-armor",
 				name: "Security Armor",
-				keywords: ["security", "vulnerability", "audit", "secure", "auth", "authentication", "authorization", "encryption", "pentest", "penetration", "threat", "xss", "csrf", "injection", "owasp"],
-				description: "Security analysis, vulnerability assessment, penetration testing, and secure coding",
+				keywords: [
+					"security",
+					"vulnerability",
+					"audit",
+					"secure",
+					"auth",
+					"authentication",
+					"authorization",
+					"encryption",
+					"pentest",
+					"penetration",
+					"threat",
+					"xss",
+					"csrf",
+					"injection",
+					"owasp",
+				],
+				description:
+					"Security analysis, vulnerability assessment, penetration testing, and secure coding",
 				agent_required: ["security"],
 				category: "security",
 				priority: 10,
@@ -85,8 +118,26 @@ export class SkillRegistry {
 			{
 				id: "testing-master",
 				name: "Testing Master",
-				keywords: ["test", "testing", "qa", "unit", "integration", "e2e", "coverage", "mock", "stub", "assertion", "jest", "vitest", "playwright", "cypress", "mocha", "junit"],
-				description: "Comprehensive testing strategies including unit, integration, and end-to-end testing",
+				keywords: [
+					"test",
+					"testing",
+					"qa",
+					"unit",
+					"integration",
+					"e2e",
+					"coverage",
+					"mock",
+					"stub",
+					"assertion",
+					"jest",
+					"vitest",
+					"playwright",
+					"cypress",
+					"mocha",
+					"junit",
+				],
+				description:
+					"Comprehensive testing strategies including unit, integration, and end-to-end testing",
 				agent_required: ["qa"],
 				category: "quality",
 				priority: 10,
@@ -94,7 +145,22 @@ export class SkillRegistry {
 			{
 				id: "api-standards",
 				name: "API Standards",
-				keywords: ["api", "rest", "endpoint", "graphql", "http", "request", "response", "json", "xml", "webhook", "crud", "restful", "openapi", "swagger"],
+				keywords: [
+					"api",
+					"rest",
+					"endpoint",
+					"graphql",
+					"http",
+					"request",
+					"response",
+					"json",
+					"xml",
+					"webhook",
+					"crud",
+					"restful",
+					"openapi",
+					"swagger",
+				],
 				description: "API design, RESTful conventions, GraphQL, and HTTP protocol best practices",
 				agent_required: ["developer", "architect"],
 				category: "backend",
@@ -103,7 +169,21 @@ export class SkillRegistry {
 			{
 				id: "vitals-templates",
 				name: "Performance Vitals",
-				keywords: ["performance", "optimize", "speed", "latency", "benchmark", "profiling", "cache", "bundle", "load-time", "fps", "memory", "cpu", "heap"],
+				keywords: [
+					"performance",
+					"optimize",
+					"speed",
+					"latency",
+					"benchmark",
+					"profiling",
+					"cache",
+					"bundle",
+					"load-time",
+					"fps",
+					"memory",
+					"cpu",
+					"heap",
+				],
 				description: "Performance optimization, benchmarking, profiling, and speed improvements",
 				agent_required: ["developer", "analyst"],
 				category: "performance",
@@ -112,8 +192,24 @@ export class SkillRegistry {
 			{
 				id: "ui-ux-pro-max",
 				name: "UI/UX Pro Max",
-				keywords: ["design", "ui", "ux", "interface", "layout", "component", "responsive", "accessibility", "a11y", "animation", "css", "style", "theme", "design-system"],
-				description: "User interface design, UX best practices, responsive layouts, and design systems",
+				keywords: [
+					"design",
+					"ui",
+					"ux",
+					"interface",
+					"layout",
+					"component",
+					"responsive",
+					"accessibility",
+					"a11y",
+					"animation",
+					"css",
+					"style",
+					"theme",
+					"design-system",
+				],
+				description:
+					"User interface design, UX best practices, responsive layouts, and design systems",
 				agent_required: ["designer"],
 				category: "frontend",
 				priority: 9,
@@ -121,8 +217,27 @@ export class SkillRegistry {
 			{
 				id: "devops-guru",
 				name: "DevOps Guru",
-				keywords: ["deploy", "deployment", "ci", "cd", "pipeline", "docker", "kubernetes", "k8s", "cloud", "infrastructure", "terraform", "ansible", "jenkins", "github-actions", "aws", "gcp", "azure"],
-				description: "CI/CD pipelines, containerization, cloud infrastructure, and deployment automation",
+				keywords: [
+					"deploy",
+					"deployment",
+					"ci",
+					"cd",
+					"pipeline",
+					"docker",
+					"kubernetes",
+					"k8s",
+					"cloud",
+					"infrastructure",
+					"terraform",
+					"ansible",
+					"jenkins",
+					"github-actions",
+					"aws",
+					"gcp",
+					"azure",
+				],
+				description:
+					"CI/CD pipelines, containerization, cloud infrastructure, and deployment automation",
 				agent_required: ["devops"],
 				category: "devops",
 				priority: 9,
@@ -130,8 +245,21 @@ export class SkillRegistry {
 			{
 				id: "architect-pro",
 				name: "Architect Pro",
-				keywords: ["architecture", "design-pattern", "microservice", "monolith", "scalability", "system-design", "high-level", "abstraction", "interface", "coupling", "cohesion"],
-				description: "System architecture, design patterns, microservices, and high-level system design",
+				keywords: [
+					"architecture",
+					"design-pattern",
+					"microservice",
+					"monolith",
+					"scalability",
+					"system-design",
+					"high-level",
+					"abstraction",
+					"interface",
+					"coupling",
+					"cohesion",
+				],
+				description:
+					"System architecture, design patterns, microservices, and high-level system design",
 				agent_required: ["architect"],
 				category: "architecture",
 				priority: 9,
@@ -139,7 +267,22 @@ export class SkillRegistry {
 			{
 				id: "pm-track",
 				name: "PM Track",
-				keywords: ["project", "planning", "roadmap", "sprint", "backlog", "task", "story", "ticket", "agile", "scrum", "kanban", "milestone", "deadline", "priority"],
+				keywords: [
+					"project",
+					"planning",
+					"roadmap",
+					"sprint",
+					"backlog",
+					"task",
+					"story",
+					"ticket",
+					"agile",
+					"scrum",
+					"kanban",
+					"milestone",
+					"deadline",
+					"priority",
+				],
 				description: "Project management, sprint planning, backlog grooming, and agile methodology",
 				agent_required: ["pm", "scrum-master"],
 				category: "management",
@@ -148,7 +291,20 @@ export class SkillRegistry {
 			{
 				id: "analyst-pro",
 				name: "Analyst Pro",
-				keywords: ["analyze", "analysis", "data", "metrics", "report", "insight", "research", "investigation", "debug", "diagnose", "root-cause", "pattern"],
+				keywords: [
+					"analyze",
+					"analysis",
+					"data",
+					"metrics",
+					"report",
+					"insight",
+					"research",
+					"investigation",
+					"debug",
+					"diagnose",
+					"root-cause",
+					"pattern",
+				],
 				description: "Data analysis, metrics reporting, research, and root cause analysis",
 				agent_required: ["analyst"],
 				category: "analysis",
@@ -157,7 +313,17 @@ export class SkillRegistry {
 			{
 				id: "quick-flow",
 				name: "Quick Flow",
-				keywords: ["quick", "fast", "simple", "prototype", "demo", "temp", "stub", "quick-fix", "hotfix"],
+				keywords: [
+					"quick",
+					"fast",
+					"simple",
+					"prototype",
+					"demo",
+					"temp",
+					"stub",
+					"quick-fix",
+					"hotfix",
+				],
 				description: "Quick prototyping, fast demos, and rapid development for temporary solutions",
 				agent_required: ["quick-flow"],
 				category: "utility",
@@ -180,7 +346,9 @@ export class SkillRegistry {
 
 		// Check for duplicate
 		if (this.skills.has(skill.id)) {
-			console.log(chalk.yellow(`[SkillRegistry] Skill "${skill.id}" already registered, updating...`));
+			console.log(
+				chalk.yellow(`[SkillRegistry] Skill "${skill.id}" already registered, updating...`),
+			);
 		}
 
 		// Store skill
@@ -192,7 +360,7 @@ export class SkillRegistry {
 			if (!this.keywordIndex.has(normalizedKeyword)) {
 				this.keywordIndex.set(normalizedKeyword, new Set());
 			}
-			this.keywordIndex.get(normalizedKeyword)!.add(skill.id);
+			this.keywordIndex.get(normalizedKeyword)?.add(skill.id);
 		});
 
 		console.log(chalk.green(`[SkillRegistry] Registered skill: ${skill.name} (${skill.id})`));
@@ -272,14 +440,15 @@ export class SkillRegistry {
 		});
 
 		// Sort by priority
-		const skills = Array.from(matchedSkills.values()).sort((a, b) => 
-			(b.priority || 0) - (a.priority || 0)
+		const skills = Array.from(matchedSkills.values()).sort(
+			(a, b) => (b.priority || 0) - (a.priority || 0),
 		);
 
 		// Calculate confidence based on keyword coverage
-		const confidence = skills.length > 0 
-			? Math.min(1, triggered_keywords.size / Math.max(1, skills[0].keywords.length))
-			: 0;
+		const confidence =
+			skills.length > 0
+				? Math.min(1, triggered_keywords.size / Math.max(1, skills[0].keywords.length))
+				: 0;
 
 		return {
 			skills,
@@ -312,7 +481,7 @@ export class SkillRegistry {
 	 */
 	getSkillsByCategory(category: string): Skill[] {
 		return Array.from(this.skills.values()).filter(
-			(skill) => skill.category?.toLowerCase() === category.toLowerCase()
+			(skill) => skill.category?.toLowerCase() === category.toLowerCase(),
 		);
 	}
 
@@ -350,7 +519,11 @@ export class SkillRegistry {
 		console.log(chalk.yellow("\nRegistered Skills:"));
 		this.listAllSkills().forEach((skill) => {
 			console.log(chalk.green(`  • ${skill.name} (${skill.id})`));
-			console.log(chalk.gray(`    Keywords: ${skill.keywords.slice(0, 5).join(", ")}${skill.keywords.length > 5 ? "..." : ""}`));
+			console.log(
+				chalk.gray(
+					`    Keywords: ${skill.keywords.slice(0, 5).join(", ")}${skill.keywords.length > 5 ? "..." : ""}`,
+				),
+			);
 		});
 		console.log("");
 	}
@@ -384,7 +557,7 @@ export class SkillRegistry {
 				const name = data.name || entry.name;
 				const description = data.description || this.generateDescription(markdown);
 				const category = data.category || this.inferCategory(entry.name);
-				
+
 				// Use provided keywords or generate from name/description
 				let keywords: string[] = [];
 				if (data.keywords && Array.isArray(data.keywords)) {
@@ -410,7 +583,11 @@ export class SkillRegistry {
 				this.registerSkill(skill);
 				loadedCount++;
 			} catch (error) {
-				console.log(chalk.red(`[SkillRegistry] Failed to load skill "${entry.name}": ${(error as Error).message}`));
+				console.log(
+					chalk.red(
+						`[SkillRegistry] Failed to load skill "${entry.name}": ${(error as Error).message}`,
+					),
+				);
 			}
 		}
 
@@ -461,10 +638,14 @@ export function detectAndActivateSkills(input: string, projectRoot?: string): De
 	const result = skillRegistry.detectSkillsInInput(input, projectRoot);
 
 	if (result.skills.length > 0) {
-		console.log(chalk.cyan(`\n⛩️ [SkillRegistry] Detected ${result.skills.length} skill(s) from input`));
+		console.log(
+			chalk.cyan(`\n⛩️ [SkillRegistry] Detected ${result.skills.length} skill(s) from input`),
+		);
 		console.log(chalk.gray(`   Triggered keywords: ${result.triggered_keywords.join(", ")}`));
 		result.skills.forEach((skill) => {
-			console.log(chalk.green(`   → Activating: ${skill.name} (${skill.agent_required.join(", ")})`));
+			console.log(
+				chalk.green(`   → Activating: ${skill.name} (${skill.agent_required.join(", ")})`),
+			);
 		});
 	}
 
@@ -484,7 +665,7 @@ export async function initializeSkillRegistry(projectRoot: string): Promise<Skil
 	// Also check legacy reference/skills path for backward compatibility
 	const legacyPath = path.join(projectRoot, "reference", "skills");
 	const loaded = await registry.loadSkillsFromDirectory(legacyPath);
-	
+
 	if (loaded > 0) {
 		console.log(chalk.cyan(`[SkillRegistry] Loaded ${loaded} skills from legacy reference/skills`));
 	}
