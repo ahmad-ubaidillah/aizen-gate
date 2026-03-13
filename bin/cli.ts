@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { cancel } from "@clack/prompts";
 import chalk from "chalk";
 /**
@@ -79,13 +80,7 @@ skillExporter = { initSkills };
 
 export { lifecycleExporter, skillExporter };
 
-program
-	.name("aizen-gate")
-	.description(chalk.dim("The Ultimate AI-Orchestration & Specification Shield"))
-	.version("2.2.4")
-	.addHelpText("before", `\n${chalk.cyan.bold("⛩️  AIZEN-GATE")} ${chalk.dim("v2.2.4")}\n`);
-
-// --- Command Groups ---
+const pkg = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../package.json"), "utf8"));
 
 import { registerCore } from "./commands/core.js";
 import { registerDocs } from "./commands/docs.js";
@@ -101,6 +96,12 @@ import { registerTasks } from "./commands/tasks.js";
 
 registerCore(program);
 registerDocs(program);
+
+program
+	.name("aizen-gate")
+	.description(chalk.dim("The Ultimate AI-Orchestration & Specification Shield"))
+	.version(pkg.version)
+	.addHelpText("before", `\n${chalk.cyan.bold("⛩️  AIZEN-GATE")} ${chalk.dim(`v${pkg.version}`)}\n`);
 registerTasks(program);
 registerKanban(program);
 registerOrchestration(program);

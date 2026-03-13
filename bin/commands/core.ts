@@ -87,6 +87,15 @@ export function registerCore(program: Command): void {
 				await runEnhancedOnboarding(projectRoot);
 			}
 		});
+	
+	// 1.6. Install (Root Alias)
+	program
+		.command("install")
+		.description("Initialize Aizen-Gate in the current workspace (Shortcut for onboarding)")
+		.action(async () => {
+			const { runEnhancedOnboarding } = await import("../../src/setup/onboarding.js");
+			await runEnhancedOnboarding(process.cwd());
+		});
 
 	// 2. Start
 	program
