@@ -309,15 +309,22 @@ export const PRD_FILE = "prd.md";
  * Clean, simple, no confusing options
  */
 export async function handlePRDFlow(projectRoot: string): Promise<any> {
-	// Simple question - what to build?
+	// Simple question - what to build? (Only if needed)
+	note(
+		chalk.gray("To accelerate your build, we've prepared several ") +
+			chalk.cyan("Elite Blueprint Templates") +
+			chalk.gray(".\nChoose one or design from scratch."),
+		"Strategic Blueprint",
+	);
+
 	const projectType = await select({
-		message: "What would you like to build?",
+		message: "Select your project's primary DNA:",
 		options: [
-			{ label: "📋 Todo App", value: "todo-app" },
-			{ label: "🔐 Authentication", value: "auth" },
-			{ label: "📝 Notes App", value: "notes" },
-			{ label: "🌐 API Service", value: "api" },
-			{ label: "🏗️ Custom", value: "custom" },
+			{ label: "📋 Universal Todo App (Web/Mobile)", value: "todo-app" },
+			{ label: "🔐 Secure Auth System (JWT/OAuth)", value: "auth" },
+			{ label: "📝 Knowledge Note App (RAG Ready)", value: "notes" },
+			{ label: "🌐 Scalable API Service (Hono/Express)", value: "api" },
+			{ label: "🏗️ Custom Architect (Blank Canvas)", value: "custom" },
 		] as any,
 	});
 

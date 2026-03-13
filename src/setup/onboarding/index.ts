@@ -25,14 +25,14 @@ export async function runOnboarding(args: {
  */
 export async function runEnhancedOnboarding(projectRoot: string): Promise<void> {
 	// Welcome
-	intro(chalk.cyan.bold("⛩️  AIZEN-GATE"));
+	intro(chalk.bgCyan.black.bold(" ⛩️  AIZEN-GATE EVOLUTION v2.3  "));
 
 	note(
-		chalk.gray("Let's set up your project in minutes.\n") +
-			chalk.dim("Press ") +
-			chalk.yellow("Ctrl+C") +
-			chalk.dim(" anytime to exit."),
-		"Welcome",
+		chalk.white("Welcome, Agent. Your workspace is being upgraded to the ") +
+			chalk.cyan.bold("Elite Swarm Architecture.") +
+			"\n\n" +
+			chalk.gray("Follow this briefing to align your project with Aizen protocols."),
+		"Mission Briefing",
 	);
 
 	// ========== QUESTION 1: Aizen Name ==========

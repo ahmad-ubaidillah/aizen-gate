@@ -1,10 +1,11 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import fs from "fs-extra";
 import matter from "gray-matter";
 
-// CommonJS compatibility for __dirname
-declare const __dirname: string;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * [AZ] Playbook Runner

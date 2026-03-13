@@ -4,10 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Lazy-load to keep startup fast
 let nodeLlamaCpp: any = null;
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * [AZ] Llama Bridge
