@@ -10,6 +10,7 @@ export class TaskCLI {
 	private configPath: string;
 	private projectRoot: string;
 	private manifest: ManifestGenerator;
+	private metadata: any;
 
 	constructor(projectRoot: string = process.cwd()) {
 		this.projectRoot = projectRoot;
@@ -19,7 +20,7 @@ export class TaskCLI {
 		this.manifest = new ManifestGenerator(projectRoot);
 		this.metadata = {
 			timestamp: new Date().toISOString(),
-			version: "2.2.4",
+			version: "2.3.0",
 			engine: "aizen-gate",
 		};
 	}

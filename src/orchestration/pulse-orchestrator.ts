@@ -20,6 +20,7 @@ export enum PulseStage {
 export class PulseOrchestrator {
 	private feed = DashboardService.getInstance();
 	private projectDir: string;
+	private currentStage: PulseStage = PulseStage.IDLE;
 
 	constructor(projectDir: string) {
 		this.projectDir = projectDir;
@@ -115,6 +116,10 @@ export class PulseOrchestrator {
 			action,
 			payload,
 			timestamp: new Date().toISOString(),
+			metadata: {
+				version: "2.3.0",
+				engine: "aizen-gate",
+			},
 		});
 
 		if (result.approved) {

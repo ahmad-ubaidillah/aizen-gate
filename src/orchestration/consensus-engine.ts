@@ -10,6 +10,7 @@ export interface Proposal {
 	action: string;
 	payload: any;
 	timestamp: string;
+	metadata?: any;
 }
 
 export interface Vote {
