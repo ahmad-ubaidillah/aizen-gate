@@ -87,7 +87,7 @@ export function registerCore(program: Command): void {
 				await runEnhancedOnboarding(projectRoot);
 			}
 		});
-	
+
 	// 1.6. Install (Root Alias)
 	program
 		.command("install")

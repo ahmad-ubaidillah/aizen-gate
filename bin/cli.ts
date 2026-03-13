@@ -80,7 +80,16 @@ skillExporter = { initSkills };
 
 export { lifecycleExporter, skillExporter };
 
-const pkg = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../package.json"), "utf8"));
+function findPkg() {
+	let curr = path.dirname(fileURLToPath(import.meta.url));
+	for (let i = 0; i < 5; i++) {
+		const p = path.join(curr, "package.json");
+		if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, "utf8"));
+		curr = path.dirname(curr);
+	}
+	return { version: "2.3.2" }; // Fallback
+}
+const pkg = findPkg();
 
 import { registerCore } from "./commands/core.js";
 import { registerDocs } from "./commands/docs.js";

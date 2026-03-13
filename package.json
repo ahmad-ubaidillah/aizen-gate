@@ -1,6 +1,6 @@
 {
 	"name": "aizen-gate",
-	"version": "2.3.1",
+	"version": "2.3.2",
 	"description": "The Ultimate AI-Orchestration & Specification Shield",
 	"main": "dist/index.js",
 	"type": "module",
@@ -34,7 +34,7 @@
 		"dev": "npm run build && npm run az-start",
 		"build": "tsc && npm run build:bundle",
 		"build:bundle": "node scripts/build.js",
-		"postinstall": "node -e \"console.log('\\n✅ Aizen-Gate installed!\\n\\n📖 Quick start: npx aizen-gate help\\n📚 Full guide: See ONBOARDING.md\\n\\n🚀 Ready to use with your IDE!\\n')\"",
+		"postinstall": "node -e \"console.log('\\n✅ Aizen-Gate Ready!\\n\\n⛩️  To initialize your project, run:\\n   npx aizen-gate install\\n\\n🚀 Enjoy the Elite Swarm Experience!\\n')\"",
 		"build:watch": "tsc --watch",
 		"clean": "rm -rf dist",
 		"test": "vitest",
