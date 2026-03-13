@@ -3,9 +3,10 @@
  * Manages auto-start, idle shutdown, and pause/resume hooks.
  */
 
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
 import { pauseSession, resumeSession } from "./session-manager.js";
 
 /**
@@ -29,13 +30,13 @@ export class LifecycleManager {
 
 	constructor(projectRoot: string) {
 		this.projectRoot = projectRoot;
-		this.statePath = path.join(projectRoot, "aizen-gate", "shared", "lifecycle.json");
+		this.statePath = path.join(projectRoot, "shared", "lifecycle.json");
 		this.idleTimeout = 30 * 60 * 1000; // 30 minutes
 		this.checkInterval = 5 * 60 * 1000; // 5 minutes
 	}
 
 	async wake(): Promise<void> {
-		const handoffPath = path.join(this.projectRoot, "aizen-gate", "shared", "handoff.md");
+		const handoffPath = path.join(this.projectRoot, "shared", "handoff.md");
 		if (fs.existsSync(handoffPath)) {
 			console.log(chalk.blue("[AZ] Detected paused session. Auto-resuming..."));
 			await resumeSession(this.projectRoot);
@@ -50,14 +51,17 @@ export class LifecycleManager {
 			pid: process.pid,
 			status: "active",
 		};
-		await fs.ensureDir(path.dirname(this.statePath));
-		await fs.writeJson(this.statePath, data);
+		const dir = path.dirname(this.statePath);
+		if (!fs.existsSync(dir)) {
+			fs.mkdirSync(dir, { recursive: true });
+		}
+		await fsPromises.writeFile(this.statePath, JSON.stringify(data, null, 2));
 	}
 
 	async checkIdle(): Promise<void> {
 		if (!fs.existsSync(this.statePath)) return;
 
-		const data = (await fs.readJson(this.statePath)) as LifecycleState;
+		const data = JSON.parse(await fsPromises.readFile(this.statePath, "utf8")) as LifecycleState;
 		const now = Date.now();
 
 		// Check if app is running (Manual Testing Detection)
@@ -69,19 +73,25 @@ export class LifecycleManager {
 				),
 			);
 			await pauseSession(this.projectRoot, "Auto-pause for manual testing");
-			await fs.writeJson(this.statePath, { ...data, status: "paused", reason: "manual-testing" });
+			await fsPromises.writeFile(
+				this.statePath,
+				JSON.stringify({ ...data, status: "paused", reason: "manual-testing" }, null, 2),
+			);
 			return;
 		}
 
 		if (data.status === "active" && now - data.last_activity > this.idleTimeout) {
 			console.log(chalk.yellow(`\n[AZ] Idle for >30m. Auto-shutting down to save resources...`));
 			await pauseSession(this.projectRoot, "Auto-shutdown on idle");
-			await fs.writeJson(this.statePath, { ...data, status: "paused", reason: "idle" });
+			await fsPromises.writeFile(
+				this.statePath,
+				JSON.stringify({ ...data, status: "paused", reason: "idle" }, null, 2),
+			);
 		}
 	}
 
 	async isAppRunning(): Promise<boolean> {
-		const { execSync } = require("node:child_process");
+		const { execSync } = await import("node:child_process");
 		try {
 			// Common dev ports
 			const ports = [3000, 5173, 8000, 8080];

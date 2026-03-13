@@ -42,6 +42,9 @@ temp/
 # OS specific
 .DS_Store
 
-# Aizen Kanban Transient Data
-CURRENT_SPRINT.md
+# Aizen-Gate Core & Transient Data
+infrastructure/logs/
+.worktrees/
+*-audit.json
+aizen-gate/shared/circuit-state.json
 kanban/**/archive/

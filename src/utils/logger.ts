@@ -1,151 +1,108 @@
 /**
- * Winston Logger for Aizen-Gate
- * Centralized logging with multiple transports
+ * Lightweight Native Logger for Aizen-Gate
+ * Replaces Winston to reduce dependency weight (~3MB saved).
  */
+
+import fs from "node:fs";
 import path from "node:path";
-import type { Request, Response } from "express";
-import winston, { format, type Logger, transports } from "winston";
-import DailyRotateFile from "winston-daily-rotate-file";
 
-const { combine, timestamp, printf, colorize, json } = format;
-
-// Log directory
 const logDir = process.env.LOG_DIR || path.join(process.cwd(), "logs");
-
-// Determine if development mode
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-/**
- * Custom format for console output (development)
- */
-const consoleFormat = combine(
-	colorize(),
-	timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-	printf(({ level, message, timestamp: ts, context, ...metadata }) => {
-		let msg = `${ts} [${level}]`;
-		if (context) msg += ` [${context}]`;
-		msg += `: ${message}`;
-		if (Object.keys(metadata).length > 0) {
-			msg += ` ${JSON.stringify(metadata)}`;
+if (!fs.existsSync(logDir)) {
+	fs.mkdirSync(logDir, { recursive: true });
+}
+
+type LogLevel = "debug" | "info" | "warn" | "error";
+
+class AizenLogger {
+	private level: LogLevel;
+
+	constructor() {
+		this.level = (process.env.LOG_LEVEL as LogLevel) || (isDevelopment ? "debug" : "info");
+	}
+
+	private getTimestamp(): string {
+		return new Date().toISOString();
+	}
+
+	private writeToFile(level: string, message: string, metadata: any = {}): void {
+		const entry = `${JSON.stringify({
+			timestamp: this.getTimestamp(),
+			level,
+			message,
+			...metadata,
+		})}\n`;
+
+		try {
+			const dateStr = new Date().toISOString().split("T")[0];
+			const filename = path.join(
+				logDir,
+				`${level === "error" ? "error" : "combined"}-${dateStr}.log`,
+			);
+			fs.appendFileSync(filename, entry);
+		} catch (err) {
+			console.error("[Logger] Failed to write to file:", err);
 		}
-		return msg;
-	}),
-);
+	}
 
-/**
- * JSON format for file output (production)
- */
-const jsonLogFormat = combine(timestamp(), json());
+	public log(level: LogLevel, message: string, metadata: any = {}): void {
+		const levels: LogLevel[] = ["debug", "info", "warn", "error"];
+		if (levels.indexOf(level) < levels.indexOf(this.level)) return;
 
-/**
- * Create Winston logger instance
- */
-export const logger = winston.createLogger({
-	level: process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info"),
-	format: isDevelopment ? consoleFormat : jsonLogFormat,
-	transports: [
-		// Console transport
-		new transports.Console({
-			format: isDevelopment ? consoleFormat : jsonLogFormat,
-		}),
+		const ts = this.getTimestamp();
+		const color = level === "error" ? "\x1b[31m" : level === "warn" ? "\x1b[33m" : "\x1b[36m";
+		const reset = "\x1b[0m";
 
-		// Error log file (rotating daily)
-		new DailyRotateFile({
-			filename: path.join(logDir, "error-%DATE%.log"),
-			datePattern: "YYYY-MM-DD",
-			level: "error",
-			maxSize: "20m",
-			maxFiles: "14d",
-			zippedArchive: true,
-		}),
+		if (isDevelopment) {
+			console.log(
+				`${ts} [${color}${level.toUpperCase()}${reset}] ${message}`,
+				Object.keys(metadata).length ? metadata : "",
+			);
+		}
 
-		// Combined log file (rotating daily)
-		new DailyRotateFile({
-			filename: path.join(logDir, "combined-%DATE%.log"),
-			datePattern: "YYYY-MM-DD",
-			maxSize: "20m",
-			maxFiles: "7d",
-			zippedArchive: true,
-		}),
-	],
+		this.writeToFile(level, message, metadata);
+	}
 
-	// Handle uncaught exceptions
-	exceptionHandlers: [
-		new DailyRotateFile({
-			filename: path.join(logDir, "exceptions-%DATE%.log"),
-			datePattern: "YYYY-MM-DD",
-			maxSize: "20m",
-			maxFiles: "14d",
-		}),
-	],
+	public debug(msg: string, meta?: any) {
+		this.log("debug", msg, meta);
+	}
+	public info(msg: string, meta?: any) {
+		this.log("info", msg, meta);
+	}
+	public warn(msg: string, meta?: any) {
+		this.log("warn", msg, meta);
+	}
+	public error(msg: string, meta?: any) {
+		this.log("error", msg, meta);
+	}
 
-	// Handle unhandled promise rejections
-	rejectionHandlers: [
-		new DailyRotateFile({
-			filename: path.join(logDir, "rejections-%DATE%.log"),
-			datePattern: "YYYY-MM-DD",
-			maxSize: "20m",
-			maxFiles: "14d",
-		}),
-	],
-});
+	public child(context: any) {
+		return {
+			debug: (msg: string, meta?: any) => this.debug(msg, { ...context, ...meta }),
+			info: (msg: string, meta?: any) => this.info(msg, { ...context, ...meta }),
+			warn: (msg: string, meta?: any) => this.warn(msg, { ...context, ...meta }),
+			error: (msg: string, meta?: any) => this.error(msg, { ...context, ...meta }),
+			log: (level: LogLevel, msg: string, meta?: any) =>
+				this.log(level, msg, { ...context, ...meta }),
+		};
+	}
+}
 
-/**
- * Create child logger with context
- * @param context - Context name (e.g., 'mcp', 'memory', 'api')
- * @returns Child logger
- */
-export function createChildLogger(context: string): Logger {
+export const logger = new AizenLogger();
+
+export function createChildLogger(context: string) {
 	return logger.child({ context });
 }
 
-/**
- * Express request with custom Aizen properties
- */
-export interface AizenRequest extends Request {
+export interface AizenRequest {
 	requestId?: string;
-	logger?: Logger;
+	logger?: any;
+	[key: string]: any;
 }
 
-/**
- * Request ID middleware for express
- * Adds request ID to all logs
- */
-export function requestIdMiddleware(req: AizenRequest, res: Response, next: () => void): void {
-	const requestId =
-		(req.headers["x-request-id"] as string) ||
-		(req.headers["x-correlation-id"] as string) ||
-		generateRequestId();
-
-	req.requestId = requestId;
-	res.setHeader("X-Request-ID", requestId);
-
-	// Attach request ID to logger
-	req.logger = logger.child({ requestId, method: req.method, path: req.path });
-
-	next();
-}
-
-/**
- * Generate unique request ID
- */
 export function generateRequestId(): string {
 	return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
-
-/**
- * Log HTTP request
- */
-export function logHttpRequest(req: AizenRequest, res: Response, durationMs: number): void {
-	const level = res.statusCode >= 400 ? "warn" : "info";
-	logger.log(level, "HTTP Request", {
-		method: req.method,
-		path: req.path,
-		statusCode: res.statusCode,
-		duration: `${durationMs}ms`,
-		requestId: req.requestId,
-		userAgent: req.get("user-agent"),
-	});
 }
 
 export { logger as default };

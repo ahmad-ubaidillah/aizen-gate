@@ -20,6 +20,10 @@
         --danger: #ef4444;
         --border: #334155;
         --lane-bg: rgba(30, 41, 59, 0.4);
+        --voter-qa: #10b981;
+        --voter-security: #a855f7;
+        --voter-architect: #f59e0b;
+        --voter-devops: #3b82f6;
       }
       body {
         font-family: "Inter", sans-serif;
@@ -205,12 +209,291 @@
         background-color: rgba(59, 130, 246, 0.1);
         border: 2px dashed var(--accent);
       }
+      /* Pulse Control Styles */
+      .pulse-controls {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-pulse {
+        background-color: var(--accent);
+        color: white;
+      }
+      .btn-pulse:hover {
+        background-color: #2563eb;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+      }
+      .btn-kill {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border-color: var(--danger);
+      }
+      .btn-kill:hover {
+        background-color: var(--danger);
+        color: white;
+      }
+      .btn-sync {
+        background-color: rgba(192, 132, 252, 0.1);
+        color: #c084fc;
+        border-color: #c084fc;
+      }
+      .btn-sync:hover {
+        background-color: #c084fc;
+        color: white;
+      }
+      .btn-factory {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border-color: var(--warning);
+      }
+      .btn-factory:hover {
+        background-color: var(--warning);
+        color: white;
+      }
+      
+      .badge-ghost {
+        background-color: rgba(216, 180, 254, 0.1);
+        color: #d8b4fe;
+        border: 1px solid #d8b4fe;
+      }
+      
+      /* Phase 25: Pulse Map */
+      .pulse-map {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+      .pulse-stage {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        transition: all 0.3s ease;
+      }
+      .pulse-stage.active {
+        box-shadow: 0 0 10px currentColor;
+        background: currentColor;
+      }
+      .stage-plan { color: #3b82f6; }
+      .stage-simulate { color: #a855f7; }
+      .stage-fix { color: #ef4444; }
+      .stage-commit { color: #10b981; }
+
+      /* Mesh Networking */
+      .mesh-pane {
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.4);
+        border-top: 1px solid var(--border);
+      }
+      .node-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.7rem;
+        margin-right: 8px;
+      }
+      .node-status {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .status-offline { background: var(--text-secondary); }
+
+      /* Entropy / Decay Map (Phase 28) */
+      .entropy-heatmap {
+        height: 40px;
+        background: linear-gradient(to right, var(--success), var(--warning), var(--danger));
+        border-radius: 4px;
+        position: relative;
+        overflow: hidden;
+        margin-top: 10px;
+        border: 1px solid var(--border);
+      }
+      .entropy-marker {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #fff;
+        box-shadow: 0 0 10px #fff;
+        transition: left 1s ease-in-out;
+      }
+
+      /* Interactive Dialogue (Phase 29) */
+      .dialog-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(2, 6, 23, 0.8);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .dialog-card {
+        background: var(--bg-card);
+        border: 1px solid var(--accent);
+        border-radius: 12px;
+        width: 450px;
+        padding: 2rem;
+        box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);
+      }
+      .dialog-choice-btn {
+        width: 100%;
+        padding: 0.8rem;
+        margin-top: 0.5rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+      .dialog-choice-btn:hover {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+      }
+
+      /* Phase 30: Persona Maturation */
+      .persona-evolution-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .persona-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+      .persona-stat-card:hover {
+        border-color: var(--accent);
+        transform: scale(1.02);
+      }
+      .persona-level {
+        font-size: 0.6rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.1);
+        margin-bottom: 0.5rem;
+        display: inline-block;
+      }
+      .persona-score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-family: monospace;
+        display: block;
+      }
+      .persona-name {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+      .persona-mini-bar {
+        height: 3px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 2px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .persona-mini-fill {
+        height: 100%;
+        background: var(--accent);
+        transition: width 1s ease-out;
+      }
+
+      /* Dashboard Header */
+      .graph-pane {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 0 2rem 1.5rem 2rem;
+        padding: 1.5rem;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+      }
+      #mermaid-graph {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      .node circle {
+        stroke: var(--border);
+        stroke-width: 2px;
+      }
+      .node text {
+        font-size: 10px;
+        font-weight: 600;
+        fill: var(--text-primary);
+        pointer-events: none;
+      }
+      .link {
+        stroke: var(--border);
+        stroke-opacity: 0.6;
+        stroke-width: 1px;
+      }
+      #d3-canvas {
+        width: 100%;
+        height: 300px;
+      }
+    </style>
+    <script>
+      mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+    </script>
   </head>
   <body>
     <header>
       <h1>⚡ Aizen-Gate Board</h1>
-      <div class="controls">
+      <div class="pulse-controls">
+        <button class="btn btn-pulse" onclick="triggerPulse()">
+          <span>⛩️ Trigger Pulse</span>
+        </button>
+        <button class="btn btn-sync" onclick="exportWisdom()">
+          <span>📤 Export Wisdom</span>
+        </button>
+        <button class="btn btn-sync" onclick="importWisdom()">
+          <span>📥 Import Wisdom</span>
+        </button>
+        <button class="btn btn-factory" onclick="probeNeuralPatterns()">
+          <span>🏭 Neural Probe</span>
+        </button>
+        <button class="btn btn-kill" onclick="killSwarm()">
+          <span>🛑 Emergency Kill</span>
+        </button>
+      </div>
+      <div class="controls" style="display:none">
         <select id="feature-select">
           <option value="">Select a Feature...</option>
         </select>
@@ -248,6 +531,75 @@
           >Implement core features for feature-001</span
         >
       </div>
+    </div>
+
+    <!-- Phase 29: Interactive Dialog -->
+    <div class="dialog-overlay" id="checkpoint-dialog">
+      <div class="dialog-card">
+        <div style="font-size: 0.65rem; color: var(--accent); text-transform:uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Sensei Checkpoint Required</div>
+        <h3 id="checkpoint-message" style="font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.4;"></h3>
+        <div id="checkpoint-choices"></div>
+      </div>
+    </div>
+
+     <!-- Phase 30: Personality Evolution -->
+     <div style="margin: 0 2rem 1.5rem 2rem;">
+        <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem; font-weight: 700;">
+          🧬 Persona Maturation Matrix
+        </div>
+        <div class="persona-evolution-grid">
+          <div class="persona-stat-card" id="persona-QA">
+            <span class="persona-level" style="color: var(--voter-qa)">MASTER</span>
+            <span class="persona-score">75</span>
+            <span class="persona-name">Aizen-QA</span>
+            <div class="persona-mini-bar"><div class="persona-mini-fill" style="width: 75%; background: var(--voter-qa)"></div></div>
+          </div>
+          <div class="persona-stat-card" id="persona-Security">
+            <span class="persona-level" style="color: var(--voter-security)">MASTER</span>
+            <span class="persona-score">80</span>
+            <span class="persona-name">Aizen-Security</span>
+            <div class="persona-mini-bar"><div class="persona-mini-fill" style="width: 80%; background: var(--voter-security)"></div></div>
+          </div>
+          <div class="persona-stat-card" id="persona-Architect">
+            <span class="persona-level" style="color: var(--voter-architect)">ADEPT</span>
+            <span class="persona-score">70</span>
+            <span class="persona-name">Aizen-Architect</span>
+            <div class="persona-mini-bar"><div class="persona-mini-fill" style="width: 70%; background: var(--voter-architect)"></div></div>
+          </div>
+          <div class="persona-stat-card" id="persona-DevOps">
+            <span class="persona-level" style="color: var(--voter-devops)">MASTER</span>
+            <span class="persona-score">85</span>
+            <span class="persona-name">Aizen-DevOps</span>
+            <div class="persona-mini-bar"><div class="persona-mini-fill" style="width: 85%; background: var(--voter-devops)"></div></div>
+          </div>
+        </div>
+     </div>
+
+     <!-- Logic Graph Pane -->
+     <div class="graph-pane">
+       <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-weight: 700; display: flex; justify-content: space-between;">
+         <span>🧠 Neural Graph v2 (D3.js)</span>
+         <span style="color: var(--accent); cursor: pointer;" onclick="toggleGraphMode()">Switch to Mermaid</span>
+       </div>
+       <div id="d3-canvas"></div>
+       <div id="mermaid-graph" class="mermaid" style="display:none">
+         graph LR
+           Aizen[⛩️ Orchestrator] --- QA[QA]
+           Aizen --- SEC[Security]
+           Aizen --- ARCH[Architect]
+           Aizen --- OPS[DevOps]
+       </div>
+    </div>
+
+    <!-- Neural Insights Pane (Phase 21) -->
+    <div class="graph-pane" id="evolution-pane" style="margin-top: 1.5rem; display: none;">
+       <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-weight: 700; display: flex; justify-content: space-between;">
+         <span>🏭 Self-Evolution Patterns (Skill Factory)</span>
+         <span style="color: var(--danger); cursor: pointer;" onclick="toggleEvolutionPane()">Close</span>
+       </div>
+       <div id="pattern-list" style="display: flex; flex-wrap: wrap; gap: 1rem; padding-top: 0.5rem;">
+         <div style="color: var(--text-secondary); font-size: 0.8rem;">Probing neural synapses for automation patterns...</div>
+       </div>
     </div>
 
     <div class="board-container">
@@ -362,23 +714,424 @@
           if (payload.type === "update") {
             tasks = payload.data;
             renderBoard();
-            if (payload.event) logActivity(payload.event);
+            if (payload.event) logActivity("SYSTEM", payload.event, "system");
+          } else if (payload.type === "swarm_event") {
+            handleSwarmEvent(payload.data);
+          }
+        };
+      }
+
+      function handleSwarmEvent(event) {
+        switch (event.type) {
+          case "thought":
+            logActivity(event.agentId, event.message, "thought", event.payload);
+            break;
+          case "vote":
+            logActivity(event.agentId, event.message, event.payload.vote === "approve" ? "success" : "danger", event.payload);
+            break;
+          case "logic_graph":
+            updateLogicGraph(event.payload);
+            break;
+          case "pulse_update":
+            updatePulseMap(event.payload);
+            break;
+          case "checkpoint_request":
+            showCheckpointDialog(event.payload);
+            break;
+          case "persona_update":
+            updatePersonaMatrix(event.agentId, event.payload);
+            break;
+        }
+      }
+
+      function updatePersonaMatrix(agentId, data) {
+         const cardId = agentId.replace("Aizen-", "persona-");
+         const card = document.getElementById(cardId);
+         if (!card) return;
+         
+         const scoreEl = card.querySelector(".persona-score");
+         const levelEl = card.querySelector(".persona-level");
+         const fillEl = card.querySelector(".persona-mini-fill");
+         
+         scoreEl.innerText = data.maturityScore;
+         levelEl.innerText = data.level;
+         fillEl.style.width = data.maturityScore + "%";
+         
+         // Visual pulse on update
+         card.style.borderColor = "var(--accent)";
+         setTimeout(() => card.style.borderColor = "var(--border)", 1000);
+      }
+
+      async function triggerPulse() {
+        logActivity("USER", "Manually triggering autonomous pulse wave...", "system");
+        try {
+          const res = await fetch('/api/pulse/trigger', { method: 'POST' });
+          const data = await res.json();
+          if (data.success) {
+            logActivity("SYSTEM", "Pulse wave successfully dispatched.", "success");
+          } else {
+            logActivity("SYSTEM", `Pulse failed: ${data.error}`, "danger");
+          }
+        } catch (e) {
+          logActivity("SYSTEM", "Pulse API error.", "danger");
+        }
+      }
+
+      async function killSwarm() {
+        if (!confirm("EMERGENCY: Force kill all active swarm worktrees?")) return;
+        logActivity("USER", "Sending emergency kill signal...", "danger");
+        try {
+          const res = await fetch('/api/pulse/kill', { method: 'POST' });
+          logActivity("SYSTEM", "Swarm emergency stop executed.", "danger");
+        } catch (e) {
+          logActivity("SYSTEM", "Kill API error.", "danger");
+        }
+      }
+
+      async function exportWisdom() {
+        logActivity("USER", "Exporting Neural Wisdom Seeds...", "system");
+        try {
+          const res = await fetch('/api/wisdom/export');
+          const seeds = await res.json();
+          const blob = new Blob([JSON.stringify(seeds, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `aizen-wisdom-${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          logActivity("SYSTEM", `Exported ${seeds.length} Wisdom Seeds.`, "success");
+        } catch (e) {
+          logActivity("SYSTEM", "Export failed.", "danger");
+        }
+      }
+
+      async function importWisdom() {
+        const jsonStr = prompt("Paste Neural Seed JSON or content here:");
+        if (!jsonStr) return;
+        logActivity("USER", "Importing external Wisdom Seeds...", "system");
+        try {
+          const seeds = JSON.parse(jsonStr);
+          const res = await fetch('/api/wisdom/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(seeds)
+          });
+          const result = await res.json();
+          logActivity("SYSTEM", `Imported ${result.imported} new Wisdom Nodes.`, "success");
+        } catch (e) {
+          logActivity("SYSTEM", "Import failed: Invalid JSON.", "danger");
+        }
+      }
+
+      function toggleEvolutionPane() {
+        const pane = document.getElementById("evolution-pane");
+        pane.style.display = pane.style.display === "none" ? "block" : "none";
+      }
+
+      async function probeNeuralPatterns() {
+        toggleEvolutionPane();
+        const list = document.getElementById("pattern-list");
+        list.innerHTML = `<div style="color: var(--text-secondary); font-size: 0.8rem;">Analyzing logs...</div>`;
+        
+        try {
+          const res = await fetch('/api/factory/probe');
+          const patterns = await res.json();
+          
+          if (patterns.length === 0) {
+            list.innerHTML = `<div style="color: var(--text-secondary); font-size: 0.8rem;">Threshold not met (min 3 repeats). Keep using Aizen!</div>`;
+            return;
+          }
+
+          list.innerHTML = "";
+          patterns.forEach(p => {
+            const card = document.createElement("div");
+            card.style.background = "rgba(15, 23, 42, 0.5)";
+            card.style.border = "1px solid var(--border)";
+            card.style.padding = "1rem";
+            card.style.borderRadius = "6px";
+            card.style.minWidth = "200px";
+            
+            card.innerHTML = `
+              <div style="color: var(--warning); font-size: 0.7rem; font-weight: 700;">${p.action}</div>
+              <div style="font-size: 0.9rem; margin: 4px 0;">${p.target}</div>
+              <div style="color: var(--text-secondary); font-size: 0.75rem;">Detected ${p.frequency} times</div>
+              <button class="btn btn-factory" style="margin-top: 10px; width: 100%; justify-content: center;" onclick="generateSkill('${p.action}', '${p.target}')">
+                Generate Skill
+              </button>
+            `;
+            list.appendChild(card);
+          });
+        } catch (e) {
+          list.innerHTML = `<div style="color: var(--danger); font-size: 0.8rem;">Probe failed.</div>`;
+        }
+      }
+
+      async function generateSkill(action, target) {
+        logActivity("FACTORY", `Forging skill for ${action}...`, "system");
+        try {
+          const res = await fetch('/api/factory/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, target })
+          });
+          const result = await res.json();
+          if (result.success) {
+            logActivity("FACTORY", `New Skill Ready: ${result.path.split('/').pop()}`, "success");
+            probeNeuralPatterns(); // Refresh patterns
+          }
+        } catch (e) {
+          logActivity("FACTORY", "Forge failed.", "danger");
+        }
+      }
+
+      function toggleGraphMode() {
+        const m = document.getElementById("mermaid-graph");
+        const d = document.getElementById("d3-canvas");
+        if (m.style.display === "none") {
+          m.style.display = "block";
+          d.style.display = "none";
+        } else {
+          m.style.display = "none";
+          d.style.display = "block";
+        }
+      }
+
+        function updateD3Graph(graphData) {
+          const width = document.getElementById("d3-canvas").clientWidth;
+          const height = 300;
+          d3.select("#d3-canvas").selectAll("*").remove();
+          
+          const svg = d3.select("#d3-canvas")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .call(d3.zoom().on("zoom", (event) => {
+              container.attr("transform", event.transform);
+            }));
+
+          const container = svg.append("g");
+
+          const simulation = d3.forceSimulation(graphData.nodes)
+            .force("link", d3.forceLink(graphData.links).id(d => d.id || d.name))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+          const link = container.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(graphData.links)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("stroke", d => d.approve ? "var(--success)" : "var(--danger)")
+            .attr("stroke-width", 2);
+
+          const node = container.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(graphData.nodes)
+            .enter().append("g")
+            .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+
+          node.append("circle")
+            .attr("r", d => d.isProp ? 12 : 8)
+            .attr("fill", d => d.isProp ? "var(--accent)" : (d.voted ? (d.approve ? "var(--success)" : "var(--danger)") : "var(--bg-card)"));
+
+          node.append("text")
+            .attr("dx", 12)
+            .attr("dy", ".35em")
+            .text(d => d.name);
+
+          simulation.on("tick", () => {
+            link
+              .attr("x1", d => d.source.x)
+              .attr("y1", d => d.source.y)
+              .attr("x2", d => d.target.x)
+              .attr("y2", d => d.target.y);
+
+            node
+              .attr("transform", d => `translate(${d.x},${d.y})`);
+          });
+
+          function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          }
+          function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+          }
+          function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          }
+        }
+
+        ws.onmessage = (event) => {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "update") {
+            tasks = payload.data;
+            renderBoard();
+            if (payload.event) logActivity("SYSTEM", payload.event, "system");
+          } else if (payload.type === "swarm_event") {
+            const { agentId, message, type, payload: eventPayload } = payload.data;
+            logActivity(agentId, message, type);
+            if (type === "task_update") fetchTasks();
+            if (type === "logic_graph") {
+              updateGraph(eventPayload.mermaid);
+              if (eventPayload.json) updateD3Graph(eventPayload.json);
+            }
+            if (type === "pulse_update") {
+              const { stage } = eventPayload;
+              document.querySelectorAll(".pulse-stage").forEach(el => el.classList.remove("active"));
+              const activeStage = document.getElementById(`pulse-${stage}`);
+              if (activeStage) activeStage.classList.add("active");
+            }
+            if (type === "mesh_update") {
+              const { nodes } = eventPayload;
+              updateMeshUI(nodes);
+            }
+            if (type === "entropy_update") {
+              const { score } = eventPayload;
+              updateEntropyUI(score);
+            }
+            if (type === "checkpoint_request") {
+              showCheckpointDialog(eventPayload);
+            }
           }
         };
 
-        function logActivity(text) {
+        function showCheckpointDialog(request) {
+          const dialog = document.getElementById("checkpoint-dialog");
+          const msg = document.getElementById("checkpoint-message");
+          const choices = document.getElementById("checkpoint-choices");
+          
+          msg.textContent = request.message;
+          choices.innerHTML = "";
+          
+          request.choices.forEach(c => {
+            const btn = document.createElement("button");
+            btn.className = "dialog-choice-btn";
+            btn.textContent = c.label;
+            btn.onclick = () => submitChoice(request.id, c.value);
+            choices.appendChild(btn);
+          });
+          
+          dialog.style.display = "flex";
+        }
+
+        async function submitChoice(id, choice) {
+          document.getElementById("checkpoint-dialog").style.display = "none";
+          await fetch("/api/checkpoint/resolve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, choice })
+          });
+          logActivity("USER", `Sensei made a choice: ${choice}`, "success");
+        }
+
+        function updateEntropyUI(score) {
+          const bar = document.getElementById("entropy-bar");
+          const label = document.getElementById("entropy-score");
+          const pct = Math.round(score * 100);
+          bar.style.width = `${pct}%`;
+          label.textContent = score.toFixed(2);
+          
+          if (score > 0.7) bar.style.background = "var(--danger)";
+          else if (score > 0.4) bar.style.background = "var(--warning)";
+          else bar.style.background = "var(--success)";
+        }
+
+        function updateMeshUI(nodes) {
+          const list = document.getElementById("mesh-nodes-list");
+          const localCore = `
+            <div class="node-card">
+              <div class="node-status status-online"></div>
+              <span style="font-weight: 700;">LOCAL_CORE</span>
+              <span style="color: var(--text-secondary); opacity: 0.6;">(this)</span>
+            </div>
+          `;
+          list.innerHTML = localCore + nodes.map(n => `
+            <div class="node-card">
+              <div class="node-status status-${n.status}"></div>
+              <span style="font-weight: 700;">${n.id}</span>
+              <span style="font-size: 0.6rem; opacity: 0.5;">${n.url}</span>
+            </div>
+          `).join("");
+        }
+
+        function logActivity(agentId, text, type) {
           const stream = document.getElementById("activity-stream");
+
           const entry = document.createElement("div");
-          entry.style.padding = "0.5rem";
+          entry.style.padding = "0.75rem";
           entry.style.borderBottom = "1px solid var(--border)";
-          entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+          entry.style.fontSize = "0.8rem";
+          entry.style.lineHeight = "1.4";
+          
+          let typeColor = "var(--text-secondary)";
+          let icon = "💬";
+          
+          if (type === "vote") { icon = "🗳️"; }
+          if (type === "task_update") { typeColor = "var(--accent)"; icon = "⚙️"; }
+          if (type === "thought") { typeColor = "var(--text-primary)"; icon = "🧠"; }
+          if (type === "system") { typeColor = "var(--success)"; icon = "⚡"; }
+
+          // Persona specific colors
+          if (agentId.includes("QA")) typeColor = "var(--voter-qa)";
+          if (agentId.includes("Security")) typeColor = "var(--voter-security)";
+          if (agentId.includes("Architect")) typeColor = "var(--voter-architect)";
+          if (agentId.includes("DevOps")) typeColor = "var(--voter-devops)";
+          if (agentId === "FACTORY") typeColor = "var(--warning)";
+
+          
+          let displayContent = text;
+          if (text.includes("[CoT:")) {
+            const parts = text.split("]");
+            const cotText = parts[0].replace("[CoT:", "").trim();
+            const mainText = parts.slice(1).join("]").trim();
+            displayContent = `
+              <div style="font-size: 0.65rem; color: var(--text-secondary); border-left: 2px solid var(--border); padding-left: 8px; margin-bottom: 4px; font-style: italic;">
+                🧠 Logic: ${cotText}
+              </div>
+              <div style="color: var(--text-primary);">${mainText}</div>
+            `;
+          } else {
+            displayContent = `<div style="color: var(--text-primary);">${text}</div>`;
+          }
+
+          entry.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="color: ${typeColor}; font-weight:700; font-size: 0.7rem; text-transform:uppercase;">${icon} ${agentId}</span>
+              <span style="color: var(--text-secondary); font-size: 0.65rem;">${new Date().toLocaleTimeString()}</span>
+            </div>
+            ${displayContent}
+          `;
           stream.prepend(entry);
-          if (stream.children.length > 20) stream.lastChild.remove();
+          if (stream.children.length > 30) stream.lastChild.remove();
         }
 
         ws.onclose = () => {
           setTimeout(initializeWebSocket, 3000); // Reconnect logic
         };
+
+        async function updateMetrics() {
+          try {
+            const res = await fetch('/api/metrics');
+            const data = await res.json();
+            document.getElementById("metric-latency").textContent = `${data.latency}ms`;
+            document.getElementById("metric-density").textContent = `${data.density}%`;
+            document.getElementById("metric-iq").textContent = data.iq || 120;
+            document.getElementById("metric-token").textContent = `${(data.tokens.used / 1000).toFixed(1)}k / ${(data.tokens.total / 1000).toFixed(0)}k`;
+          } catch (e) {}
+        }
+
+        setInterval(updateMetrics, 5000);
+        updateMetrics(); // Initial call
       }
 
       function renderBoard() {

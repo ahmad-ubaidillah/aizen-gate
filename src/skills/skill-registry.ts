@@ -4,9 +4,10 @@
  * Supports both code-based and file-based (markdown) skills
  */
 
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
 import grayMatter from "gray-matter";
 
 /**
@@ -54,9 +55,19 @@ export class SkillRegistry {
 		if (this.initialized) return;
 		this.initialized = true;
 
-		// Load skills from aizen-gate/skills-reference/skills directory
-		const referenceSkillsPath = path.join(projectRoot, "aizen-gate", "skills-reference", "skills");
-		await this.loadSkillsFromDirectory(referenceSkillsPath);
+		// 1. Try global cache first (~/.aizen-gate/skills)
+		const os = await import("node:os");
+		const globalSkillsPath = path.join(os.homedir(), ".aizen-gate", "skills");
+
+		if (fs.existsSync(globalSkillsPath)) {
+			await this.loadSkillsFromDirectory(globalSkillsPath);
+		} else {
+			// 2. Fallback to project root if global not found
+			const referenceSkillsPath = path.join(projectRoot, "skills-reference", "skills");
+			if (fs.existsSync(referenceSkillsPath)) {
+				await this.loadSkillsFromDirectory(referenceSkillsPath);
+			}
+		}
 	}
 
 	/**
@@ -535,22 +546,22 @@ export class SkillRegistry {
 	 * @returns Number of skills loaded
 	 */
 	async loadSkillsFromDirectory(skillsDir: string): Promise<number> {
-		if (!(await fs.pathExists(skillsDir))) {
+		if (!fs.existsSync(skillsDir)) {
 			console.log(chalk.yellow(`[SkillRegistry] Skills directory not found: ${skillsDir}`));
 			return 0;
 		}
 
-		const entries = await fs.readdir(skillsDir, { withFileTypes: true });
+		const entries = await fsPromises.readdir(skillsDir, { withFileTypes: true });
 		let loadedCount = 0;
 
 		for (const entry of entries) {
 			if (!entry.isDirectory()) continue;
 
 			const skillPath = path.join(skillsDir, entry.name, "SKILL.md");
-			if (!(await fs.pathExists(skillPath))) continue;
+			if (!fs.existsSync(skillPath)) continue;
 
 			try {
-				const content = await fs.readFile(skillPath, "utf-8");
+				const content = await fsPromises.readFile(skillPath, "utf-8");
 				const { data, content: markdown } = grayMatter(content);
 
 				// Extract metadata from frontmatter
@@ -622,11 +633,57 @@ export class SkillRegistry {
 	/**
 	 * Generate keywords from name and description
 	 */
+	/**
+	 * Generate keywords from name and description
+	 */
 	private generateKeywords(name: string, description: string): string[] {
 		const text = `${name} ${description}`.toLowerCase();
 		const words = text.split(/[\s,\-_]+/).filter((word) => word.length > 2);
 		const stopWords = ["the", "and", "for", "with", "from", "that", "this", "have", "will", "your"];
 		return [...new Set(words.filter((w) => !stopWords.includes(w)))].slice(0, 15);
+	}
+
+	/**
+	 * [Phase 9] Autonomous Skill Auto-Healing
+	 * Analyzes a broken skill and attempts to refactor its keywords/description
+	 * based on actual usage patterns (fragments).
+	 */
+	async selfHealingSkill(
+		skillId: string,
+		fragments: { content: string; vector: any }[],
+	): Promise<boolean> {
+		const skill = this.skills.get(skillId);
+		if (!skill) return false;
+
+		console.log(
+			chalk.yellow(
+				`[Auto-Healing] Attempting to refactor broken skill: ${skill.name} (${skillId})`,
+			),
+		);
+
+		const { localEmbedding } = await import("../memory/local-embed.js");
+		const synthesis = localEmbedding.synthesize(fragments);
+
+		// Propose new keywords from synthesis
+		const newKeywords = Array.from(new Set([...skill.keywords, ...synthesis.unifiedVector])).slice(
+			0,
+			20,
+		);
+
+		const updatedSkill: Skill = {
+			...skill,
+			keywords: newKeywords,
+			description: `${skill.description} (Auto-Healed: ${new Date().toISOString()})`,
+		};
+
+		this.registerSkill(updatedSkill);
+		console.log(
+			chalk.green(
+				`[Auto-Healing] Skill ${skillId} updated with ${newKeywords.length} stabilized keywords.`,
+			),
+		);
+
+		return true;
 	}
 }
 

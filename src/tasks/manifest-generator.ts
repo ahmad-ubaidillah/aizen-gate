@@ -1,12 +1,12 @@
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
 import yaml from "js-yaml";
 
 export class ManifestGenerator {
 	private manifestPath: string;
 	private devDir: string;
-	private projectRoot: string;
 
 	constructor(projectRoot: string) {
 		this.projectRoot = projectRoot;
@@ -19,7 +19,13 @@ export class ManifestGenerator {
 
 		const files = fs.readdirSync(this.devDir).filter((f) => f.endsWith(".md"));
 		if (files.length === 0) {
-			await fs.remove(this.manifestPath);
+			try {
+				if (fs.existsSync(this.manifestPath)) {
+					await fsPromises.unlink(this.manifestPath);
+				}
+			} catch (err) {
+				console.error(`[Kanban] Failed to remove manifest: ${(err as Error).message}`);
+			}
 			return;
 		}
 
@@ -56,7 +62,7 @@ export class ManifestGenerator {
 			manifest += `\n---\n\n`;
 		}
 
-		await fs.writeFile(this.manifestPath, manifest);
+		await fsPromises.writeFile(this.manifestPath, manifest);
 		console.log(chalk.blue(`[Kanban] Updated ${path.basename(this.manifestPath)}`));
 	}
 }

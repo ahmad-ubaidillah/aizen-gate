@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import path from "node:path";
 import { cancel } from "@clack/prompts";
 import chalk from "chalk";
@@ -9,14 +10,13 @@ import chalk from "chalk";
  * Refactored for modern UX with branded aesthetics.
  */
 import { Command } from "commander";
-import fs from "fs-extra";
 
 const program = new Command();
 
 // Lifecycle Hook: Auto-start/resume on any interaction
 // Properly handle async lifecycle with error logging
 const projectRoot = process.cwd();
-const configPath = path.join(projectRoot, "aizen-gate/shared/config.json");
+const configPath = path.join(projectRoot, "shared/config.json");
 
 interface LifecycleModule {
 	initLifecycle: () => Promise<void>;
@@ -56,7 +56,7 @@ const initSkills = async (): Promise<void> => {
 	try {
 		const { skillRegistry } = await import("../src/skills/index.js");
 		await skillRegistry.initialize(projectRoot);
-		console.log(chalk.cyan("[Skills] Loaded skills from reference/skills"));
+		console.log(chalk.cyan("[Skills] Loaded skills from root skills folder"));
 	} catch (err) {
 		console.error("[Skills] Initialization warning:", (err as Error).message);
 	}
@@ -82,8 +82,8 @@ export { lifecycleExporter, skillExporter };
 program
 	.name("aizen-gate")
 	.description(chalk.dim("The Ultimate AI-Orchestration & Specification Shield"))
-	.version("2.2.0")
-	.addHelpText("before", `\n${chalk.cyan.bold("⛩️  AIZEN-GATE")} ${chalk.dim("v2.2.0")}\n`);
+	.version("2.2.4")
+	.addHelpText("before", `\n${chalk.cyan.bold("⛩️  AIZEN-GATE")} ${chalk.dim("v2.2.4")}\n`);
 
 // --- Command Groups ---
 
@@ -125,9 +125,8 @@ program.arguments("[unrecognized]").action(async (cmd: string | undefined) => {
 
 	const { runPlaybook } = await import("../src/utils/playbook-runner.js");
 	const playbookPath = path.join(process.cwd(), `commands/az-${cmd}.md`);
-	const installedPath = path.join(process.cwd(), `aizen-gate/commands/az-${cmd}.md`);
 
-	if (fs.existsSync(playbookPath) || fs.existsSync(installedPath)) {
+	if (fs.existsSync(playbookPath)) {
 		runPlaybook(cmd, process.cwd());
 	} else {
 		cancel(`Unknown command "${chalk.yellow(cmd)}".`);

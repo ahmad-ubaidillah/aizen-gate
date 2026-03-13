@@ -15,6 +15,8 @@ interface CircuitState {
 	attempts: Record<string, number>;
 	lastHashes: Record<string, string>;
 	stalledCount: Record<string, number>;
+	failurePatterns: Record<string, string[]>;
+	trippedReasons: Record<string, string>;
 }
 
 /**
@@ -34,6 +36,8 @@ export class CircuitBreaker {
 			attempts: {}, // wpId -> count
 			lastHashes: {}, // wpId -> md5 of last implementation result
 			stalledCount: {}, // wpId -> count of cycles with no changes
+			failurePatterns: {}, // wpId -> array of last 3 error outputs
+			trippedReasons: {}, // wpId -> reason for trip
 		};
 		this.loadState();
 	}
@@ -70,11 +74,48 @@ export class CircuitBreaker {
 	}
 
 	/**
-	 * Checks if a WP has exceeded max retries.
+	 * Checks if a WP has exceeded max retries or hit a recursive loop.
 	 */
 	isTripped(wpId: string): boolean {
+		if (this.state.trippedReasons[wpId]) return true;
+
 		const count = this.state.attempts[wpId] || 0;
-		return count >= this.maxRetries;
+		if (count >= this.maxRetries) {
+			this.state.trippedReasons[wpId] = "MAX_RETRIES_EXCEEDED";
+			return true;
+		}
+		return false;
+	}
+
+	getTripReason(wpId: string): string | null {
+		return this.state.trippedReasons[wpId] || null;
+	}
+
+	/**
+	 * Phase 17: Pattern Recognition for Recursive Loops
+	 */
+	recordFailure(wpId: string, error: string): boolean {
+		if (!this.state.failurePatterns[wpId]) this.state.failurePatterns[wpId] = [];
+
+		const patterns = this.state.failurePatterns[wpId];
+		patterns.push(error.slice(0, 200)); // Sample the error
+
+		if (patterns.length > 3) patterns.shift();
+
+		// Detect recursion: check if the last 3 errors are identical or very similar
+		if (patterns.length === 3 && patterns.every((p) => p === patterns[0])) {
+			this.state.trippedReasons[wpId] = "RECURSIVE_LOOP_DETECTED";
+			this.saveState();
+			console.log(
+				chalk.red.bold(
+					`[CB] 🛑 RECURSIVE LOOP DETECTED for ${wpId}. Automatic Kill-Switch activated.`,
+				),
+			);
+			return true;
+		}
+
+		this.saveState();
+		return false;
 	}
 
 	/**

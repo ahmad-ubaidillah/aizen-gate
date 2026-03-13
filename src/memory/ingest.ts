@@ -1,6 +1,7 @@
 import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
+import { Chunker } from "./chunker.js";
 import { MemoryStore } from "./memory-store.js";
 
 export async function ingestDocument(projectRoot: string, targetPath: string): Promise<void> {
@@ -10,13 +11,16 @@ export async function ingestDocument(projectRoot: string, targetPath: string): P
 	}
 
 	const ext = path.extname(targetPath).toLowerCase();
+	const isCode = [".ts", ".js", ".go", ".py", ".rs", ".c", ".cpp"].includes(ext);
+	const isText = [".md", ".txt"].includes(ext);
 
-	if (ext === ".md" || ext === ".txt") {
+	if (isCode || isText) {
 		const content = await fs.readFile(targetPath, "utf8");
-		console.log(chalk.yellow(`[Aizen] Ingesting ${targetPath}...`));
+		console.log(
+			chalk.yellow(`[Aizen] Ingesting ${targetPath} (mode: ${isCode ? "code" : "text"})...`),
+		);
 
-		// Chunk by paragraphs for better memory ingestion
-		const chunks = content.split(/\n\s*\n/).filter((c) => c.trim().length > 20);
+		const chunks = Chunker.chunk(content, isCode ? "code" : "text");
 
 		const store = new MemoryStore(projectRoot);
 		const spaceId = path.basename(projectRoot);
@@ -27,17 +31,18 @@ export async function ingestDocument(projectRoot: string, targetPath: string): P
 			const uri = `agent://${spaceId}/ingest/${path.basename(targetPath).replace(/[^a-zA-Z0-9]/g, "_")}_${i}`;
 			await store.storeMemory(
 				uri,
-				`[Source: ${path.basename(targetPath)}] ${chunk.trim().slice(0, 1000)}`,
+				chunk.trim(),
+				isCode ? 7.0 : 5.0, // Code chunks get slightly higher importance
 			);
 			ingested++;
 		}
 
 		console.log(
-			chalk.green(`✔ Ingested ${ingested} memory chunks from ${path.basename(targetPath)}`),
+			chalk.green(`✔ Ingested ${ingested} contextual chunks from ${path.basename(targetPath)}`),
 		);
 	} else {
 		console.log(
-			chalk.red(`[Aizen] Unsupported chunk format: ${ext}. Currently supports .md and .txt.`),
+			chalk.red(`[Aizen] Unsupported format: ${ext}. Currently supports code and text/markdown.`),
 		);
 	}
 }

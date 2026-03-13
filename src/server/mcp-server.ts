@@ -1,8 +1,8 @@
+import fs from "node:fs";
 import path from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import fs from "fs-extra";
 import yaml from "js-yaml";
 import { MemoryStore } from "../memory/memory-store.js";
 import { TaskCLI } from "../tasks/task-cli.js";
@@ -138,6 +138,11 @@ async function getServer(): Promise<{
 			}
 
 			case "task_list": {
+				if (!fs.existsSync(cli.tasksDir)) {
+					return {
+						content: [{ type: "text", text: "No tasks found (backlog directory missing)." }],
+					};
+				}
 				const files = fs.readdirSync(cli.tasksDir).filter((f) => f.endsWith(".md"));
 				const taskList: string[] = [];
 				for (const f of files) {

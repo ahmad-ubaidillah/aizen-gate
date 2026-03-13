@@ -8,21 +8,19 @@
 
 ---
 
-## 🆕 Implemented Features (2026 Enhancement)
+## 🆕 Implemented Features (Elite Swarm Upgrade)
 
-All 6 phases of the Aizen-Gate Enhancement have been completed:
+All optimization and autonomous protection phases are active:
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Enhanced Onboarding** | 7-question wizard with project style selection (Fast/Medium/Slow) | ✅ DONE |
-| **PRD Conditional Flow** | Smart detection - load existing PRD or create new with PM+BA agents | ✅ DONE |
-| **Agent Tags System** | Clear identification with [PM], [DEV], [QA], [ARCH], [AZ] tags | ✅ DONE |
-| **Situation Detection** | Auto-detect intent (feature/bug/optimization/review/discussion) | ✅ DONE |
-| **AI Questions with Suggestions** | Multi-choice options with pros/cons and recommendations | ✅ DONE |
-| **Review Retry Loop** | 3-attempt retry with diff reports and rejection tracking | ✅ DONE |
-| **Fallback Correction** | User can correct misdetected intents with [F], [B], [O], [D] commands | ✅ DONE |
-| **Auto-Skill Trigger** | Keyword-based skill activation (security, database, testing, etc.) | ✅ DONE |
-| **Token Management** | Budget tracking and context summarization every 20 messages | ✅ DONE |
+| Phase | Feature | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **10-11** | **Recursive Mesh** | Multi-agent neural mesh with Quantum Token Compression. | ✅ OK |
+| **12-14** | **Neural Memory** | Forgetting (Soft Pruning) & Dreaming (Knowledge Consolidation). | ✅ OK |
+| **15-16** | **Self-Healing** | Immune System (Auto-Repair) & Swarm Consensus Voting. | ✅ OK |
+| **17** | **Safety Fuse** | Infinite Loop Prevention & Emergency Kill-Switch. | ✅ OK |
+| **18** | **Elite FBA** | Workspace Ergonomics & Structural Refactoring (Clean Root). | ✅ OK |
+| **31** | **Advanced RAG** | Multi-Query Expansion, Semantic Re-ranking, Contextual Chunker. | ✅ OK |
+| **32** | **Elite Brainstorm** | 12-Section Industry Master PRD & Expert Panel Challenger Mode. | ✅ OK |
 
 ### New CLI Commands
 
@@ -35,23 +33,18 @@ npx aizen-gate status      # View Scrum Board & Memory
 npx aizen-gate dashboard  # Real-time progress (port 6420)
 ```
 
-### New Folder Structure
+### New Elite Hierarchy (FBA)
 
 ```
 aizen-gate/
-├── agents/                    # All agents (unified - MD + YAML)
-│   ├── legacy/               # Legacy YAML agents
-│   ├── pm.agent.md
-│   ├── developer.agent.md
-│   └── ...
-├── skills-reference/         # 1200+ skills (Antigravity)
-│   └── skills/
-├── rules/                    # Rules system (11 files)
-├── prd/
-├── shared/
-│   └── memory.db            # SQLite database
-├── kanban/                   # Task board
-└── dashboard/                # Web dashboard
+├── bin/                # CLI Entrances (npx entry points)
+├── src/                # Core Logic & Source (The Brain)
+├── docs/               # Documentation Archives & ADRs
+├── infrastructure/     # Agents Infra, Rules, Logs, & Templates
+├── aizen-gate/         # Core Persistent Mesh Data
+├── kanban/             # Swarm Execution Board
+├── shared/             # Cross-Agent State Mesh
+└── skills/             # 1200+ Atomic Agent Skills
 ```
 
 ### Documentation
@@ -95,7 +88,23 @@ Aizen-Gate is built on a modern foundation for maximum performance and security:
 - **Unified Memory:** Synchronous **better-sqlite3** backend with the **12-Core Intelligence Tiering** (Working, Semantic, Episodic, Procedural, etc.).
 - **Logic Recall:** **@xenova/transformers** (BGE-Micro-V2) for ultra-lightweight semantic indexing.
 - **Addressing:** Built on the **OpenViking URI Protocol** (`agent://space/agent/topic`) for deterministic logic routing.
-- **UI Aesthetics:** **Vanilla CSS** with a premium, responsive minimalist editorial style.
+- **Vanilla CSS** with a premium, responsive minimalist editorial style.
+
+---
+
+## ⛩️ New in v2.3.0
+
+### 🔍 Phase 31: Advanced RAG Optimization
+Maximize memory retrieval fidelity with hybrid intelligence:
+- **Multi-Query Expansion**: Generates technical variations of queries to broaden recall.
+- **Semantic Re-Ranking**: Uses cross-match heuristics to prioritize most relevant memories.
+- **Contextual Chunker**: Structural code boundary detection for higher-integrity memory fragments.
+
+### 🧠 Phase 32: Elite Brainstorming v2.0
+Transform LLMs into a relentless Expert Panel:
+- **12-Section Master PRD**: Enterprise-grade blueprint covering Security, i18n, Analytics, and Rollback plans.
+- **Consensus Meter**: Visual real-time tracking of AI expert agreement level.
+- **Conflict Resolution**: Logic-driven synthesis of opposing architect/PM views.
 
 ---
 

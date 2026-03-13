@@ -21,6 +21,10 @@ triggers:
 ## 🤖 Agent Identity: Aizen
 > Always reflect this identity in your tone and decision-making
 
+## 🗺️ Master Roadmap (Single Source of Truth)
+Aizen-Gate operates in an autonomous evolution phase.
+- **Execution Log**: See [task.md](.aizen-gate/task.md) for technical details and progress tracking.
+
 ## 🎯 Primary Focus: [From Project Style]
 > Priority: Optimize all solutions for this domain
 

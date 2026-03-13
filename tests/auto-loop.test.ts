@@ -29,6 +29,24 @@ vi.mock("../src/memory/context-engine.js", () => ({
 	}
 }));
 
+vi.mock("../src/orchestration/consensus-engine.js", () => ({
+	getConsensusEngine: () => ({
+		evaluateProposal: vi.fn().mockResolvedValue({ approved: true, votes: [], ratio: 1.0 }),
+	}),
+}));
+
+vi.mock("../src/orchestration/checkpoint-manager.js", () => ({
+	getCheckpointManager: () => ({
+		requestValidation: vi.fn().mockResolvedValue("APPROVE"),
+	}),
+}));
+
+vi.mock("../src/orchestration/entropy-analyzer.js", () => ({
+	getEntropyAnalyzer: () => ({
+		analyzeEntropy: vi.fn().mockResolvedValue({ score: 0.1, hotspots: [], recommendations: [] }),
+	}),
+}));
+
 describe("Aizen-Gate Auto Loop", () => {
 	test("Identifies next PENDING task and transitions to In Progress", async () => {
 		const mockRoot = "/tmp/project";

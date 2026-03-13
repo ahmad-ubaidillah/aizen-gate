@@ -10,7 +10,6 @@ export class TaskCLI {
 	private configPath: string;
 	private projectRoot: string;
 	private manifest: ManifestGenerator;
-	private metadata: any;
 
 	constructor(projectRoot: string = process.cwd()) {
 		this.projectRoot = projectRoot;

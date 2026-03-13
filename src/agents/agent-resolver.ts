@@ -3,8 +3,9 @@
  * Supports both .md (Antigravity) and .yaml (legacy) agent formats
  */
 
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
-import fs from "fs-extra";
 
 /**
  * Resolve agent file path by name
@@ -21,19 +22,19 @@ export async function resolveAgentPath(
 
 	// First check for .md (Antigravity format)
 	const mdPath = path.join(agentsDir, `${agentName}.md`);
-	if (await fs.pathExists(mdPath)) {
+	if (fs.existsSync(mdPath)) {
 		return mdPath;
 	}
 
 	// Then check for .yaml (legacy format)
 	const yamlPath = path.join(agentsDir, `${agentName}.agent.yaml`);
-	if (await fs.pathExists(yamlPath)) {
+	if (fs.existsSync(yamlPath)) {
 		return yamlPath;
 	}
 
 	// Check in legacy directory
 	const legacyPath = path.join(agentsDir, "legacy", `${agentName}.agent.yaml`);
-	if (await fs.pathExists(legacyPath)) {
+	if (fs.existsSync(legacyPath)) {
 		return legacyPath;
 	}
 
@@ -49,8 +50,8 @@ export async function listAvailableAgents(projectRoot: string): Promise<string[]
 	const agentsDir = path.join(projectRoot, "agents");
 	const agents: Set<string> = new Set();
 
-	if (await fs.pathExists(agentsDir)) {
-		const files = await fs.readdir(agentsDir);
+	if (fs.existsSync(agentsDir)) {
+		const files = await fsPromises.readdir(agentsDir);
 		for (const file of files) {
 			// Skip directories and non-agent files
 			if (file === "legacy" || file === ".gitkeep") continue;
@@ -98,7 +99,7 @@ interface AgentMetadata {
 async function loadYamlAgent(agentPath: string): Promise<AgentMetadata | null> {
 	try {
 		const yaml = await import("js-yaml");
-		const content = await fs.readFile(agentPath, "utf-8");
+		const content = await fsPromises.readFile(agentPath, "utf-8");
 		const data = yaml.load(content) as any;
 
 		return {
@@ -123,7 +124,7 @@ async function loadYamlAgent(agentPath: string): Promise<AgentMetadata | null> {
 async function loadMdAgent(agentPath: string): Promise<AgentMetadata | null> {
 	try {
 		const grayMatter = await import("gray-matter");
-		const content = await fs.readFile(agentPath, "utf-8");
+		const content = await fsPromises.readFile(agentPath, "utf-8");
 		const { data } = grayMatter.default(content);
 
 		return {
@@ -147,8 +148,8 @@ async function loadMdAgent(agentPath: string): Promise<AgentMetadata | null> {
  */
 export async function getAgentContent(agentPath: string): Promise<string | null> {
 	try {
-		if (await fs.pathExists(agentPath)) {
-			return await fs.readFile(agentPath, "utf-8");
+		if (fs.existsSync(agentPath)) {
+			return await fsPromises.readFile(agentPath, "utf-8");
 		}
 		return null;
 	} catch (error) {

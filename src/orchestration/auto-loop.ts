@@ -2,9 +2,11 @@ import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
 import yaml from "js-yaml";
+import { DashboardService } from "../../dashboard/dashboard-service.js";
 import { ContextEngine } from "../memory/context-engine.js";
 import { TaskCLI } from "../tasks/task-cli.js";
 import { CircuitBreaker } from "./circuit-breaker.js";
+import { getPulseOrchestrator } from "./pulse-orchestrator.js";
 import { WorktreeManager } from "./worktree-manager.js";
 
 /**
@@ -61,52 +63,42 @@ export async function runAutoLoop(projectRoot: string) {
 			return { success: true, finished: true };
 		}
 
-		console.log(
-			`[Aizen] 🌊 Parallel Wave Identified: ${executableTasks.map((t) => t.id).join(", ")}`,
+		const feed = DashboardService.getInstance();
+		feed.emitThought(
+			"Orchestrator",
+			`🌊 Parallel Wave Identified: ${executableTasks.map((t) => t.id).join(", ")}`,
 		);
 
-		const wtManager = new WorktreeManager(projectRoot);
+		const _wtManager = new WorktreeManager(projectRoot);
 		const circuitBreaker = new CircuitBreaker(projectRoot, 3);
 		const cli = new TaskCLI(projectRoot);
-		const contextEngine = new ContextEngine(projectRoot);
+		const _contextEngine = new ContextEngine(projectRoot);
+		const orchestrator = getPulseOrchestrator(projectRoot);
 
 		for (const task of executableTasks) {
 			if (circuitBreaker.isTripped(task.id)) {
-				console.log(chalk.red(`\n[CB] 🛑 Circuit Tripped for ${task.id}: Max retries exceeded.`));
+				const reason = circuitBreaker.getTripReason(task.id) || "UNKNOWN_ERROR";
+				console.log(chalk.red(`\n[CB] 🛑 Circuit Tripped for ${task.id}: ${reason}`));
 				continue;
 			}
 
-			console.log(chalk.cyan(`\n>> Dispatching ${task.id}`));
+			console.log(chalk.cyan(`\n>> Initiating Pulse v2 Cycle for ${task.id}`));
+
+			// For Phase 25 demo, we simulate a WRITE action from the task
+			const payload = {
+				path: `src/${task.id}.ts`,
+				content: `// Auto-generated implementation for ${task.title}\nexport const ${task.id.replace(/-/g, "")} = () => console.log("${task.title}");`,
+			};
 
 			circuitBreaker.recordAttempt(task.id);
-			await cli.edit(task.id, { status: "In Progress" });
+			const success = await orchestrator.executeCycle(task.id, "WRITE", payload);
 
-			try {
-				// 1. Create Git Worktree for isolation
-				const wtPath = wtManager.createWorktree("backlog", task.id, null);
-
-				// 2. [AIZEN-019] Fresh Context Isolation
-				// Assemble only relevant artifacts and memories for this specific task
-				const fullTask = tasks.find((t) => t.id === task.id);
-				const taskObj = {
-					id: task.id,
-					title: fullTask?.title || task.id,
-					content: fullTask?.description || "Complete implementation.",
-				};
-
-				// Root is used as fallback featureDir
-				const context = await contextEngine.assembleWPContext(projectRoot, taskObj);
-				const xmlPrompt = await contextEngine.formatXMLPrompt(taskObj, context);
-
-				const wpFilePath = path.join(wtPath, "WORK_PACKAGE.md");
-				await fs.writeFile(wpFilePath, xmlPrompt);
-
-				console.log(chalk.green(`   [Aizen] Created fresh isolated context: ${wpFilePath}`));
-				console.log(`   [Aizen] Worktree Ready: ${wtPath}`);
-			} catch (e) {
-				console.log(
-					chalk.red(`   [Aizen] Could not bootstrap ${task.id}: ${(e as Error).message}`),
-				);
+			if (success) {
+				await cli.edit(task.id, { status: "Review" });
+				feed.emitTaskUpdate(task.id, "Review", `Implementation complete. Waiting for user review.`);
+			} else {
+				circuitBreaker.recordFailure(task.id, "Pulse v2 Cycle Failed");
+				await cli.edit(task.id, { status: "Blocked (Pulse Failure)" });
 			}
 		}
 

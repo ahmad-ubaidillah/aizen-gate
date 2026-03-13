@@ -22,5 +22,5 @@
 		"allowJs": true
 	},
 	"include": ["src/**/*", "bin/**/*", "skill-creator/**/*", "installer/**/*"],
-	"exclude": ["node_modules", "dist", "**/*.spec.js", "tests"]
+	"exclude": ["node_modules", "dist", "**/*.spec.js", "tests", "src/wasm/**/*.ts", "src/wasm/**/*.js"]
 }

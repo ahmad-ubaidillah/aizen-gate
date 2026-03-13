@@ -1,6 +1,7 @@
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
 import { OutputFilter } from "../ai/output-filter.js";
 import { TokenBudget } from "../ai/token-budget.js";
 import { MemoryStore } from "./memory-store.js";
@@ -69,7 +70,7 @@ export class ContextEngine {
 		for (const file of files) {
 			const filePath = path.join(this.sharedDir, file);
 			if (fs.existsSync(filePath)) {
-				const content = await fs.readFile(filePath, "utf8");
+				const content = await fsPromises.readFile(filePath, "utf8");
 				const lineCount = content.split("\n").length;
 				const status = lineCount > this.MAX_FILE_LINES ? "ROT" : "HEALTHY";
 				reports.push({ file, lineCount, status });
@@ -96,7 +97,7 @@ export class ContextEngine {
 		// 1. Read Project Core
 		const projectPath = path.join(this.sharedDir, "project.md");
 		if (fs.existsSync(projectPath)) {
-			const project = await fs.readFile(projectPath, "utf8");
+			const project = await fsPromises.readFile(projectPath, "utf8");
 			const coreValue = project.match(/## Core Value\n([\s\S]*?)\n##/);
 			if (coreValue) context += `**Project Goal:** ${coreValue[1].trim()}\n`;
 		}
@@ -104,7 +105,7 @@ export class ContextEngine {
 		// 2. Read Active Task
 		if (taskId) {
 			const boardPath = path.join(this.sharedDir, "board.md");
-			const board = await fs.readFile(boardPath, "utf8");
+			const board = await fsPromises.readFile(boardPath, "utf8");
 			const taskLine = board.split("\n").find((l) => l.includes(taskId));
 			if (taskLine) context += `**Active Task:** ${taskLine.trim()}\n`;
 		}
@@ -112,7 +113,7 @@ export class ContextEngine {
 		// 3. Read Tech Stack
 		const memoryPath = path.join(this.sharedDir, "memory.md");
 		if (fs.existsSync(memoryPath)) {
-			const memory = await fs.readFile(memoryPath, "utf8");
+			const memory = await fsPromises.readFile(memoryPath, "utf8");
 			const stack = memory.match(/## Tech Stack\n([\s\S]*?)\n##/);
 			if (stack) context += `**Tech Stack:** ${stack[1].trim()}\n`;
 		}
@@ -132,8 +133,10 @@ export class ContextEngine {
 			`${tag}-${timestamp}`,
 		);
 
-		await fs.ensureDir(snapshotDir);
-		await fs.copy(this.sharedDir, snapshotDir);
+		await fsPromises.mkdir(snapshotDir, { recursive: true });
+
+		// Simple recursive copy using native fs (node 16.7.0+)
+		await fsPromises.cp(this.sharedDir, snapshotDir, { recursive: true });
 
 		console.log(chalk.green(`[AZ] State snapshot saved to: ${snapshotDir}`));
 		return snapshotDir;
@@ -184,19 +187,19 @@ Execute WP ${wp.id} now following the above context and constraints.
 
 		const specPath = path.join(featureDir, "spec.md");
 		if (fs.existsSync(specPath)) {
-			const spec = await fs.readFile(specPath, "utf8");
+			const spec = await fsPromises.readFile(specPath, "utf8");
 			components.push({ name: "spec", content: spec, priority: 5 });
 		}
 
 		const planPath = path.join(featureDir, "plan.md");
 		if (fs.existsSync(planPath)) {
-			const plan = await fs.readFile(planPath, "utf8");
+			const plan = await fsPromises.readFile(planPath, "utf8");
 			components.push({ name: "plan", content: plan, priority: 8 });
 		}
 
 		const researchPath = path.join(featureDir, "research.md");
 		if (fs.existsSync(researchPath)) {
-			const research = await fs.readFile(researchPath, "utf8");
+			const research = await fsPromises.readFile(researchPath, "utf8");
 			components.push({ name: "research", content: research, priority: 3 });
 		}
 

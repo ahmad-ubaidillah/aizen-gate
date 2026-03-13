@@ -1,6 +1,6 @@
+import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
 
 export class KanbanScaffolder {
 	private projectRoot: string;
@@ -10,13 +10,13 @@ export class KanbanScaffolder {
 	}
 
 	async scaffold(): Promise<void> {
-		const dirs = ["backlog", "dev", "test", "done", "aizen-gate/shared"];
+		const dirs = ["backlog", "dev", "test", "done", "shared"];
 
 		console.log(chalk.cyan(`[Kanban] Initializing directory structure...`));
 		for (const dir of dirs) {
 			const absDir = path.join(this.projectRoot, dir);
 			if (!fs.existsSync(absDir)) {
-				fs.ensureDirSync(absDir);
+				fs.mkdirSync(absDir, { recursive: true });
 				console.log(chalk.gray(`  ✔ Created ${dir}`));
 			}
 		}

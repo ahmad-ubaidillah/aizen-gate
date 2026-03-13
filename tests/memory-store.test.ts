@@ -16,7 +16,8 @@ vi.mock("../src/memory/local-embed.js", () => ({
 // Mock llama bridge to avoid GGUF downloads in tests
 vi.mock("../src/memory/llama-bridge.js", () => ({
 	createLlamaBridge: vi.fn().mockReturnValue({
-		distill: vi.fn().mockImplementation((text: string) => Promise.resolve(`TOON: ${text}`))
+		distill: vi.fn().mockImplementation((text: string) => Promise.resolve(`TOON: ${text}`)),
+		quantumCompress: vi.fn().mockImplementation((toon: string) => Promise.resolve(`SEED: ${toon}`))
 	})
 }));
 

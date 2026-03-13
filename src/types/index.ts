@@ -3,33 +3,29 @@
  * Core types used across the application
  */
 
-import type { NextFunction, Request, Response } from "express";
-
-/* ============================================================================
- * Express Types
- * ========================================================================= */
-
 /**
- * Express request with custom Aizen properties
+ * Generic request with custom Aizen properties
  */
-export interface AizenRequest extends Request {
+export interface AizenRequest {
 	requestId?: string;
-	logger?: import("winston").Logger;
+	logger?: any;
 	userId?: string;
 	sessionId?: string;
+	[key: string]: any;
 }
 
 /**
- * Express response with custom properties
+ * Generic response with custom properties
  */
-export interface AizenResponse extends Response {
+export interface AizenResponse {
 	startTime?: number;
+	[key: string]: any;
 }
 
 /**
- * Express next function
+ * Generic next function
  */
-export type AizenNext = NextFunction;
+export type AizenNext = () => void | Promise<void>;
 
 /* ============================================================================
  * Configuration Types
