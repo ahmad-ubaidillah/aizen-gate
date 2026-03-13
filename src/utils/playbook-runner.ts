@@ -19,7 +19,7 @@ export function runPlaybook(
 	const findPlaybook = (name: string) => {
 		const localPath = path.join(projectRoot, `commands/az-${name}.md`);
 		const installedPath = path.join(projectRoot, `aizen-gate/commands/az-${name}.md`);
-		const packagePath = path.join(__dirname, `../../commands/az-${name}.md`);
+		const packagePath = path.join(__dirname, `../../../commands/az-${name}.md`);
 
 		if (fs.existsSync(localPath)) return localPath;
 		if (fs.existsSync(installedPath)) return installedPath;

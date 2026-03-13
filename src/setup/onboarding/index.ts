@@ -261,6 +261,11 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 
 	await saveOnboardingConfig(projectRoot, onboardingData);
 
+	// ========== Scaffolding ==========
+	const { KanbanScaffolder } = await import("../kanban-scaffold.js");
+	const scaffolder = new KanbanScaffolder(projectRoot);
+	await scaffolder.scaffold();
+
 	// ========== Show Summary ==========
 	note(
 		chalk.white.bold("🎉 Setup Complete!\n\n") +

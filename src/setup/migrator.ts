@@ -5,6 +5,7 @@ import fs from "fs-extra";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 import { MissionEngine } from "../missions/mission-engine.js";
 
 export class Migrator {
