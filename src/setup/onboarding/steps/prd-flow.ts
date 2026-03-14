@@ -307,7 +307,7 @@ export const PRD_FILE = "prd.md";
 /**
  * Simplified PRD Flow - BMad V6 Style
  * Clean, simple, no confusing options
- * 
+ *
  * Flow:
  * 1. Ask: "Do you already have a PRD?"
  * 2. If YES: Guide to create prd.md using template.md
@@ -321,7 +321,7 @@ export async function handlePRDFlow(projectRoot: string): Promise<any> {
 	const templatePath = path.join(prdFolderPath, "template.md");
 
 	await fs.ensureDir(prdFolderPath);
-	
+
 	// Ask: Do you already have a PRD?
 	const hasPRD = await select({
 		message: "Do you already have a PRD?",

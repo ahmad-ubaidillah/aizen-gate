@@ -239,7 +239,9 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	);
 
 	// ========== Next Steps ==========
-	outro(chalk.green.bold("✓ ") + chalk.white("Setup done! Run: ") + chalk.cyan("npx aizen-gate start"));
+	outro(
+		chalk.green.bold("✓ ") + chalk.white("Setup done! Run: ") + chalk.cyan("npx aizen-gate start"),
+	);
 }
 
 /**

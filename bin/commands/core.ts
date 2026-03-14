@@ -94,7 +94,7 @@ export function registerCore(program: Command): void {
 		.description("Initialize Aizen-Gate in the current workspace (runs onboarding)")
 		.action(async () => {
 			const projectRoot = process.cwd();
-			
+
 			// Run full interactive onboarding
 			const { runEnhancedOnboarding } = await import("../../src/setup/onboarding.js");
 			await runEnhancedOnboarding(projectRoot);
@@ -106,13 +106,13 @@ export function registerCore(program: Command): void {
 		.description("Initialize a new Aizen session (scaffolds project + PRD setup)")
 		.action(async () => {
 			const projectRoot = process.cwd();
-			
+
 			// Run KanbanScaffolder to create project structure
 			console.log(chalk.cyan("\n⛩️  [Aizen] Initializing project structure..."));
 			const { KanbanScaffolder } = await import("../../src/setup/kanban-scaffold.js");
 			const scaffolder = new KanbanScaffolder(projectRoot);
 			await scaffolder.scaffold();
-			
+
 			// Open AIZEN.md in editor
 			const { execSync } = await import("child_process");
 			const aizenMdPath = path.join(projectRoot, "AIZEN.md");
@@ -127,12 +127,12 @@ export function registerCore(program: Command): void {
 					console.log(chalk.yellow("   ⚠ Could not open editor automatically"));
 				}
 			}
-			
+
 			// Ask PRD creation question
 			console.log(chalk.cyan("\n📝 PRD Setup"));
 			const { handlePRDFlow } = await import("../../src/setup/onboarding/steps/prd-flow.js");
 			await handlePRDFlow(projectRoot);
-			
+
 			// Show next steps
 			console.log(chalk.cyan("\n🚀 Ready!"));
 			console.log(chalk.dim("\nNext:"));

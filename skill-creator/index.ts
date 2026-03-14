@@ -150,4 +150,4 @@ export async function autoGenerateSkills(projectRoot: string): Promise<void> {
 	}
 }
 
-export { detectStack, detectAgentsFromStack, mapCodebase };
+export { detectAgentsFromStack, detectStack, mapCodebase };

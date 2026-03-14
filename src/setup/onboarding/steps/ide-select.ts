@@ -1,7 +1,7 @@
-import { cancel, isCancel, note, select } from "@clack/prompts";
-import chalk from "chalk";
 import fs from "node:fs";
 import path from "node:path";
+import { cancel, isCancel, note, select } from "@clack/prompts";
+import chalk from "chalk";
 import { IDE_OPTIONS } from "../config/options.js";
 
 /**

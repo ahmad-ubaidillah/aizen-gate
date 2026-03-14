@@ -63,17 +63,31 @@ export class KanbanScaffolder {
 		if (!fs.existsSync(prdDir)) {
 			fs.mkdirSync(prdDir, { recursive: true });
 			console.log(chalk.gray(`   ✔ Created .agent/PRD/`));
-			
+
 			// Copy brainstorming template
-			const brainSource = path.join(__dirname, "..", "..", "infrastructure", "templates", "brainstorming.hbs");
+			const brainSource = path.join(
+				__dirname,
+				"..",
+				"..",
+				"infrastructure",
+				"templates",
+				"brainstorming.hbs",
+			);
 			const brainDest = path.join(prdDir, "brainstorming.md");
 			if (fs.existsSync(brainSource) && !fs.existsSync(brainDest)) {
 				fs.copyFileSync(brainSource, brainDest);
 				console.log(chalk.gray(`   ✔ Copied brainstorming.md template`));
 			}
-			
+
 			// Copy requirements template as template.md
-			const reqSource = path.join(__dirname, "..", "..", "infrastructure", "templates", "requirements.md");
+			const reqSource = path.join(
+				__dirname,
+				"..",
+				"..",
+				"infrastructure",
+				"templates",
+				"requirements.md",
+			);
 			const reqDest = path.join(prdDir, "template.md");
 			if (fs.existsSync(reqSource) && !fs.existsSync(reqDest)) {
 				fs.copyFileSync(reqSource, reqDest);
@@ -210,7 +224,7 @@ export class KanbanScaffolder {
 	private async copyDirectory(src: string, dest: string, label: string): Promise<void> {
 		// Resolve source path relative to project root for user-facing paths
 		const resolvedSrc = fs.existsSync(src) ? src : path.join(this.projectRoot, src);
-		
+
 		if (!fs.existsSync(resolvedSrc)) {
 			console.log(chalk.yellow(`   ⚠️ Source not found: ${resolvedSrc} (skipping ${label})`));
 			return;
