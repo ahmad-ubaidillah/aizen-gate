@@ -94,7 +94,7 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	);
 
 	// ========== QUESTION 4: Output Path ==========
-	const defaultOutputPath = path.join(projectRoot, "aizen-gate", "output");
+	const defaultOutputPath = path.join(projectRoot, ".agent", "output");
 
 	const useDefaultPath = await confirm({
 		message: `Where should I save output files? (Default: ${chalk.yellow(defaultOutputPath)})`,
@@ -184,66 +184,14 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 	const selectedIDE = IDE_OPTIONS.find((opt: any) => opt.value === ide);
 	note(`${chalk.cyan("🖥️ IDE:")} ${chalk.green(selectedIDE?.label || ide)}`, "IDE");
 
-	// ========== QUESTION 7: PRD Ownership ==========
-	const hasPRD = await select({
-		message: "Do you already have a PRD?",
-		options: [
-			{
-				label: "✅ Yes, load from prd/prd.md",
-				value: "yes",
-				description: "Load existing PRD document",
-			},
-			{ label: "❌ No, create new", value: "no", description: "Start with a template" },
-		] as any,
-		initialValue: "no",
-	});
-
-	if (isCancel(hasPRD)) {
-		cancel("Onboarding cancelled.");
-		return;
-	}
-
-	const hasPRDValue = hasPRD === "yes";
-	note(
-		`${chalk.cyan("📋 PRD status:")} ${hasPRDValue ? chalk.green("Yes, I have a PRD") : chalk.yellow("No, create new")}`,
-		"PRD",
-	);
-
-	// ========== Handle PRD Flow ==========
-	let prdData: any = {
-		prdPath: path.join(projectRoot, "aizen-gate", "PRD", "prd.md"),
-		brainstormingPath: path.join(projectRoot, "aizen-gate", "PRD", "brainstorming.md"),
+	// ========== Skip PRD Question (moved to start command) ==========
+	// PRD question now handled in npx aizen-gate start
+	const prdData = {
+		prdPath: path.join(projectRoot, ".agent", "PRD", "prd.md"),
+		brainstormingPath: path.join(projectRoot, ".agent", "PRD", "brainstorming.md"),
 		prdExists: false,
-		hasPRD: hasPRDValue,
+		hasPRD: false,
 	};
-
-	if (hasPRDValue) {
-		// Load existing PRD
-		const prdPath = path.join(projectRoot, "aizen-gate", "PRD", "prd.md");
-		const prdExists = await fs.pathExists(prdPath);
-		if (prdExists) {
-			prdData = {
-				...prdData,
-				prdPath,
-				prdExists: true,
-			};
-			note(chalk.green("✅ PRD found!"), "PRD Ready");
-		} else {
-			note(
-				chalk.yellow("⚠️ PRD not found at: ") +
-					prdPath +
-					"\n" +
-					chalk.gray("Please create it or choose 'No' to create new."),
-				"PRD Not Found",
-			);
-		}
-	} else {
-		// Create new PRD using handlePRDFlow
-		const newPRDResult = await handlePRDFlow(projectRoot);
-		if (newPRDResult) {
-			prdData = { ...prdData, ...newPRDResult };
-		}
-	}
 
 	// ========== Save Configuration ==========
 	const onboardingData = {
@@ -253,7 +201,7 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 		outputPath,
 		projectStyle: projectStyle as string,
 		ide: ide as string,
-		hasPRD: hasPRDValue,
+		hasPRD: false, // PRD is handled in npx aizen-gate start
 		prdPath: prdData.prdPath,
 		prdExists: prdData.prdExists || false,
 		brainstormingPath: prdData.brainstormingPath,
@@ -285,30 +233,13 @@ export async function runEnhancedOnboarding(projectRoot: string): Promise<void> 
 			`   ${chalk.gray("•")} IDE: ${chalk.white(selectedIDE?.label || ide)}\n\n` +
 			chalk.cyan("📋 PRD") +
 			"\n" +
-			`   ${chalk.gray("•")} Status: ${hasPRDValue ? chalk.green("Has PRD") : chalk.yellow("New")}\n` +
+			`   ${chalk.gray("•")} Status: ${chalk.yellow("Will be set in start")}\n` +
 			chalk.gray("─".repeat(40)),
 		"Summary",
 	);
 
 	// ========== Next Steps ==========
-	if (!prdData.prdExists && !hasPRDValue) {
-		outro(chalk.yellow("📝 Complete your plan, then run: ") + chalk.white("npx aizen-gate start"));
-		return;
-	}
-
-	if (!prdData.prdExists && hasPRDValue) {
-		outro(
-			chalk.yellow("📝 Add your plan to: ") +
-				chalk.white(prdData.prdPath) +
-				"\n" +
-				chalk.yellow("Then run: ") +
-				chalk.white("npx aizen-gate start"),
-		);
-		return;
-	}
-
-	// Done! Show next steps
-	outro(chalk.green.bold("✓ ") + chalk.white("Ready! Run: ") + chalk.cyan("npx aizen-gate start"));
+	outro(chalk.green.bold("✓ ") + chalk.white("Setup done! Run: ") + chalk.cyan("npx aizen-gate start"));
 }
 
 /**
@@ -357,12 +288,12 @@ export async function handleAIZENTrigger(projectRoot: string, userInput: string)
 	if (!validation.ready) {
 		return {
 			handled: true,
-			message: `PRD not found. Please create it first at: ${path.join(projectRoot, "aizen-gate/PRD/prd.md")}`,
+			message: `PRD not found. Please create it first at: ${path.join(projectRoot, ".agent/PRD/prd.md")}`,
 		};
 	}
 
 	// Load onboarding config
-	const configPath = path.join(projectRoot, "aizen-gate", "config.json");
+	const configPath = path.join(projectRoot, ".agent", "config.json");
 	let onboardingData = { projectStyle: "medium", ide: "cursor" };
 
 	if (await fs.pathExists(configPath)) {

@@ -91,19 +91,53 @@ export function registerCore(program: Command): void {
 	// 1.6. Install (Root Alias)
 	program
 		.command("install")
-		.description("Initialize Aizen-Gate in the current workspace (Shortcut for onboarding)")
+		.description("Initialize Aizen-Gate in the current workspace (runs onboarding)")
 		.action(async () => {
+			const projectRoot = process.cwd();
+			
+			// Run full interactive onboarding
 			const { runEnhancedOnboarding } = await import("../../src/setup/onboarding.js");
-			await runEnhancedOnboarding(process.cwd());
+			await runEnhancedOnboarding(projectRoot);
 		});
 
 	// 2. Start
 	program
 		.command("start")
-		.description("Initialize a new Aizen session and grooming phase")
+		.description("Initialize a new Aizen session (scaffolds project + PRD setup)")
 		.action(async () => {
-			const { runPlaybook } = (await import("../../src/utils/playbook-runner.js")) as any;
-			await runPlaybook("start", process.cwd());
+			const projectRoot = process.cwd();
+			
+			// Run KanbanScaffolder to create project structure
+			console.log(chalk.cyan("\n⛩️  [Aizen] Initializing project structure..."));
+			const { KanbanScaffolder } = await import("../../src/setup/kanban-scaffold.js");
+			const scaffolder = new KanbanScaffolder(projectRoot);
+			await scaffolder.scaffold();
+			
+			// Open AIZEN.md in editor
+			const { execSync } = await import("child_process");
+			const aizenMdPath = path.join(projectRoot, "AIZEN.md");
+			try {
+				execSync(`code "${aizenMdPath}"`, { cwd: projectRoot, stdio: "ignore" });
+				console.log(chalk.gray("   ✔ Opened AIZEN.md in editor"));
+			} catch (e) {
+				// Try open command for macOS
+				try {
+					execSync(`open "${aizenMdPath}"`, { cwd: projectRoot, stdio: "ignore" });
+				} catch (e2) {
+					console.log(chalk.yellow("   ⚠ Could not open editor automatically"));
+				}
+			}
+			
+			// Ask PRD creation question
+			console.log(chalk.cyan("\n📝 PRD Setup"));
+			const { handlePRDFlow } = await import("../../src/setup/onboarding/steps/prd-flow.js");
+			await handlePRDFlow(projectRoot);
+			
+			// Show next steps
+			console.log(chalk.cyan("\n🚀 Ready!"));
+			console.log(chalk.dim("\nNext:"));
+			console.log(chalk.white("   npx aizen-gate specify   - Define your first feature"));
+			console.log(chalk.white("   npx aizen-gate status    - View sprint board\n"));
 		});
 
 	// 3. Status

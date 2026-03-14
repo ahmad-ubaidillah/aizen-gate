@@ -300,82 +300,138 @@ _Note to AI: When the user explicitly types "I AGREE" or "GENERATE", output the 
 4. Wait for the user's response to continue the dialogue.
 `;
 
-export const PRD_FOLDER = "aizen-gate/PRD";
+export const PRD_FOLDER = ".agent/PRD";
 export const BRAINSTORMING_FILE = "brainstorming.md";
 export const PRD_FILE = "prd.md";
 
 /**
  * Simplified PRD Flow - BMad V6 Style
  * Clean, simple, no confusing options
+ * 
+ * Flow:
+ * 1. Ask: "Do you already have a PRD?"
+ * 2. If YES: Guide to create prd.md using template.md
+ * 3. If NO: Ask if they want to use ChatGPT/Gemini or discuss with Aizen
  */
 export async function handlePRDFlow(projectRoot: string): Promise<any> {
-	// Simple question - what to build? (Only if needed)
-	note(
-		chalk.gray("To accelerate your build, we've prepared several ") +
-			chalk.cyan("Elite Blueprint Templates") +
-			chalk.gray(".\nChoose one or design from scratch."),
-		"Strategic Blueprint",
-	);
+	// Create PRD folder first
+	const prdFolderPath = path.join(projectRoot, ".agent", "PRD");
+	const brainstormingPath = path.join(prdFolderPath, BRAINSTORMING_FILE);
+	const prdFilePath = path.join(prdFolderPath, PRD_FILE);
+	const templatePath = path.join(prdFolderPath, "template.md");
 
-	const projectType = await select({
-		message: "Select your project's primary DNA:",
+	await fs.ensureDir(prdFolderPath);
+	
+	// Ask: Do you already have a PRD?
+	const hasPRD = await select({
+		message: "Do you already have a PRD?",
 		options: [
-			{ label: "📋 Universal Todo App (Web/Mobile)", value: "todo-app" },
-			{ label: "🔐 Secure Auth System (JWT/OAuth)", value: "auth" },
-			{ label: "📝 Knowledge Note App (RAG Ready)", value: "notes" },
-			{ label: "🌐 Scalable API Service (Hono/Express)", value: "api" },
-			{ label: "🏗️ Custom Architect (Blank Canvas)", value: "custom" },
-		] as any,
+			{ label: "Yes, I have my own PRD", value: "yes" },
+			{ label: "No, I need to create one", value: "no" },
+		],
 	});
 
-	if (isCancel(projectType)) {
-		cancel("Cancelled.");
+	if (isCancel(hasPRD)) {
+		cancel("Onboarding cancelled.");
 		return null;
 	}
 
-	// Create PRD folder
-	const prdFolderPath = path.join(projectRoot, PRD_FOLDER);
-	const brainstormingPath = path.join(prdFolderPath, BRAINSTORMING_FILE);
-	const prdFilePath = path.join(prdFolderPath, PRD_FILE);
-
-	await fs.ensureDir(prdFolderPath);
-	await fs.writeFile(brainstormingPath, BRAINSTORMING_TEMPLATE);
-
-	// Handle custom or template
-	if (projectType === "custom") {
+	if (hasPRD === "yes") {
+		// User already has PRD - guide them to use template.md
 		note(
-			chalk.cyan("Great! Let's build your custom project.\n\n") +
-				chalk.white("1. Open: ") +
-				chalk.yellow(brainstormingPath) +
+			chalk.cyan("Great! Let's use your PRD.\n\n") +
+				chalk.white("1. Check folder: ") +
+				chalk.yellow(prdFolderPath) +
 				"\n" +
-				chalk.white("2. Fill in your idea\n") +
-				chalk.white("3. Run: ") +
-				chalk.yellow("npx aizen-gate idea"),
-			"Custom Project",
+				chalk.white("2. Inside you'll find: ") +
+				chalk.yellow("template.md") +
+				" - Use this as reference\n" +
+				chalk.white("3. Create your ") +
+				chalk.yellow("prd.md") +
+				" following the template structure\n" +
+				chalk.white("4. When done, mention @aizen to process it\n") +
+				chalk.dim("   Example: Hi @aizen, you can check my prd"),
+			"Use Your PRD",
+		);
+
+		return {
+			hasPRD: true,
+			prdPath: prdFilePath,
+			brainstormingPath,
+			templatePath,
+			prdExists: false,
+			nextStep: "mention_aizen",
+		};
+	}
+
+	// User doesn't have PRD - ask how they want to create it
+	const createMethod = await select({
+		message: "How would you like to create your PRD?",
+		options: [
+			{
+				label: "🤖 Use ChatGPT/Gemini (Save tokens)",
+				hint: "Use AI outside IDE - more cost effective",
+				value: "external_ai",
+			},
+			{
+				label: "💬 Discuss with Aizen in IDE",
+				hint: "Interactive brainstorming session",
+				value: "aizen_discuss",
+			},
+		],
+	});
+
+	if (isCancel(createMethod)) {
+		cancel("Onboarding cancelled.");
+		return null;
+	}
+
+	if (createMethod === "external_ai") {
+		// Guide to use external AI with template
+		note(
+			chalk.cyan("Token-Saving Mode\n\n") +
+				chalk.white("1. Open: ") +
+				chalk.yellow(templatePath) +
+				"\n" +
+				chalk.white("2. Copy the template and paste to ChatGPT/Gemini\n") +
+				chalk.white("3. Brainstorm and create your PRD there\n") +
+				chalk.white("4. Save result as: ") +
+				chalk.yellow("prd.md") +
+				" in " +
+				chalk.yellow(prdFolderPath) +
+				"\n\n" +
+				chalk.dim("Then mention @aizen when ready: Hi @aizen, check my prd"),
+			"Create PRD with External AI",
 		);
 
 		return {
 			hasPRD: false,
 			prdPath: prdFilePath,
 			brainstormingPath,
+			templatePath,
 			prdExists: false,
+			nextStep: "external_ai",
 		};
 	}
 
-	// Use template
-	const selectedType = projectType as string;
-	const prdContent =
-		QUICK_START_PRD[selectedType] ?? "# My Project\n\n## Overview\nDescribe your project...";
-
-	await fs.writeFile(prdFilePath, prdContent);
-
-	note(`${chalk.green("✓ Created!")} ${chalk.gray(prdFilePath)}`, "Done");
+	// User wants to discuss with Aizen
+	// The onboarding will continue and they'll use @aizen mention later
+	note(
+		chalk.cyan("Perfect! Let's brainstorm with Aizen.\n\n") +
+			chalk.white("After setup, just tell Aizen what you want to build:\n") +
+			chalk.dim("   Hi @aizen, help me build [your idea]") +
+			"\n\n" +
+			chalk.white("Aizen will act as PM + BA to help define your requirements."),
+		"Brainstorm with Aizen",
+	);
 
 	return {
-		hasPRD: true,
+		hasPRD: false,
 		prdPath: prdFilePath,
 		brainstormingPath,
-		prdExists: true,
+		templatePath,
+		prdExists: false,
+		nextStep: "aizen_discuss",
 	};
 }
 

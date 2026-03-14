@@ -1,12 +1,14 @@
 import { cancel, isCancel, note, select } from "@clack/prompts";
 import chalk from "chalk";
+import fs from "node:fs";
+import path from "node:path";
 import { IDE_OPTIONS } from "../config/options.js";
 
 /**
  * IDE/CLI Selection Step
  * Prompts user to select their primary development environment
  */
-export async function selectIDE(_projectRoot: string): Promise<any> {
+export async function selectIDE(projectRoot: string): Promise<any> {
 	const ide = await select({
 		message: "What IDE/CLI do you primarily use for development?",
 		options: IDE_OPTIONS as any,
