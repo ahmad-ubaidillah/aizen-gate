@@ -31,6 +31,7 @@
 		"profiles.yaml"
 	],
 	"scripts": {
+		"prepare": "npm run build",
 		"dev": "npm run build && npm run az-start",
 		"build": "tsc && npm run build:bundle",
 		"build:bundle": "node scripts/build.js",
