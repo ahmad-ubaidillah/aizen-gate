@@ -363,7 +363,7 @@ export class ProgressSpinner {
 	 * Update the spinner message
 	 */
 	update(message: string): void {
-		this.spinner.message = message;
+		this.message = message;
 	}
 
 	/**
