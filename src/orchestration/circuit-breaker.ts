@@ -2,11 +2,11 @@
  * CircuitBreaker: Protects the autonomous loop from infinite failures and stagnation.
  */
 
-import { execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import crypto from "node:crypto";
 import path from "node:path";
 import chalk from "chalk";
-import fs from "fs-extra";
+import fs, { pathExistsSync, statSync } from "fs-extra";
 
 /**
  * Circuit state
@@ -121,14 +121,60 @@ export class CircuitBreaker {
 	/**
 	 * Computes a hash of the current workspace state for a given WP.
 	 * Use this to detect if anything actually changed between attempts.
+	 * SECURITY: Uses SHA-256 instead of MD5 to prevent collision attacks.
+	 * SECURITY: Uses spawn with args array instead of execSync to prevent command injection.
 	 */
 	async hashWorkspace(_wpId: string): Promise<string> {
 		try {
-			// Simplified: hash the git diff or status
-			// In a real scenario, we might use 'git diff' output
-			const diff = execSync("git diff HEAD", { cwd: this.projectRoot, encoding: "utf8" });
+			// SECURITY: Validate projectRoot exists and is a directory
+			if (!pathExistsSync(this.projectRoot)) {
+				return Date.now().toString();
+			}
+
+			try {
+				const stats = statSync(this.projectRoot);
+				if (!stats.isDirectory()) {
+					return Date.now().toString();
+				}
+			} catch {
+				return Date.now().toString();
+			}
+
+			// SECURITY: Use spawn with args array to prevent command injection
+			// The git command arguments are passed as separate array elements
+			const diff = await new Promise<string>((resolve, reject) => {
+				const proc = spawn("git", ["diff", "HEAD"], {
+					cwd: this.projectRoot,
+					timeout: 10000, // 10 second timeout
+				});
+
+				let output = "";
+				let errorOutput = "";
+
+				proc.stdout.on("data", (data) => {
+					output += data.toString();
+				});
+
+				proc.stderr.on("data", (data) => {
+					errorOutput += data.toString();
+				});
+
+				proc.on("close", (code) => {
+					if (code === 0 || code === 1) {
+						// git diff returns 0 if no changes, 1 if changes exist
+						resolve(output);
+					} else {
+						reject(new Error(`git diff exited with code ${code}: ${errorOutput}`));
+					}
+				});
+
+				proc.on("error", (err) => {
+					reject(err);
+				});
+			});
+
 			return crypto
-				.createHash("md5")
+				.createHash("sha256")
 				.update(diff || "no-changes")
 				.digest("hex");
 		} catch {

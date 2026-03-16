@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { DashboardService } from "../../dashboard/dashboard-service.js";
 
 export interface CheckpointChoice {
@@ -23,13 +24,17 @@ export class CheckpointManager {
 
 	/**
 	 * Pauses execution and waits for user feedback from the dashboard.
+	 * SECURITY: Uses crypto.randomBytes() for secure checkpoint ID generation.
+	 * Math.random() is predictable and should never be used for security-sensitive IDs.
 	 */
 	public async requestValidation(
 		taskId: string,
 		message: string,
 		choices: CheckpointChoice[],
 	): Promise<string> {
-		const id = `checkpoint_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+		// SECURITY: Use crypto.randomBytes instead of Math.random for secure ID generation
+		const randomSuffix = crypto.randomBytes(4).toString("base64url").slice(0, 8);
+		const id = `checkpoint_${Date.now()}_${randomSuffix}`;
 
 		const request: CheckpointRequest = { id, taskId, message, choices };
 

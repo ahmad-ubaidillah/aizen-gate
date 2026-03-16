@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import chalk from "chalk";
 import { DashboardService } from "../../dashboard/dashboard-service.js";
@@ -10,6 +11,15 @@ export interface MeshNode {
 }
 
 /**
+ * SECURITY: Generates a cryptographically secure random node ID.
+ * Uses crypto.randomBytes() instead of Math.random() which is predictable.
+ */
+function generateSecureNodeId(): string {
+	const bytes = crypto.randomBytes(6);
+	return `node-${bytes.toString("base64url").slice(0, 8)}`;
+}
+
+/**
  * [Phase 26] MeshRelay
  * Manages distributed connections between Aizen instances.
  */
@@ -18,7 +28,11 @@ export class MeshRelay extends EventEmitter {
 	private feed = DashboardService.getInstance();
 	private myId: string;
 
-	constructor(myId: string = `node-${Math.random().toString(36).substr(2, 5)}`) {
+	/**
+	 * SECURITY: Uses cryptographically secure random ID by default.
+	 * Math.random() is predictable and should never be used for security-sensitive IDs.
+	 */
+	constructor(myId: string = generateSecureNodeId()) {
 		super();
 		this.myId = myId;
 		console.log(chalk.blue(`[MeshRelay] Initialized as Node: ${this.myId}`));

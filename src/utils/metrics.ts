@@ -30,25 +30,62 @@ const metrics: MetricsData = {
 	memoryUsage: 0,
 };
 
+type CounterName = keyof Pick<MetricsData, "commandsTotal" | "errorsTotal" | "requestsTotal">;
+type RecordName = keyof Pick<MetricsData, "commandsByType" | "errorsByType">;
+
+// Type-safe metrics accessor
+function getMetricValue(name: string): number | undefined {
+	const metric = metrics as unknown as Record<string, number>;
+	return metric[name];
+}
+
+function setMetricValue(name: string, value: number): void {
+	const metric = metrics as unknown as Record<string, number>;
+	metric[name] = value;
+}
+
+function getRecordMetric(name: string): Record<string, number> | undefined {
+	const metric = metrics as unknown as Record<string, Record<string, number>>;
+	return metric[name];
+}
+
 export function incrementCounter(name: string, label?: string, value = 1): void {
 	if (label) {
-		const target = (metrics as any)[name];
-		if (target && typeof target === "object") {
-			target[label] = (target[label] || 0) + value;
+		// For labeled counters (commandsByType, errorsByType)
+		const record = getRecordMetric(name);
+		if (record) {
+			record[label] = (record[label] || 0) + value;
 		}
 	} else {
-		(metrics as any)[name] += value;
+		// For simple counters - validate name is a known counter
+		const validCounters: CounterName[] = ["commandsTotal", "errorsTotal", "requestsTotal"];
+		if (validCounters.includes(name as CounterName)) {
+			const current = getMetricValue(name) ?? 0;
+			setMetricValue(name, current + value);
+		}
 	}
 }
 
 export function recordHistogram(name: string, value: number): void {
-	if (!(metrics as any)[name]) (metrics as any)[name] = [];
-	(metrics as any)[name].push(value);
-	if ((metrics as any)[name].length > 1000) (metrics as any)[name].shift();
+	const histogramNames = ["commandDurations", "requestDurations"];
+	if (histogramNames.includes(name)) {
+		const metric = metrics as unknown as Record<string, number[]>;
+		if (!metric[name]) {
+			metric[name] = [];
+		}
+		metric[name].push(value);
+		if (metric[name].length > 1000) {
+			metric[name].shift();
+		}
+	}
 }
 
 export function setGauge(name: string, value: number): void {
-	(metrics as any)[name] = value;
+	const gaugeNames: (keyof MetricsData)[] = ["activeConnections", "memoryUsage"];
+	if (gaugeNames.includes(name as keyof MetricsData)) {
+		const metric = metrics as unknown as Record<string, number>;
+		metric[name] = value;
+	}
 }
 
 function percentile(arr: number[], p: number): number {

@@ -1,0 +1,16 @@
+{
+  "projectName": "aizen-gate",
+  "version": "2.3.2",
+  "devType": "medium",
+  "ide": "cursor",
+  "languages": {
+    "interaction": "en",
+    "output": "en"
+  },
+  "features": {
+    "memory": true,
+    "orchestration": true,
+    "skills": true
+  },
+  "lastActive": "2026-03-15T05:00:00.000Z"
+}

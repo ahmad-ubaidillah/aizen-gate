@@ -1,0 +1,13 @@
+{
+  "aizenName": "user",
+  "chatLanguage": "en",
+  "outputLanguage": "en",
+  "outputPath": "./.agent/output",
+  "projectStyle": "medium",
+  "ide": "cursor",
+  "hasPRD": false,
+  "prdPath": "./.agent/PRD/prd.md",
+  "prdExists": false,
+  "brainstormingPath": "./.agent/PRD/brainstorming.md",
+  "timestamp": "2026-03-15T05:00:00.000Z"
+}

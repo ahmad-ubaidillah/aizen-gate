@@ -10,6 +10,7 @@ import { cancel, confirm, intro, note, outro, select, spinner } from "@clack/pro
 import chalk from "chalk";
 import type { Command } from "commander";
 import yaml from "js-yaml";
+import { runFirstRunTutorial } from "../../src/setup/onboarding/first-run-tutorial.js";
 
 /**
  * Register core commands
@@ -92,55 +93,124 @@ export function registerCore(program: Command): void {
 	program
 		.command("install")
 		.description("Initialize Aizen-Gate in the current workspace (runs onboarding)")
-		.action(async () => {
+		.option("--skip-prereq", "Skip prerequisite checks")
+		.option("--minimal", "Use minimal output mode")
+		.action(async (options: { skipPrereq?: boolean; minimal?: boolean }) => {
 			const projectRoot = process.cwd();
 
-			// Run full interactive onboarding
-			const { runEnhancedOnboarding } = await import("../../src/setup/onboarding.js");
-			await runEnhancedOnboarding(projectRoot);
+			// Run enhanced onboarding with progress tracking
+			const { runEnhancedInstallFlow } = await import(
+				"../../src/setup/onboarding/enhanced-flow.js"
+			);
+			const result = await runEnhancedInstallFlow({
+				projectRoot,
+				skipPrerequisites: options.skipPrereq,
+				minimal: options.minimal,
+			});
+
+			if (!result.success) {
+				process.exit(1);
+			}
 		});
 
 	// 2. Start
 	program
 		.command("start")
 		.description("Initialize a new Aizen session (scaffolds project + PRD setup)")
-		.action(async () => {
+		.option("--minimal", "Use minimal output mode")
+		.action(async (options: { minimal?: boolean }) => {
 			const projectRoot = process.cwd();
 
-			// Run KanbanScaffolder to create project structure
-			console.log(chalk.cyan("\n⛩️  [Aizen] Initializing project structure..."));
-			const { KanbanScaffolder } = await import("../../src/setup/kanban-scaffold.js");
-			const scaffolder = new KanbanScaffolder(projectRoot);
-			await scaffolder.scaffold();
+			// Run enhanced start flow with progress tracking
+			const { runEnhancedStartFlow } = await import("../../src/setup/onboarding/enhanced-flow.js");
+			const result = await runEnhancedStartFlow({
+				projectRoot,
+				minimal: options.minimal,
+			});
 
-			// Open AIZEN.md in editor
-			const { execSync } = await import("child_process");
-			const aizenMdPath = path.join(projectRoot, "AIZEN.md");
-			try {
-				execSync(`code "${aizenMdPath}"`, { cwd: projectRoot, stdio: "ignore" });
-				console.log(chalk.gray("   ✔ Opened AIZEN.md in editor"));
-			} catch (e) {
-				// Try open command for macOS
-				try {
-					execSync(`open "${aizenMdPath}"`, { cwd: projectRoot, stdio: "ignore" });
-				} catch (e2) {
-					console.log(chalk.yellow("   ⚠ Could not open editor automatically"));
-				}
+			if (!result.success) {
+				process.exit(1);
 			}
-
-			// Ask PRD creation question
-			console.log(chalk.cyan("\n📝 PRD Setup"));
-			const { handlePRDFlow } = await import("../../src/setup/onboarding/steps/prd-flow.js");
-			await handlePRDFlow(projectRoot);
-
-			// Show next steps
-			console.log(chalk.cyan("\n🚀 Ready!"));
-			console.log(chalk.dim("\nNext:"));
-			console.log(chalk.white("   npx aizen-gate specify   - Define your first feature"));
-			console.log(chalk.white("   npx aizen-gate status    - View sprint board\n"));
 		});
 
-	// 3. Status
+	// 3. Tutorial
+	program
+		.command("tutorial")
+		.description("Run the interactive first-run tutorial")
+		.option("--skip-example", "Skip example project creation")
+		.action(async (options: { skipExample?: boolean }) => {
+			const projectRoot = process.cwd();
+
+			try {
+				if (options.skipExample) {
+					// Run tutorial without example project
+					const { displayQuickReference, displayBestPractices } = await import(
+						"../../src/setup/onboarding/first-run-tutorial.js"
+					);
+					displayQuickReference();
+					displayBestPractices();
+				} else {
+					await runFirstRunTutorial(projectRoot);
+				}
+			} catch (error) {
+				console.error(chalk.red(`Tutorial error: ${(error as Error).message}`));
+				process.exit(1);
+			}
+		});
+
+	// 4. Example
+	program
+		.command("example")
+		.description("Create an example project to learn Aizen-Gate")
+		.argument("[type]", "Example type: hello-world, todo-app, api-service")
+		.action(async (type?: string) => {
+			const projectRoot = process.cwd();
+
+			try {
+				const { createExampleProject } = await import(
+					"../../src/setup/onboarding/first-run-tutorial.js"
+				);
+
+				if (!type) {
+					const { select, isCancel } = await import("@clack/prompts");
+
+					const exampleType = await select({
+						message: "Choose an example project:",
+						options: [
+							{
+								value: "hello-world",
+								label: "Hello World",
+								hint: "Simple example to learn basics",
+							},
+							{
+								value: "todo-app",
+								label: "Todo App",
+								hint: "Complete app with multiple features",
+							},
+							{
+								value: "api-service",
+								label: "REST API",
+								hint: "Production-ready API service",
+							},
+						],
+					});
+
+					if (isCancel(exampleType)) {
+						console.log(chalk.yellow("Example creation cancelled"));
+						return;
+					}
+
+					type = exampleType as string;
+				}
+
+				await createExampleProject(type, projectRoot);
+			} catch (error) {
+				console.error(chalk.red(`Example creation error: ${(error as Error).message}`));
+				process.exit(1);
+			}
+		});
+
+	// 5. Status
 	program
 		.command("status")
 		.description("Check the current status of the scrum board")

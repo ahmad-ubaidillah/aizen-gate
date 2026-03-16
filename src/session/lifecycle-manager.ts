@@ -90,16 +90,47 @@ export class LifecycleManager {
 		}
 	}
 
+	/**
+	 * Check if common dev ports are in use (indicates manual testing).
+	 * SECURITY: Uses spawn with args array to prevent command injection.
+	 */
 	async isAppRunning(): Promise<boolean> {
-		const { execSync } = await import("node:child_process");
+		const { spawn } = await import("node:child_process");
 		try {
-			// Common dev ports
+			// Common dev ports - validated to be integers in range 1-65535
 			const ports = [3000, 5173, 8000, 8080];
+
 			for (const port of ports) {
+				// SECURITY: Validate port number
+				if (!Number.isInteger(port) || port < 1 || port > 65535) {
+					console.warn(`[LifecycleManager] Invalid port skipped: ${port}`);
+					continue;
+				}
+
 				try {
-					// Add timeout to prevent hanging
-					const res = execSync(`lsof -i :${port}`, { stdio: "pipe", timeout: 5000 });
-					if (res.toString().length > 0) return true;
+					const isPortInUse = await new Promise<boolean>((resolve) => {
+						// SECURITY: Use spawn with args array instead of execSync with interpolation
+						// This prevents command injection even if port were user-controlled
+						const proc = spawn("lsof", ["-i", `:${port}`], {
+							timeout: 5000,
+						});
+
+						let output = "";
+						proc.stdout.on("data", (data) => {
+							output += data.toString();
+						});
+
+						proc.on("close", (code) => {
+							// lsof returns 0 if found, 1 if not found
+							resolve(code === 0 && output.length > 0);
+						});
+
+						proc.on("error", () => {
+							resolve(false);
+						});
+					});
+
+					if (isPortInUse) return true;
 				} catch {
 					// Port not in use or lsof failed
 				}

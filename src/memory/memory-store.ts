@@ -245,9 +245,22 @@ export class MemoryStore {
 			const incoming = JSON.stringify({
 				[agent_id]: (JSON.parse(existing.vector_clock)[agent_id] || 0) + 1,
 			});
-			clockJson = this.aizenCore?.mergeVectorClocks
-				? this.aizenCore.mergeVectorClocks(existing.vector_clock, incoming)
-				: incoming;
+			// Use WASM if available, otherwise fallback to JS implementation
+			if (this.aizenCore?._isLoaded && this.aizenCore?.mergeVectorClocks) {
+				clockJson = this.aizenCore.mergeVectorClocks(existing.vector_clock, incoming);
+			} else {
+				try {
+					const a = JSON.parse(existing.vector_clock);
+					const b = JSON.parse(incoming);
+					const merged = { ...a };
+					for (const [node, clock] of Object.entries(b)) {
+						merged[node] = Math.max(merged[node] || 0, clock as number);
+					}
+					clockJson = JSON.stringify(merged);
+				} catch {
+					clockJson = incoming;
+				}
+			}
 		} else {
 			clockJson = JSON.stringify({ [agent_id]: 1 });
 		}
@@ -570,8 +583,10 @@ export class MemoryStore {
 			await this.storeMemory(superPath, synthesis, 9.0);
 
 			// Mark original fragments as deleted or purged to clean up
-			const ids = items.map((i) => i.id);
-			this.db.prepare(`DELETE FROM agent_memory WHERE id IN (${ids.join(",")})`).run();
+			// Use parameterized query to prevent SQL injection
+			const itemIds = items.map((i) => i.id);
+			const placeholders = itemIds.map(() => "?").join(",");
+			this.db.prepare(`DELETE FROM agent_memory WHERE id IN (${placeholders})`).run(...itemIds);
 
 			totalConsolidated += items.length;
 		}

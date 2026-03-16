@@ -97,8 +97,11 @@ export function createChildLogger(context: string) {
 
 export interface AizenRequest {
 	requestId?: string;
-	logger?: any;
-	[key: string]: any;
+	logger?: ReturnType<AizenLogger["child"]>;
+	method?: string;
+	path?: string;
+	headers?: Record<string, string | string[] | undefined>;
+	[key: string]: unknown;
 }
 
 export function generateRequestId(): string {

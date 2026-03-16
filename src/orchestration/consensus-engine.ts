@@ -1,8 +1,20 @@
+import crypto from "node:crypto";
 import chalk from "chalk";
 import { DashboardService } from "../../dashboard/dashboard-service.js";
 import { createLlamaBridge } from "../memory/llama-bridge.js";
 import { getMemoryStore } from "../memory/memory-store.js";
 import { getGhostSimulator } from "./ghost-simulator.js";
+
+/**
+ * SECURITY: Generates a cryptographically secure random number between 0 and 1.
+ * Uses crypto.randomBytes() instead of Math.random() which is predictable.
+ * @returns Secure random number in range [0, 1)
+ */
+function secureRandom(): number {
+	const bytes = crypto.randomBytes(4);
+	const value = bytes.readUInt32BE(0);
+	return value / (0xffffffff + 1);
+}
 
 export interface Proposal {
 	id: string;
@@ -117,7 +129,10 @@ export class ConsensusEngine {
 		// Emit Logic Graph (Mermaid + JSON for D3)
 		const mm = this.generateMermaidGraph(proposal, votes, approved);
 		const json = this.generateJsonGraph(proposal, votes, approved);
-		this.feed.emitLogicGraph(this.agentId, "Evaluating swarm consensus...", { mermaid: mm, json });
+		this.feed.emitLogicGraph(this.agentId, "Evaluating swarm consensus...", {
+			mermaid: mm,
+			json,
+		});
 
 		if (approved) {
 			console.log(
@@ -126,7 +141,9 @@ export class ConsensusEngine {
 			// Phase 22: Commit the Ghost Layer to reality
 			if (proposal.action === "WRITE") {
 				await ghost.commitToDisk();
-				this.feed.emitThought(this.agentId, "Ghost layer committed to disk.", { success: true });
+				this.feed.emitThought(this.agentId, "Ghost layer committed to disk.", {
+					success: true,
+				});
 			}
 		} else {
 			console.log(
@@ -156,8 +173,9 @@ Counter-Argument: ${debater.reason}`;
 
 			const resolution = await this.llama.distill(`debate-resolution|${proposal.action}`);
 
+			// SECURITY: Use secureRandom() instead of Math.random() to prevent predictability
 			// Heuristic: If debate yields a strong counter-argument, small chance to flip
-			if (Math.random() < 0.3) {
+			if (secureRandom() < 0.3) {
 				console.log(
 					chalk.magenta(`  [Debate] ${rejecter.voter} flipped their vote after deliberation!`),
 				);
@@ -217,20 +235,22 @@ Counter-Argument: ${debater.reason}`;
 			adversePrefix = `[NEURAL SCAR DETECTED] Previous similar proposal was REJECTED. Scar: ${scars[0].text}\n`;
 		}
 
-		const _context = `${adversePrefix}Voter: ${voter}
+		// Build evaluation context for logging/audit purposes
+		const context = `${adversePrefix}Voter: ${voter}
 Role Guidelines: ${persona}
 
 Proposal: ${proposal.action}
 Payload: ${JSON.stringify(proposal.payload)}
 Constitution: See shared/constitution.md (Elite Standards)`;
 
-		// Distill evaluation through specialized lens
-		const _evaluation = await this.llama.distill(
-			`voter:${voter}|action:${proposal.action}|persona_eval`,
+		// Log context for debugging (Phase 30: Traceability)
+		console.log(
+			chalk.gray(`[Consensus] ${voter} evaluating with context length: ${context.length} chars`),
 		);
 
+		// SECURITY: Use secureRandom() instead of Math.random() to prevent predictability
 		// Persona-specific heuristic variance
-		const rand = Math.random();
+		const rand = secureRandom();
 		let approve = true;
 		let reason = "Aligned with specialized persona standards.";
 
@@ -296,7 +316,12 @@ Constitution: See shared/constitution.md (Elite Standards)`;
 
 	private generateJsonGraph(proposal: Proposal, votes: Vote[], approved: boolean): any {
 		const nodes: any[] = [
-			{ id: "prop", name: `⛩️ ${proposal.action}`, isProp: true, approve: approved },
+			{
+				id: "prop",
+				name: `⛩️ ${proposal.action}`,
+				isProp: true,
+				approve: approved,
+			},
 		];
 		const links: any[] = [];
 
